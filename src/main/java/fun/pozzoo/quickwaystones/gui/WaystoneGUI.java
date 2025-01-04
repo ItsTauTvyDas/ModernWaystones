@@ -13,7 +13,9 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
+import java.util.*;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class WaystoneGUI {
     public static void runGUI(Player player) {
@@ -25,14 +27,21 @@ public class WaystoneGUI {
 
         Map<Location, WaystoneData> waystones = QuickWaystones.getWaystonesMap();
 
-        for (WaystoneData waystone : waystones.values()) {
-            GuiItem item = ItemBuilder.from(Material.ENDER_PEARL).name(StringUtils.formatItemName(waystone.getName())).asGuiItem(inventoryClickEvent -> {
-                inventoryClickEvent.setCancelled(true);
-                player.teleport(waystone.getLocation().clone().add(0.5, 1, 0.5));
-                player.getWorld().spawnParticle(Particle.PORTAL, player.getLocation(), 5);
-                player.playSound(player, Sound.ENTITY_FOX_TELEPORT, 0.5f, 1f);
-                player.closeInventory();
-            });
+        List<WaystoneData> sortedWaystones = waystones.values().stream()
+            .sorted(Comparator.comparing(WaystoneData::getName))
+            .collect(Collectors.toList());
+
+        for (WaystoneData waystone : sortedWaystones) {
+            GuiItem item = ItemBuilder.from(Material.ENDER_PEARL)
+                .name(StringUtils.formatItemName(waystone.getName()))
+                .asGuiItem(inventoryClickEvent -> {
+                    inventoryClickEvent.setCancelled(true);
+                    player.teleport(waystone.getLocation().clone().add(0.5, 1, 0.5));
+                    player.getWorld().spawnParticle(Particle.PORTAL, player.getLocation(), 5);
+                    player.playSound(player, Sound.ENTITY_FOX_TELEPORT, 0.5f, 1f);
+                    player.closeInventory();
+                });
+
             gui.addItem(item);
         }
 
