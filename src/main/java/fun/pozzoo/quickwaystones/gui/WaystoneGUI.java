@@ -21,8 +21,8 @@ public class WaystoneGUI {
     public static void runGUI(Player player) {
         PaginatedGui gui = Gui.paginated()
                 .title(StringUtils.formatString("Waystones"))
-                .rows(4)
-                .pageSize(27)
+                .rows(6)
+                .pageSize(45)
                 .create();
 
         Map<Location, WaystoneData> waystones = QuickWaystones.getWaystonesMap();
@@ -34,6 +34,8 @@ public class WaystoneGUI {
         for (WaystoneData waystone : sortedWaystones) {
             GuiItem item = ItemBuilder.from(Material.ENDER_PEARL)
                 .name(StringUtils.formatItemName(waystone.getName()))
+                .lore("§8POS §7" + waystone.getLocation().getBlockX() + ", " + waystone.getLocation().getBlockY() + ", " + waystone.getLocation().getBlockZ())
+                .lore("§8WORLD §7" + waystone.getLocation().getWorld().getName())
                 .asGuiItem(inventoryClickEvent -> {
                     inventoryClickEvent.setCancelled(true);
                     player.teleport(waystone.getLocation().clone().add(0.5, 1, 0.5));
@@ -46,12 +48,12 @@ public class WaystoneGUI {
         }
 
         if (gui.getPagesNum() > 1) {
-            gui.setItem(4, 3, ItemBuilder.from(Material.PAPER).name(StringUtils.formatString("Previous")).asGuiItem(event -> {
+            gui.setItem(6, 3, ItemBuilder.from(Material.PAPER).name(StringUtils.formatString("Previous")).asGuiItem(event -> {
                 event.setCancelled(true);
                 gui.previous();
             }));
 
-            gui.setItem(4, 7, ItemBuilder.from(Material.PAPER).name(StringUtils.formatString("Next")).asGuiItem(event -> {
+            gui.setItem(6, 7, ItemBuilder.from(Material.PAPER).name(StringUtils.formatString("Next")).asGuiItem(event -> {
                 event.setCancelled(true);
                 gui.next();
             }));
