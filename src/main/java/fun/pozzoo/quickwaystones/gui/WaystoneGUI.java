@@ -34,8 +34,8 @@ public class WaystoneGUI {
         for (WaystoneData waystone : sortedWaystones) {
             GuiItem item = ItemBuilder.from(Material.ENDER_PEARL)
                 .name(StringUtils.formatItemName(waystone.getName()))
-                .lore("§8POS §7" + waystone.getLocation().getBlockX() + ", " + waystone.getLocation().getBlockY() + ", " + waystone.getLocation().getBlockZ())
-                .lore("§8WORLD §7" + waystone.getLocation().getWorld().getName())
+                // .lore("§8POS §7" + waystone.getLocation().getBlockX() + ", " + waystone.getLocation().getBlockY() + ", " + waystone.getLocation().getBlockZ())
+                // .lore("§8WORLD §7" + waystone.getLocation().getWorld().getName())
                 .asGuiItem(inventoryClickEvent -> {
                     inventoryClickEvent.setCancelled(true);
                     player.teleport(waystone.getLocation().clone().add(0.5, 1, 0.5));
