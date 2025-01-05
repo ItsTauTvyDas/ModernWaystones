@@ -1,7 +1,11 @@
 name: Build Development
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -19,8 +23,14 @@ jobs:
       - name: Build
         run: mvn package --file pom.xml
 
+      - name: Extract repository name
+        run: echo "NAME=$(basename ${{ github.repository }})" >> $GITHUB_ENV
+
       - name: Upload Build
-        uses: actions/upload-artifact@v4
+        uses: marvinpinto/action-automatic-releases@master
         with:
-          name: plugin
-          path: target
+          title: "${{ env.NAME }}"
+          automatic_release_tag: "latest"
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          files: "target/*.jar"
+          prerelease: false
