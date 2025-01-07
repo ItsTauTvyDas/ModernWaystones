@@ -49,6 +49,10 @@ public final class QuickWaystones extends JavaPlugin {
         metrics.shutdown();
     }
 
+    public DataManager getDataManager() {
+        return dataManager;
+    }
+
     public static QuickWaystones getInstance() {
         return plugin;
     }

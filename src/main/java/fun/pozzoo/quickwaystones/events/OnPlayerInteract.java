@@ -38,7 +38,10 @@ public class OnPlayerInteract implements Listener {
             if (!QuickWaystones.getWaystonesMap().containsKey(block.getLocation())) {
                 player.playSound(player, Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                 player.sendMessage(StringUtils.formatString("<gold>" + this.plugin.getConfig().getString("Messages.WaystoneActivated")));
+
                 QuickWaystones.getWaystonesMap().put(block.getLocation(), new WaystoneData(block.getLocation(), player.getName()));
+
+                QuickWaystones.getInstance().getDataManager().saveWaystoneData(QuickWaystones.getWaystonesMap().values());
                 return;
             }
 

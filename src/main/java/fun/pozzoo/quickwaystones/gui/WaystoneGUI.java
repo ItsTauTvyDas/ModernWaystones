@@ -32,7 +32,21 @@ public class WaystoneGUI {
             .collect(Collectors.toList());
 
         for (WaystoneData waystone : sortedWaystones) {
-            GuiItem item = ItemBuilder.from(Material.ENDER_PEARL)
+            Material material;
+
+            switch (waystone.getLocation().getWorld().getEnvironment()) {
+                case NETHER:
+                    material = Material.NETHERRACK;
+                    break;
+                case THE_END:
+                    material = Material.END_STONE;
+                    break;
+                default:
+                    material = Material.GRASS_BLOCK;
+                    break;
+            }
+
+            GuiItem item = ItemBuilder.from(material)
                 .name(StringUtils.formatItemName(waystone.getName()))
                 .asGuiItem(inventoryClickEvent -> {
                     inventoryClickEvent.setCancelled(true);

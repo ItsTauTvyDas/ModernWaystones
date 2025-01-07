@@ -3,7 +3,11 @@ package fun.pozzoo.quickwaystones.events;
 import fun.pozzoo.quickwaystones.QuickWaystones;
 import fun.pozzoo.quickwaystones.data.WaystoneData;
 import fun.pozzoo.quickwaystones.utils.StringUtils;
+
+import java.util.Map;
+
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -28,6 +32,8 @@ public class OnBlockBreak implements Listener {
 
         if (player.isOp() || player.getName().equals(waystone.getOwner())) {
             QuickWaystones.getWaystonesMap().remove(event.getBlock().getLocation());
+
+            QuickWaystones.getInstance().getDataManager().saveWaystoneData(QuickWaystones.getWaystonesMap().values());
             return;
         }
 
