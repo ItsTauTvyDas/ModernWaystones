@@ -1,8 +1,8 @@
 # Changes over original
-- More Saving: Instead of saving once on server shutdown, it will also save on adding and removing a waystone.
-- Bigger Menus: Instead of a single chest, it now uses a double chest so you can see more per page.
-- UUIDs for IDs: Allows mutliple waystones to have the same name and not override each other.
-- World Specific icons: The 3 dimensions in Minecraft have their own block as the icon in the menu.
+- **More Saving:** Instead of saving once on server shutdown, it will also save on adding and removing a waystone.
+- **Bigger Menus:** Instead of a single chest, it now uses a double chest so you can see more per page.
+- **UUIDs for IDs:** Allows mutliple waystones to have the same name and not override each other.
+- **World Specific icons:** The 3 dimensions in Minecraft have their own block as the icon in the menu.
 
 ## A plugin that adds Waystones for instant travel, making lodestones more useful!
 
