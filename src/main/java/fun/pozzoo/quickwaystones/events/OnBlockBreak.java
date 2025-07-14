@@ -3,17 +3,12 @@ package fun.pozzoo.quickwaystones.events;
 import fun.pozzoo.quickwaystones.QuickWaystones;
 import fun.pozzoo.quickwaystones.data.WaystoneData;
 import fun.pozzoo.quickwaystones.utils.StringUtils;
-
-import java.util.Map;
-
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-
 
 public class OnBlockBreak implements Listener {
     private final QuickWaystones plugin;

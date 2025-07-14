@@ -57,7 +57,5 @@ public class OnPlayerInteract implements Listener {
             QuickWaystones.getWaystonesMap().get(block.getLocation()).setName(textComponent.content());
             player.getInventory().getItemInMainHand().subtract();
         }
-
-
     }
 }

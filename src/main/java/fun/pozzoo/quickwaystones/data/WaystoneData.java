@@ -6,10 +6,11 @@ import org.bukkit.Location;
 import java.util.UUID;
 
 public class WaystoneData {
-    private String id;
     private String name;
-    private String owner;
-    private Location location;
+
+    private final String id;
+    private final String owner;
+    private final Location location;
 
     public WaystoneData(Location location, String owner) {
         id = UUID.randomUUID().toString();

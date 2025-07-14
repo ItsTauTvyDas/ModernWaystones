@@ -1,21 +1,21 @@
 package fun.pozzoo.quickwaystones.gui;
 
-import fun.pozzoo.quickwaystones.QuickWaystones;
-import fun.pozzoo.quickwaystones.data.WaystoneData;
-import fun.pozzoo.quickwaystones.utils.StringUtils;
 import dev.triumphteam.gui.builder.item.ItemBuilder;
 import dev.triumphteam.gui.guis.Gui;
 import dev.triumphteam.gui.guis.GuiItem;
 import dev.triumphteam.gui.guis.PaginatedGui;
+import fun.pozzoo.quickwaystones.QuickWaystones;
+import fun.pozzoo.quickwaystones.data.WaystoneData;
+import fun.pozzoo.quickwaystones.utils.StringUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class WaystoneGUI {
     public static void runGUI(Player player) {
@@ -29,22 +29,14 @@ public class WaystoneGUI {
 
         List<WaystoneData> sortedWaystones = waystones.values().stream()
             .sorted(Comparator.comparing(WaystoneData::getName))
-            .collect(Collectors.toList());
+            .toList();
 
         for (WaystoneData waystone : sortedWaystones) {
-            Material material;
-
-            switch (waystone.getLocation().getWorld().getEnvironment()) {
-                case NETHER:
-                    material = Material.NETHERRACK;
-                    break;
-                case THE_END:
-                    material = Material.END_STONE;
-                    break;
-                default:
-                    material = Material.GRASS_BLOCK;
-                    break;
-            }
+            Material material = switch (waystone.getLocation().getWorld().getEnvironment()) {
+                case NETHER -> Material.NETHERRACK;
+                case THE_END -> Material.END_STONE;
+                default -> Material.GRASS_BLOCK;
+            };
 
             GuiItem item = ItemBuilder.from(material)
                 .name(StringUtils.formatItemName(waystone.getName()))

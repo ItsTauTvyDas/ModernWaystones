@@ -5,12 +5,12 @@ import fun.pozzoo.quickwaystones.data.WaystoneData;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-
 
 public class DataManager {
     private File file;
