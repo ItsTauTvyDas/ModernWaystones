@@ -1,4 +1,5 @@
 name: QuickWaystones
 version: '${project.version}'
 main: fun.pozzoo.quickwaystones.QuickWaystones
-api-version: '1.20'
+authors: [Pozzoo, SkyboundLab, ItsTauTvyDas]
+api-version: '1.21'
