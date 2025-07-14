@@ -6,7 +6,7 @@ import dev.triumphteam.gui.guis.GuiItem;
 import dev.triumphteam.gui.guis.PaginatedGui;
 import fun.pozzoo.quickwaystones.QuickWaystones;
 import fun.pozzoo.quickwaystones.data.WaystoneData;
-import fun.pozzoo.quickwaystones.utils.StringUtils;
+import fun.pozzoo.quickwaystones.Utils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -20,7 +20,7 @@ import java.util.Map;
 public class WaystoneGUI {
     public static void runGUI(Player player) {
         PaginatedGui gui = Gui.paginated()
-                .title(StringUtils.formatString("Waystones"))
+                .title(Utils.formatString("Waystones"))
                 .rows(6)
                 .pageSize(45)
                 .create();
@@ -39,7 +39,7 @@ public class WaystoneGUI {
             };
 
             GuiItem item = ItemBuilder.from(material)
-                .name(StringUtils.formatItemName(waystone.getName()))
+                .name(Utils.formatItemName(waystone.getName()))
                 .asGuiItem(inventoryClickEvent -> {
                     inventoryClickEvent.setCancelled(true);
                     player.teleport(waystone.getLocation().clone().add(0.5, 1, 0.5));
@@ -52,12 +52,12 @@ public class WaystoneGUI {
         }
 
         if (gui.getPagesNum() > 1) {
-            gui.setItem(6, 3, ItemBuilder.from(Material.PAPER).name(StringUtils.formatString("Previous")).asGuiItem(event -> {
+            gui.setItem(6, 3, ItemBuilder.from(Material.PAPER).name(Utils.formatString("Previous")).asGuiItem(event -> {
                 event.setCancelled(true);
                 gui.previous();
             }));
 
-            gui.setItem(6, 7, ItemBuilder.from(Material.PAPER).name(StringUtils.formatString("Next")).asGuiItem(event -> {
+            gui.setItem(6, 7, ItemBuilder.from(Material.PAPER).name(Utils.formatString("Next")).asGuiItem(event -> {
                 event.setCancelled(true);
                 gui.next();
             }));
