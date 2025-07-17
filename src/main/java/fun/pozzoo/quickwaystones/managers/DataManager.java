@@ -7,18 +7,18 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class DataManager {
+    private final QuickWaystones plugin;
+
     private File file;
     private YamlConfiguration config;
     private YamlConfiguration configOverwrite;
     private Set<String> keys;
 
-    public DataManager() {
+    public DataManager(QuickWaystones plugin) {
+        this.plugin = plugin;
         keys = new HashSet<>();
         checkFile();
     }
@@ -44,8 +44,16 @@ public class DataManager {
             config.load(file);
 
             for (String key : keys) {
-                WaystoneData waystoneData = new WaystoneData(key, config.getString("Waystones." + key + ".name"), config.getLocation("Waystones." + key + ".location"), config.getString("Waystones." + key + ".owner"));
-                QuickWaystones.getWaystonesMap().put(waystoneData.getLocation(), waystoneData);
+                WaystoneData waystoneData = new WaystoneData(key,
+                        config.getString("Waystones." + key + ".name"),
+                        config.getLocation("Waystones." + key + ".location"),
+                        config.getString("Waystones." + key + ".owner"),
+                        UUID.fromString(Objects.requireNonNull(config.getString("Waystones." + key + ".ownerId"))),
+                        config.getLong("Waystones." + key + ".createdAt")
+                );
+                waystoneData.setLastUsedAt(config.getLong("Waystones." + key + ".lastUsedAt"));
+                waystoneData.setGloballyAccessible(config.getBoolean("Waystones." + key + ".global"));
+                plugin.getWaystonesMap().put(waystoneData.getLocation(), waystoneData);
             }
         } catch (InvalidConfigurationException | IOException e) {
             throw new RuntimeException(e);
@@ -59,6 +67,10 @@ public class DataManager {
             configOverwrite.set("Waystones." + waystone.getID() + ".name", waystone.getName());
             configOverwrite.set("Waystones." + waystone.getID() + ".location", waystone.getLocation());
             configOverwrite.set("Waystones." + waystone.getID() + ".owner", waystone.getOwner());
+            configOverwrite.set("Waystones." + waystone.getID() + ".ownerId", waystone.getOwner());
+            configOverwrite.set("Waystones." + waystone.getID() + ".global", waystone.isGloballyAccessible());
+            configOverwrite.set("Waystones." + waystone.getID() + ".createdAt", waystone.getCreatedAt());
+            configOverwrite.set("Waystones." + waystone.getID() + ".lastUsedAt", waystone.getLastUsedAt());
         }
 
         save();
