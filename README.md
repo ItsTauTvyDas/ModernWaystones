@@ -4,8 +4,8 @@ A plugin that adds Waystones for instant travel, making lodestones more useful!
 ## TODO list
 - [ ] Use `echo shard` to change visibility (public by default)
 - [ ] Target block below lodestone unlocks the ability to add other players to your private waystone.
-- [ ] Change recipe — uses 4 chiseled stone bricks, 1 target block, 1 enderpearl, 2 redstone dusts and 1 lodestone.
-- [ ] Try replacing inventory GUI with new dialogs system.
+- [x] Special waystone recipe — uses 4 chiseled stone bricks, 1 target block, 1 enderpearl, 2 redstone dusts and 1 lodestone.
+- [x] Try replacing inventory GUI with new dialogs system.
 - [ ] Persistent (system specified) waystones.
 
 ## Changes over original (by SkyboundLab)
