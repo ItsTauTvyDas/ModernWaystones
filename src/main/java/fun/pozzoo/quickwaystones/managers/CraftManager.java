@@ -47,7 +47,7 @@ public class CraftManager {
         meta.setEnchantmentGlintOverride(config.getBoolean("Item.EnchantmentGlint", true));
         meta.displayName(Utils.formatItemName(config.getString("Item.DisplayName")));
         meta.setRarity(ItemRarity.valueOf(config.getString("Item.Rarity", ItemRarity.UNCOMMON.name()).toUpperCase(Locale.ROOT)));
-        meta.lore(config.getConfigurationSection("Item")
+        meta.lore(Objects.requireNonNull(config.getConfigurationSection("Item"))
                 .getStringList(name == null ? "Lore" : "LoreWithName")
                 .stream()
                 .map(x -> x.replace("{name}", name == null ? "<unknown>" : name))
