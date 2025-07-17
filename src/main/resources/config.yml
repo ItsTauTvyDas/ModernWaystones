@@ -1,3 +1,54 @@
+Item:
+  DisplayName: "Waystone"
+  Lore: []
+  LoreWithName:
+    - "<white>Name: <aqua>{name}"
+  Material: LODESTONE
+  EnchantmentGlint: true
+  Rarity: UNCOMMON
+  Recipe:
+    Layout:
+      - SES
+      - RLR
+      - STS
+    Ingredients:
+      S: CHISELED_STONE_BRICKS
+      E: ENDER_PEARL
+      L: LODESTONE
+      R: REDSTONE
+      T: TARGET
+DefaultWaystone:
+  Name: "Waystone #{id}"
+  GloballyAccessible: true
+Functions:
+  RenameByNameTag:
+    Enabled: true
+    UseDialog: false
+  AddFriends:
+    Enabled: true
+    SpecialBlockMaterial: TARGET
 Messages:
-  WaystoneActivated: "Waystone Activated"
-  WaystoneBrokenByOther: "This waystone isn't yours"
+  WaystoneActivated: "<gold>Waystone Activated!"
+  WaystoneBrokenByOther: "<red>This waystone isn't yours!"
+  NameInputDialog:
+    Title: "Waystones"
+    Notice: "Your waystone will be open to public, unless visibility is changed using <blue>echo shard"
+    InputLabel: "Enter waystone name:"
+  WaystonesListDialog:
+    Title: "Current waystone - <bold>{current_name}"
+    WaystoneButton: "{name} ({visibility})"
+    WaystoneTooltip:
+      - "Location: <aqua>{x}, {y}, {z}"
+      - "World: {world}"
+      - "Owner: {owner}"
+  WorldReplacedNames:
+    world: "<green>Overworld</green>"
+    world_nether: "<red>Nether</red>"
+    world_the_end: "<yellow>The End</yellow>"
+  Visibilities:
+    Public: "<green>public</green>"
+    Private: "<red>private</red>"
+  ArrowUp: "↑"
+  ArrowDown: "↓"
+  Close: "Close"
+  Done: "Done"
