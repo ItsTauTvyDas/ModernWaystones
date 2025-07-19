@@ -78,6 +78,10 @@ public class WaystoneData {
         this.lastUsedAt = timestamp;
     }
 
+    public void markLastUsed() {
+        setLastUsedAt(new Date().getTime());
+    }
+
     public void addPlayer(Player player) {
         this.addedPlayers.add(player.getUniqueId());
     }
