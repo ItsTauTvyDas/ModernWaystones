@@ -36,7 +36,7 @@ Messages:
     InputLabel: "Enter waystone name:"
   WaystonesListDialog:
     Title: "Current waystone - <bold>{current_name}"
-    WaystoneButton: "{name} ({visibility})"
+    WaystoneButton: "{name} ({attributes})"
     WaystoneTooltip:
       - "Location: <aqua>{x}, {y}, {z}"
       - "World: {world}"
@@ -45,9 +45,11 @@ Messages:
     world: "<green>Overworld</green>"
     world_nether: "<red>Nether</red>"
     world_the_end: "<yellow>The End</yellow>"
-  Visibilities:
+  WaystoneAttributes:
+    Separator: ","
     Public: "<green>public</green>"
     Private: "<red>private</red>"
+    Destroyed: "<red>destroyed</red>"
   ArrowUp: "↑"
   ArrowDown: "↓"
   Close: "Close"
