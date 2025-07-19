@@ -5,7 +5,6 @@ import fun.pozzoo.quickwaystones.Utils;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemRarity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
@@ -15,22 +14,26 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.*;
 
 public class CraftManager {
-    private final FileConfiguration config;
-    private final NamespacedKey persistentDataKey;
+    private final QuickWaystones plugin;
+    private final NamespacedKey persistentItemDataKey;
+    private final NamespacedKey craftKey;
 
     public CraftManager(QuickWaystones plugin) {
-        this.config = plugin.getConfig();
-        this.persistentDataKey = new NamespacedKey(QuickWaystones.getInstance(), "waystone_name");
+        this.plugin = plugin;
+        this.persistentItemDataKey = new NamespacedKey(QuickWaystones.getInstance(), "waystone_name");
+        this.craftKey = new NamespacedKey(QuickWaystones.getInstance(), "waypoint_recipe");
     }
 
-    public NamespacedKey getPersistentDataKey() {
-        return persistentDataKey;
+    public NamespacedKey getPersistentItemDataKey() {
+        return persistentItemDataKey;
     }
 
     public void registerRecipes() {
-        ShapedRecipe recipe = new ShapedRecipe(new NamespacedKey(QuickWaystones.getInstance(), "waypoint"), createWaystoneItem(null));
-        recipe.shape(config.getStringList("Item.Recipe.Layout").toArray(new String[0]));
-        ConfigurationSection ingredients = config.getConfigurationSection("Item.Recipe.Ingredients");
+        if (plugin.getServer().getRecipe(craftKey) != null)
+            plugin.getServer().removeRecipe(craftKey, true);
+        ShapedRecipe recipe = new ShapedRecipe(craftKey, createWaystoneItem(null));
+        recipe.shape(plugin.getConfig().getStringList("Item.Recipe.Layout").toArray(new String[0]));
+        ConfigurationSection ingredients = plugin.getConfig().getConfigurationSection("Item.Recipe.Ingredients");
         if (ingredients == null)
             return;
         for (String key : ingredients.getKeys(false)) {
@@ -38,22 +41,23 @@ public class CraftManager {
             Material type = Material.valueOf(ingredients.getString(key, "BEDROCK").toUpperCase(Locale.ROOT));
             recipe.setIngredient(token, type);
         }
-        QuickWaystones.getInstance().getServer().addRecipe(recipe);
+        plugin.getServer().addRecipe(recipe, true);
+        plugin.getLogger().info("Custom recipe registered!");
     }
 
     public ItemStack createWaystoneItem(String name) {
-        ItemStack item = new ItemStack(Material.valueOf(config.getString("Item.Material", Material.LODESTONE.name()).toUpperCase(Locale.ROOT)));
+        ItemStack item = new ItemStack(Material.valueOf(plugin.getConfig().getString("Item.Material", Material.LODESTONE.name()).toUpperCase(Locale.ROOT)));
         ItemMeta meta = item.getItemMeta();
-        meta.setEnchantmentGlintOverride(config.getBoolean("Item.EnchantmentGlint", true));
-        meta.displayName(Utils.formatItemName(config.getString("Item.DisplayName")));
-        meta.setRarity(ItemRarity.valueOf(config.getString("Item.Rarity", ItemRarity.UNCOMMON.name()).toUpperCase(Locale.ROOT)));
-        meta.lore(Objects.requireNonNull(config.getConfigurationSection("Item"))
+        meta.setEnchantmentGlintOverride(plugin.getConfig().getBoolean("Item.EnchantmentGlint", true));
+        meta.displayName(Utils.formatItemName(plugin.getConfig().getString("Item.DisplayName")));
+        meta.setRarity(ItemRarity.valueOf(plugin.getConfig().getString("Item.Rarity", ItemRarity.UNCOMMON.name()).toUpperCase(Locale.ROOT)));
+        meta.lore(Objects.requireNonNull(plugin.getConfig().getConfigurationSection("Item"))
                 .getStringList(name == null ? "Lore" : "LoreWithName")
                 .stream()
                 .map(x -> x.replace("{name}", name == null ? "<unknown>" : name))
-                .map(Utils::formatString)
+                .map(Utils::formatItemName)
                 .toList());
-        meta.getPersistentDataContainer().set(persistentDataKey, PersistentDataType.STRING, name == null ? "" : name);
+        meta.getPersistentDataContainer().set(persistentItemDataKey, PersistentDataType.STRING, name == null ? "" : name);
         item.setItemMeta(meta);
         return item;
     }
