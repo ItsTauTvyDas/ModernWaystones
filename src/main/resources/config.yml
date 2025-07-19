@@ -46,10 +46,11 @@ Messages:
     world_nether: "<red>Nether</red>"
     world_the_end: "<yellow>The End</yellow>"
   WaystoneAttributes:
-    Separator: ","
+    Separator: ", "
     Public: "<green>public</green>"
     Private: "<red>private</red>"
     Destroyed: "<red>destroyed</red>"
+    LastlyUsed: "<yellow>recent</yellow>"
   ArrowUp: "↑"
   ArrowDown: "↓"
   Close: "Close"
