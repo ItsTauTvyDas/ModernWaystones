@@ -101,7 +101,7 @@ public final class QuickWaystones extends JavaPlugin {
     @Override
     public void onDisable() {
         if (dataManager != null)
-            dataManager.saveWaystoneData(waystonesMap.values());
+            dataManager.saveWaystoneData();
         if (dialogManager != null)
             dialogManager.unregister();
         if (metrics != null)

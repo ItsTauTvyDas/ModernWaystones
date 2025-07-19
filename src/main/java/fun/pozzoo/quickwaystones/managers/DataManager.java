@@ -76,6 +76,10 @@ public class DataManager {
         save();
     }
 
+    public void saveWaystoneData() {
+        saveWaystoneData(plugin.getWaystonesMap().values());
+    }
+
     public void save() {
         QuickWaystones.getInstance().saveResource("waystones.yml", true);
 
