@@ -1,6 +1,7 @@
 package fun.pozzoo.quickwaystones.gui;
 
 import fun.pozzoo.quickwaystones.QuickWaystones;
+import fun.pozzoo.quickwaystones.Utils;
 import fun.pozzoo.quickwaystones.data.WaystoneData;
 import io.github.projectunified.unidialog.core.dialog.Dialog;
 import io.github.projectunified.unidialog.paper.dialog.PaperMultiActionDialog;
@@ -10,10 +11,7 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class WaystoneDialogs {
     public static final String KEY_NAME_DIALOG_INPUT = "waystone_name_input";
@@ -60,10 +58,16 @@ public class WaystoneDialogs {
     }
 
     public void showListDialog(Player player, WaystoneData clickedWaystone) {
+        showListDialog(player, clickedWaystone, player);
+    }
+
+    public void showListDialog(Player player, WaystoneData clickedWaystone, Player viewer) {
         Map<String, String> placeholders = new HashMap<>();
-        placeholders.put("current_name", clickedWaystone.getName());
-        placeholders.put("current_id", clickedWaystone.getID());
-        placeholders.put("current_owner", clickedWaystone.getOwner());
+        if (clickedWaystone != null) {
+            placeholders.put("current_name", clickedWaystone.getName());
+            placeholders.put("current_id", clickedWaystone.getID());
+            placeholders.put("current_owner", clickedWaystone.getOwner());
+        }
 
         PaperMultiActionDialog dialog = QuickWaystones.getInstance().getDialogManager()
                 .createMultiActionDialog()
@@ -77,6 +81,12 @@ public class WaystoneDialogs {
         Map<Location, WaystoneData> waystones = plugin.getWaystonesMap();
 
         List<WaystoneData> sortedWaystones = waystones.values().stream()
+                .filter(x ->
+                        (clickedWaystone == null && x.getOwnerUniqueId().equals(player.getUniqueId())) ||
+                        (clickedWaystone != null && (x.isGloballyAccessible()
+                                || x.getAddedPlayers().contains(player.getUniqueId())
+                                || x.getOwnerUniqueId().equals(player.getUniqueId())
+                        )))
                 .sorted(Comparator.comparing(WaystoneData::getCreatedAt))
                 .toList();
 
@@ -85,10 +95,7 @@ public class WaystoneDialogs {
             String baseId = player.getUniqueId() + "_" + waystone.getID() + "_";
 
             QuickWaystones.getInstance().getDialogManager().registerCustomAction(baseId + KEY_TELEPORT, (uuid, data) -> {
-                Location loc = waystone.getLocation().toCenterLocation().add(0, 1, 0);
-                if (loc.getBlock().getType().isOccluding())
-                    loc.add(0, 1, 0);
-                player.teleport(loc);
+                player.teleport(waystone.getTeleportLocation());
                 player.getWorld().spawnParticle(Particle.PORTAL, player.getLocation(), 5);
                 player.playSound(player, Sound.ENTITY_FOX_TELEPORT, 0.5f, 1f);
                 player.setNoDamageTicks(10);
@@ -111,10 +118,13 @@ public class WaystoneDialogs {
                     .getString("Messages.WorldReplacedNames." + waystone.getLocation().getWorld().getName(),
                             waystone.getLocation().getWorld().getName()
                     ));
-            placeholders.put("visibility", QuickWaystones.config().getString("Messages.Visibilities."
-                    + (waystone.isGloballyAccessible() ? "Public" : "Private")));
+            List<String> attributes = new ArrayList<>();
+            attributes.add(QuickWaystones.config().getString("Messages.WaystoneAttributes." + (waystone.isGloballyAccessible() ? "Public" : "Private")));
+            if (plugin.isWaystoneDestroyed(waystone.getLocation().getBlock()))
+                attributes.add(QuickWaystones.config().getString("Messages.WaystoneAttributes.Destroyed"));
+            placeholders.put("attributes", String.join(", ", attributes));
 
-            dialog.action(builder -> builder.width(150)
+            dialog.action(builder -> builder.width(200)
                     .label(QuickWaystones.message("WaystonesListDialog.WaystoneButton", placeholders))
                     .tooltip(QuickWaystones.message("WaystonesListDialog.WaystoneTooltip", placeholders))
                     .dynamicCustom(baseId + KEY_TELEPORT));
@@ -128,6 +138,6 @@ public class WaystoneDialogs {
                     .dynamicCustom(baseId + KEY_DOWN));
         }
 
-        dialog.opener().open(player);
+        dialog.opener().open(viewer);
     }
 }
