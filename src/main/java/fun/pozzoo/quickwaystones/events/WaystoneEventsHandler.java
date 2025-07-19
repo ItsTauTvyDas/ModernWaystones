@@ -25,8 +25,6 @@ import java.util.*;
 public class WaystoneEventsHandler implements Listener {
     private final QuickWaystones plugin;
 
-    private final Map<UUID, Location> redstoneTracker = new HashMap<>();
-
     public WaystoneEventsHandler(QuickWaystones plugin) {
         this.plugin = plugin;
         Bukkit.getPluginManager().registerEvents(this, plugin);
@@ -48,47 +46,7 @@ public class WaystoneEventsHandler implements Listener {
 
     private void destroyWaystone(Location location) {
         plugin.getWaystonesMap().remove(location);
-        QuickWaystones.getInstance().getDataManager().saveWaystoneData(plugin.getWaystonesMap().values());
-    }
-
-    @EventHandler
-    public void onRedstoneTrigger(BlockRedstoneEvent event) {
-        if (event.getBlock().getType() == Material.REDSTONE_WIRE) {
-            if (!event.getBlock().isBlockPowered())
-                return;
-            System.out.println("1. redstone");
-            RedstoneWire wire = (RedstoneWire) event.getBlock().getBlockData();
-            for (BlockFace face : wire.getAllowedFaces()) {
-                RedstoneWire.Connection conn = wire.getFace(face);
-                if (conn == RedstoneWire.Connection.SIDE) {
-                    Block nextBlock = event.getBlock().getRelative(face);
-                    System.out.println("2.1. " + nextBlock);
-                    WaystoneData data = plugin.getWaystonesMap().get(nextBlock.getLocation());
-                    if (nextBlock.getType() == Material.REDSTONE_WIRE || nextBlock.getType() == Material.REPEATER) {
-                        redstoneTracker.replaceAll((uuid, location) -> {
-                            if (location.distance(nextBlock.getLocation()) <= 1)
-                                return nextBlock.getLocation();
-                            return location;
-                        });
-                        System.out.println(redstoneTracker);
-                    } else if (data != null) {
-                        Optional<Map.Entry<UUID, Location>> uuid = redstoneTracker.entrySet()
-                                .stream()
-                                .filter(entry -> entry.getValue().equals(nextBlock.getLocation()))
-                                .findFirst();
-                        System.out.println("3. " + uuid.isPresent());
-                        System.out.println(redstoneTracker);
-                        uuid.ifPresent(uuidLocationEntry -> {
-                            plugin.getWaystoneDialogs().showListDialog(Bukkit.getPlayer(uuidLocationEntry.getKey()), data);
-                            redstoneTracker.remove(uuidLocationEntry.getKey());
-                        });
-                    }
-                }
-            }
-        } else if (event.getBlock().getType() == Material.REPEATER) {
-            Repeater repeater = (Repeater) event.getBlock().getBlockData();
-            Block nextBlock = event.getBlock().getRelative(repeater.getFacing());
-        }
+        plugin.getDataManager().saveWaystoneData();
     }
 
     @EventHandler
@@ -145,7 +103,7 @@ public class WaystoneEventsHandler implements Listener {
         String name = item.getItemMeta().getPersistentDataContainer().get(plugin.getCraftManager().getPersistentItemDataKey(), PersistentDataType.STRING);
         if (name != null && !name.isEmpty())
             data.setName(name);
-        plugin.getDataManager().saveWaystoneData(plugin.getWaystonesMap().values());
+        plugin.getDataManager().saveWaystoneData();
     }
 
     @EventHandler
@@ -181,9 +139,10 @@ public class WaystoneEventsHandler implements Listener {
     @EventHandler
     public void onPlayerInteractRedstone(PlayerInteractEvent event) {
         if (event.getHand() == EquipmentSlot.OFF_HAND) return;
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.PHYSICAL) return;
+        if ( event.getAction() != Action.PHYSICAL) return;
         if (event.getClickedBlock() == null) return;
         if (plugin.isWaystoneBlock(event.getClickedBlock())) return;
+        if (event.getPlayer().getNoDamageTicks() > 0) return;
 
         Material type = event.getClickedBlock().getType();
         if (type.toString().endsWith("_PRESSURE_PLATE") && !List.of(Material.LIGHT_WEIGHTED_PRESSURE_PLATE, Material.HEAVY_WEIGHTED_PRESSURE_PLATE).contains(type)) {
@@ -196,10 +155,5 @@ public class WaystoneEventsHandler implements Listener {
                 }
             }
         }
-
-        if (!type.toString().endsWith("_BUTTON"))
-            return;
-
-        redstoneTracker.put(event.getPlayer().getUniqueId(), event.getClickedBlock().getLocation());
     }
 }
