@@ -2,6 +2,8 @@ package fun.pozzoo.quickwaystones.data;
 
 import fun.pozzoo.quickwaystones.QuickWaystones;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -94,6 +96,18 @@ public class WaystoneData {
 
     public void setGloballyAccessible(boolean globallyAccessible) {
         this.globallyAccessible = globallyAccessible;
+    }
+
+    public Block getBlock() {
+        return getLocation().getBlock();
+    }
+
+    public Location getTeleportLocation() {
+        Block block = getBlock();
+        Location location = getLocation().toCenterLocation().add(0, 0.5, 0);
+        if (block.getRelative(BlockFace.UP).getType().isOccluding())
+            location.add(0, 1, 0);
+        return location;
     }
 
     @Override
