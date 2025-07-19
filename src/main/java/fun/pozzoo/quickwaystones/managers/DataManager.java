@@ -67,7 +67,7 @@ public class DataManager {
             configOverwrite.set("Waystones." + waystone.getID() + ".name", waystone.getName());
             configOverwrite.set("Waystones." + waystone.getID() + ".location", waystone.getLocation());
             configOverwrite.set("Waystones." + waystone.getID() + ".owner", waystone.getOwner());
-            configOverwrite.set("Waystones." + waystone.getID() + ".ownerId", waystone.getOwner());
+            configOverwrite.set("Waystones." + waystone.getID() + ".ownerId", waystone.getOwnerUniqueId().toString());
             configOverwrite.set("Waystones." + waystone.getID() + ".global", waystone.isGloballyAccessible());
             configOverwrite.set("Waystones." + waystone.getID() + ".createdAt", waystone.getCreatedAt());
             configOverwrite.set("Waystones." + waystone.getID() + ".lastUsedAt", waystone.getLastUsedAt());
