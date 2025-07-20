@@ -14,6 +14,8 @@ import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.BlockPositionResolver;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
@@ -79,7 +81,7 @@ public final class QuickWaystones extends JavaPlugin {
                                     .executes(ctx -> {
                                         final PlayerSelectorArgumentResolver resolver = ctx.getArgument("target", PlayerSelectorArgumentResolver.class);
                                         final Player target = resolver.resolve(ctx.getSource()).getFirst();
-                                        waystoneDialogs.showListDialog(target, null, (Player) ctx.getSource().getExecutor());
+                                        waystoneDialogs.showListDialog(target, (Player) ctx.getSource().getExecutor(), null);
                                         return Command.SINGLE_SUCCESS;
                                     })))
                     .then(Commands.literal("check")
@@ -106,6 +108,24 @@ public final class QuickWaystones extends JavaPlugin {
             dialogManager.unregister();
         if (metrics != null)
             metrics.shutdown();
+    }
+
+    @SuppressWarnings("PatternValidation")
+    public void playWaystoneSound(Player player, Location location, WaystoneSound sound) {
+        String type = sound.configKey;
+        boolean status = getConfig().getBoolean("Sounds." + type + ".Enabled", false);
+        if (!status)
+            return;
+        String id = getConfig().getString("Sounds." + type + ".Key");
+        if (id == null)
+            return;
+        double volume = Math.clamp(getConfig().getDouble("Sounds." + type + ".Volume", 1), 0, 1);
+        double pitch = Math.clamp(getConfig().getDouble("Sounds." + type + ".Pitch", 1), 0, 2);
+
+        (player == null ? getServer() : player).playSound(
+                Sound.sound(Key.key(id), Sound.Source.BLOCK, (float) pitch, (float) volume),
+                location.x(), location.y(), location.z()
+        );
     }
 
     public DataManager getDataManager() {

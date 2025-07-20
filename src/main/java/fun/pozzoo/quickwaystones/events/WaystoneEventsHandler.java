@@ -2,15 +2,13 @@ package fun.pozzoo.quickwaystones.events;
 
 import com.destroystokyo.paper.event.block.BlockDestroyEvent;
 import fun.pozzoo.quickwaystones.QuickWaystones;
-import fun.pozzoo.quickwaystones.Utils;
+import fun.pozzoo.quickwaystones.WaystoneSound;
 import fun.pozzoo.quickwaystones.data.WaystoneData;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.data.type.RedstoneWire;
-import org.bukkit.block.data.type.Repeater;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -58,6 +56,7 @@ public class WaystoneEventsHandler implements Listener {
         if (event.willDrop()) {
             event.setWillDrop(false);
             location.getWorld().dropItem(location.toCenterLocation(), plugin.getCraftManager().createWaystoneItem(waystone.getName()));
+            plugin.playWaystoneSound(null, location, WaystoneSound.DEACTIVATED);
         }
     }
 
@@ -69,41 +68,33 @@ public class WaystoneEventsHandler implements Listener {
         WaystoneData waystone = plugin.getWaystonesMap().get(event.getBlock().getLocation());
 
         Location location = event.getBlock().getLocation();
-        if ((player.isOp() && player.getGameMode() == GameMode.CREATIVE) || player.getUniqueId().equals(waystone.getOwnerUniqueId())) {
+        if ((player.isOp() && player.getGameMode() == GameMode.CREATIVE) || player.getUniqueId().equals(waystone.getOwnerUniqueId()))
             destroyWaystone(location);
-            event.setDropItems(false);
-            if (event.getPlayer().getInventory().getItemInMainHand().getType().toString().endsWith("_PICKAXE"))
-                location.getWorld().dropItem(location.toCenterLocation(), plugin.getCraftManager().createWaystoneItem(waystone.getName()));
-            return;
-        }
-
-        event.setCancelled(true);
-        player.sendMessage(Utils.formatString(this.plugin.getConfig().getString("Messages.WaystoneBrokenByOther")));
+        plugin.playWaystoneSound(null, location, WaystoneSound.DEACTIVATED);
+        event.setDropItems(false);
+        if (event.getPlayer().getInventory().getItemInMainHand().getType().toString().endsWith("_PICKAXE"))
+            location.getWorld().dropItem(location.toCenterLocation(), plugin.getCraftManager().createWaystoneItem(waystone.getName()));
     }
 
     @EventHandler
     public void onBlockPlaceEvent(BlockPlaceEvent event) {
         ItemStack item = event.getItemInHand();
         Block block = event.getBlockPlaced();
-
         if (!canPlaceBlock(event.getBlockPlaced())) {
+            plugin.playWaystoneSound(event.getPlayer(), block.getLocation(), WaystoneSound.DISALLOWED);
             event.setCancelled(true);
             return;
         }
-
         if (!plugin.isWaystoneItem(item))
             return;
-
         Player player = event.getPlayer();
-
-        player.playSound(player, Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
-        player.sendMessage(QuickWaystones.message("WaystoneActivated"));
         WaystoneData data = new WaystoneData(block.getLocation(), player.getName(), player.getUniqueId());
         plugin.getWaystonesMap().put(block.getLocation(), data);
         String name = item.getItemMeta().getPersistentDataContainer().get(plugin.getCraftManager().getPersistentItemDataKey(), PersistentDataType.STRING);
         if (name != null && !name.isEmpty())
             data.setName(name);
         plugin.getDataManager().saveWaystoneData();
+        plugin.playWaystoneSound(null, block.getLocation(), WaystoneSound.ACTIVATED);
     }
 
     @EventHandler

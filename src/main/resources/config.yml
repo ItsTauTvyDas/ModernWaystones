@@ -27,9 +27,28 @@ Functions:
   AddFriends:
     Enabled: true
     SpecialBlockMaterial: TARGET
+Sounds:
+  Activation:
+    Enabled: true
+    Key: "block.beacon.activate"
+    Volume: 1
+    Pitch: 1.5
+  Deactivation:
+    Enabled: true
+    Key: "block.beacon.deactivate"
+    Volume: 1
+    Pitch: 1.5
+  Disallowed:
+    Enabled: true
+    Key: "entity.villager.no"
+    Volume: 0.5
+    Pitch: 1
+  Teleported:
+    Enabled: true
+    Key: "entity.player.teleport"
+    Volume: 0.5
+    Pitch: 1
 Messages:
-  WaystoneActivated: "<gold>Waystone Activated!"
-  WaystoneBrokenByOther: "<red>This waystone isn't yours!"
   NameInputDialog:
     Title: "Waystones"
     Notice: "Your waystone will be open to public, unless visibility is changed using <blue>echo shard"
@@ -41,6 +60,11 @@ Messages:
       - "Location: <aqua>{x}, {y}, {z}"
       - "World: {world}"
       - "Owner: {owner}"
+  WaystoneDestroyedNoticeDialog:
+    Title: "Something happened"
+    Message: "<red>Waystone <white>{name}</white> doesn't exist anymore! This can happen when your waystone block gets destroyed by an explosion or something else.</red>"
+    Checkbox: "Remove this waystone from the list (<red>irreversible</red>)"
+    BackToList: "Back to the list"
   WorldReplacedNames:
     world: "<green>Overworld</green>"
     world_nether: "<red>Nether</red>"
