@@ -48,6 +48,7 @@ public class CraftManager {
     public ItemStack createWaystoneItem(String name) {
         ItemStack item = new ItemStack(Material.valueOf(plugin.getConfig().getString("Item.Material", Material.LODESTONE.name()).toUpperCase(Locale.ROOT)));
         ItemMeta meta = item.getItemMeta();
+        meta.setMaxStackSize(1);
         meta.setEnchantmentGlintOverride(plugin.getConfig().getBoolean("Item.EnchantmentGlint", true));
         meta.displayName(Utils.formatItemName(plugin.getConfig().getString("Item.DisplayName")));
         meta.setRarity(ItemRarity.valueOf(plugin.getConfig().getString("Item.Rarity", ItemRarity.UNCOMMON.name()).toUpperCase(Locale.ROOT)));
