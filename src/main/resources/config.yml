@@ -1,11 +1,12 @@
 Item:
   DisplayName: "Waystone"
   Lore: []
-  LoreWithName:
-    - "<white>Name: <aqua>{name}"
+  LoreWithData:
+    - "<white>Name: <aqua>{name}<aqua> <white>({visibility})"
   Material: LODESTONE
   EnchantmentGlint: true
   Rarity: UNCOMMON
+  MaxStackSize: 1
   Recipe:
     Layout:
       - SES
@@ -20,34 +21,43 @@ Item:
 DefaultWaystone:
   Name: "Waystone #{id}"
   GloballyAccessible: true
-Functions:
+Features:
   RenameByNameTag:
     Enabled: true
     UseDialog: false
+    Material: NAME_TAG
+    SubtractItemCount: true
   AddFriends:
     Enabled: true
     SpecialBlockMaterial: TARGET
+  ChangeVisibility:
+    Enabled: true
+    Material: ECHO_SHARD
+    SubtractItemCount: true
 Sounds:
   Activation:
     Enabled: true
     Key: "block.beacon.activate"
-    Volume: 1
     Pitch: 1.5
   Deactivation:
     Enabled: true
     Key: "block.beacon.deactivate"
-    Volume: 1
     Pitch: 1.5
   Disallowed:
     Enabled: true
     Key: "entity.villager.no"
     Volume: 0.5
-    Pitch: 1
   Teleported:
     Enabled: true
     Key: "entity.player.teleport"
     Volume: 0.5
-    Pitch: 1
+  VisibilityChangeToPublic:
+    Enabled: false
+  VisibilityChangeToPrivate:
+    Enabled: false
+  Renamed:
+    Enabled: true
+    Key: "entity.player.levelup"
 Messages:
   NameInputDialog:
     Title: "Waystones"
@@ -75,6 +85,8 @@ Messages:
     Private: "<red>private</red>"
     Destroyed: "<red>destroyed</red>"
     LastlyUsed: "<yellow>recent</yellow>"
+  VisibilityChanged: "Waystone's <gold>{name}</gold> visibility changed to {type}."
+  Renamed: "Waystone <gold>{name}</gold> renamed to <green>{new_name}</green>"
   ArrowUp: "↑"
   ArrowDown: "↓"
   Close: "Close"
