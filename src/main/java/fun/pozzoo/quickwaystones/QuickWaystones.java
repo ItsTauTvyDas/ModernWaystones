@@ -149,7 +149,7 @@ public final class QuickWaystones extends JavaPlugin {
     }
 
     public boolean isWaystoneItem(ItemStack item) {
-        return item.getItemMeta().getPersistentDataContainer().has(craftManager.getPersistentItemDataKey(), PersistentDataType.STRING);
+        return item.getItemMeta().getPersistentDataContainer().has(craftManager.getPersistentWaystoneNameKey(), PersistentDataType.STRING);
     }
 
     public Map<Location, WaystoneData> getWaystonesMap() {
@@ -183,7 +183,7 @@ public final class QuickWaystones extends JavaPlugin {
     public static Component message(String path, Map<String, String> placeholders) {
         String text = multiMessage(path);
         for (Map.Entry<String, String> entry : placeholders.entrySet())
-            text = text.replace("{" + entry.getKey() + "}", entry.getValue());
+            text = text.replace("{" + entry.getKey() + "}", entry.getValue() == null ? "<null_error>" : entry.getValue());
         return Utils.formatString(text);
     }
 
