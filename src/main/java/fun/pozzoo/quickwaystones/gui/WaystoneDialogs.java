@@ -94,7 +94,7 @@ public class WaystoneDialogs {
                         .text(QuickWaystones.message("WaystoneDestroyedNoticeDialog.Message", placeholders)))
                 .body(builder -> builder
                         .item()
-                        .item(plugin.getCraftManager().createWaystoneItem(clickedWaystone.getName())))
+                        .item(plugin.getCraftManager().createWaystoneItem(clickedWaystone)))
                 .input(KEY_REMOVE_DEAD_WAYSTONE, builder -> builder.booleanInput()
                         .label(QuickWaystones.message("WaystoneDestroyedNoticeDialog.Checkbox", placeholders))
                         .initial(false))
