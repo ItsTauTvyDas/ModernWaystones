@@ -2,6 +2,7 @@ package fun.pozzoo.quickwaystones.managers;
 
 import fun.pozzoo.quickwaystones.QuickWaystones;
 import fun.pozzoo.quickwaystones.Utils;
+import fun.pozzoo.quickwaystones.data.WaystoneData;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
@@ -15,23 +16,29 @@ import java.util.*;
 
 public class CraftManager {
     private final QuickWaystones plugin;
-    private final NamespacedKey persistentItemDataKey;
+    private final NamespacedKey persistentWaystoneNameKey;
+    private final NamespacedKey persistentWaystoneVisibilityKey;
     private final NamespacedKey craftKey;
 
     public CraftManager(QuickWaystones plugin) {
         this.plugin = plugin;
-        this.persistentItemDataKey = new NamespacedKey(QuickWaystones.getInstance(), "waystone_name");
-        this.craftKey = new NamespacedKey(QuickWaystones.getInstance(), "waypoint_recipe");
+        this.persistentWaystoneNameKey = new NamespacedKey(QuickWaystones.getInstance(), "name");
+        this.persistentWaystoneVisibilityKey = new NamespacedKey(QuickWaystones.getInstance(), "visibility_attr");
+        this.craftKey = new NamespacedKey(QuickWaystones.getInstance(), "recipe");
     }
 
-    public NamespacedKey getPersistentItemDataKey() {
-        return persistentItemDataKey;
+    public NamespacedKey getPersistentWaystoneNameKey() {
+        return persistentWaystoneNameKey;
+    }
+
+    public NamespacedKey getPersistentWaystoneVisibilityKey() {
+        return persistentWaystoneVisibilityKey;
     }
 
     public void registerRecipes() {
         if (plugin.getServer().getRecipe(craftKey) != null)
             plugin.getServer().removeRecipe(craftKey, true);
-        ShapedRecipe recipe = new ShapedRecipe(craftKey, createWaystoneItem(null));
+        ShapedRecipe recipe = new ShapedRecipe(craftKey, createWaystoneItem(null, null));
         recipe.shape(plugin.getConfig().getStringList("Item.Recipe.Layout").toArray(new String[0]));
         ConfigurationSection ingredients = plugin.getConfig().getConfigurationSection("Item.Recipe.Ingredients");
         if (ingredients == null)
@@ -45,20 +52,30 @@ public class CraftManager {
         plugin.getLogger().info("Custom recipe registered!");
     }
 
-    public ItemStack createWaystoneItem(String name) {
+    public ItemStack createWaystoneItem(WaystoneData waystone) {
+        return createWaystoneItem(waystone.getName(), waystone.isGloballyAccessible());
+    }
+
+    public ItemStack createWaystoneItem(String name, Boolean visibility) {
         ItemStack item = new ItemStack(Material.valueOf(plugin.getConfig().getString("Item.Material", Material.LODESTONE.name()).toUpperCase(Locale.ROOT)));
         ItemMeta meta = item.getItemMeta();
-        meta.setMaxStackSize(1);
-        meta.setEnchantmentGlintOverride(plugin.getConfig().getBoolean("Item.EnchantmentGlint", true));
-        meta.displayName(Utils.formatItemName(plugin.getConfig().getString("Item.DisplayName")));
-        meta.setRarity(ItemRarity.valueOf(plugin.getConfig().getString("Item.Rarity", ItemRarity.UNCOMMON.name()).toUpperCase(Locale.ROOT)));
-        meta.lore(Objects.requireNonNull(plugin.getConfig().getConfigurationSection("Item"))
-                .getStringList(name == null ? "Lore" : "LoreWithName")
+        // For now , only visibility
+        meta.getPersistentDataContainer().set(persistentWaystoneNameKey, PersistentDataType.STRING, name == null ? "" : name);
+        if (visibility == null)
+            visibility = plugin.getConfig().getBoolean("DefaultWaystone.GloballyAccessible");
+        meta.getPersistentDataContainer().set(persistentWaystoneVisibilityKey, PersistentDataType.BOOLEAN, visibility);
+        String visibilityString = plugin.getConfig().getString("Messages.WaystoneAttributes." + (visibility ? "Public" : "Private"));
+        ConfigurationSection section = Objects.requireNonNull(plugin.getConfig().getConfigurationSection("Item"));
+        meta.setMaxStackSize(section.getInt("MaxStackSize", 1));
+        meta.setEnchantmentGlintOverride(section.getBoolean("EnchantmentGlint", true));
+        meta.displayName(Utils.formatItemName(section.getString("DisplayName")));
+        meta.setRarity(ItemRarity.valueOf(section.getString("Rarity", ItemRarity.UNCOMMON.name()).toUpperCase(Locale.ROOT)));
+        meta.lore(section.getStringList(name == null ? "Lore" : "LoreWithData")
                 .stream()
-                .map(x -> x.replace("{name}", name == null ? "<unknown>" : name))
-                .map(Utils::formatItemName)
+                .map(x -> Utils.formatItemName(
+                        x.replace("{name}", name == null ? "<unknown>" : name).replace("{visibility}", Objects.requireNonNull(visibilityString))
+                ))
                 .toList());
-        meta.getPersistentDataContainer().set(persistentItemDataKey, PersistentDataType.STRING, name == null ? "" : name);
         item.setItemMeta(meta);
         return item;
     }
