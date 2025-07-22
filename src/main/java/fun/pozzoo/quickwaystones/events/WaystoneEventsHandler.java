@@ -9,6 +9,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -55,7 +56,10 @@ public class WaystoneEventsHandler implements Listener {
         Location location = event.getBlock().getLocation();
         if (event.willDrop()) {
             event.setWillDrop(false);
-            location.getWorld().dropItem(location.toCenterLocation(), plugin.getCraftManager().createWaystoneItem(waystone.getName()));
+            location.getWorld().dropItem(
+                    location.toCenterLocation(),
+                    plugin.getCraftManager().createWaystoneItem(waystone)
+            );
             plugin.playWaystoneSound(null, location, WaystoneSound.DEACTIVATED);
         }
     }
@@ -73,7 +77,10 @@ public class WaystoneEventsHandler implements Listener {
         plugin.playWaystoneSound(null, location, WaystoneSound.DEACTIVATED);
         event.setDropItems(false);
         if (event.getPlayer().getInventory().getItemInMainHand().getType().toString().endsWith("_PICKAXE"))
-            location.getWorld().dropItem(location.toCenterLocation(), plugin.getCraftManager().createWaystoneItem(waystone.getName()));
+            location.getWorld().dropItem(
+                    location.toCenterLocation(),
+                    plugin.getCraftManager().createWaystoneItem(waystone)
+            );
     }
 
     @EventHandler
@@ -90,9 +97,12 @@ public class WaystoneEventsHandler implements Listener {
         Player player = event.getPlayer();
         WaystoneData data = new WaystoneData(block.getLocation(), player.getName(), player.getUniqueId());
         plugin.getWaystonesMap().put(block.getLocation(), data);
-        String name = item.getItemMeta().getPersistentDataContainer().get(plugin.getCraftManager().getPersistentItemDataKey(), PersistentDataType.STRING);
+        String name = item.getItemMeta().getPersistentDataContainer().get(plugin.getCraftManager().getPersistentWaystoneNameKey(), PersistentDataType.STRING);
+        Boolean visible = item.getItemMeta().getPersistentDataContainer().get(plugin.getCraftManager().getPersistentWaystoneVisibilityKey(), PersistentDataType.BOOLEAN);
         if (name != null && !name.isEmpty())
             data.setName(name);
+        if (visible != null)
+            data.setGloballyAccessible(visible);
         plugin.getDataManager().saveWaystoneData();
         plugin.playWaystoneSound(null, block.getLocation(), WaystoneSound.ACTIVATED);
     }
@@ -116,14 +126,42 @@ public class WaystoneEventsHandler implements Listener {
             return;
         }
 
-        if (event.getItem().getType() == Material.NAME_TAG) {
+        WaystoneData waystone = plugin.getWaystonesMap().get(block.getLocation());
+        Map<String, String> placeholders = new HashMap<>();
+        placeholders.put("name", waystone.getName());
+        ConfigurationSection section = plugin.getConfig().getConfigurationSection("Features.RenameByNameTag");
+        if (section != null && section.getBoolean("Enabled")
+                && event.getItem().getType() == Material.getMaterial(section.getString("Material", "NAME_TAG"))) {
             TextComponent textComponent = (TextComponent) event.getItem().getItemMeta().displayName();
 
             if (textComponent == null) return;
 
-            plugin.getWaystonesMap().get(block.getLocation()).setName(textComponent.decoration(TextDecoration.ITALIC, false).content());
-            player.getInventory().getItemInMainHand().subtract();
-            player.playSound(player, Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+            waystone.setName(textComponent.decoration(TextDecoration.ITALIC, false).content());
+            placeholders.put("new_name", waystone.getName());
+            plugin.getDataManager().saveWaystoneData();
+            if (section.getBoolean("SubtractItemCount"))
+                player.getInventory().getItemInMainHand().subtract();
+            plugin.playWaystoneSound(player, block.getLocation(), WaystoneSound.RENAMED);
+            player.sendActionBar(QuickWaystones.message("Renamed", placeholders));
+            return;
+        }
+        section = plugin.getConfig().getConfigurationSection("Features.ChangeVisibility");
+        if (section != null && section.getBoolean("Enabled")
+                && event.getItem().getType() == Material.getMaterial(section.getString("Material", "ECHO_SHARD"))) {
+            waystone.setGloballyAccessible(!waystone.isGloballyAccessible());
+            plugin.getDataManager().saveWaystoneData();
+            if (section.getBoolean("SubtractItemCount"))
+                player.getInventory().getItemInMainHand().subtract();
+            String type;
+            if (waystone.isGloballyAccessible()) {
+                type = "Public";
+                plugin.playWaystoneSound(player, block.getLocation(), WaystoneSound.VISIBILITY_CHANGE_TO_PUBLIC);
+            } else {
+                type = "Private";
+                plugin.playWaystoneSound(player, block.getLocation(), WaystoneSound.VISIBILITY_CHANGE_TO_PRIVATE);
+            }
+            placeholders.put("type", plugin.getConfig().getString("Messages.WaystoneAttributes." + type));
+            player.sendActionBar(QuickWaystones.message("VisibilityChanged", placeholders));
         }
     }
 
