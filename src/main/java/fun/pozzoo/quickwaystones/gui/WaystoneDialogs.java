@@ -79,10 +79,10 @@ public class WaystoneDialogs {
                 plugin.getDataManager().saveWaystoneData();
                 plugin.playWaystoneSound(dialogPlayer, dialogPlayer.getLocation(), WaystoneSound.DEACTIVATED);
             }
-            showListDialog(dialogPlayer, previousClickedWaystone);
+            showListDialog(dialogPlayer, viewer, previousClickedWaystone);
         });
 
-        plugin.getDialogManager()
+        PaperMultiActionDialog dialog = plugin.getDialogManager()
                 .createMultiActionDialog()
                 .title(QuickWaystones.message("WaystoneDestroyedNoticeDialog.Title", placeholders))
                 .afterAction(Dialog.AfterAction.WAIT_FOR_RESPONSE)
@@ -95,15 +95,18 @@ public class WaystoneDialogs {
                 .body(builder -> builder
                         .item()
                         .item(plugin.getCraftManager().createWaystoneItem(clickedWaystone)))
-                .input(KEY_REMOVE_DEAD_WAYSTONE, builder -> builder.booleanInput()
-                        .label(QuickWaystones.message("WaystoneDestroyedNoticeDialog.Checkbox", placeholders))
-                        .initial(false))
                 .action(builder -> builder
                         .dynamicCustom(baseId + KEY_BACK_TO_THE_LIST)
                         .label(QuickWaystones.message("WaystoneDestroyedNoticeDialog.BackToList", placeholders)))
-                .pause(false)
-                .opener()
-                .open(viewer);
+                .pause(false);
+
+        if (clickedWaystone.getOwnerUniqueId().equals(viewer.getUniqueId())) {
+            dialog.input(KEY_REMOVE_DEAD_WAYSTONE, builder -> builder.booleanInput()
+                    .label(QuickWaystones.message("WaystoneDestroyedNoticeDialog.Checkbox", placeholders))
+                    .initial(false));
+        }
+
+        dialog.opener().open(viewer);
     }
 
     public void showListDialog(Player player, WaystoneData clickedWaystone) {
