@@ -72,7 +72,7 @@ Messages:
       - "Owner: {owner}"
   WaystoneDestroyedNoticeDialog:
     Title: "Something happened"
-    Message: "<red>Waystone <white>{name}</white> doesn't exist anymore! This can happen when your waystone block gets destroyed by an explosion or something else.</red>"
+    Message: "<red>Waystone <white>{name}</white> doesn't exist anymore! This can happen when your waystone block gets destroyed by a player, explosion or something else.</red>"
     Checkbox: "Remove this waystone from the list (<red>irreversible</red>)"
     BackToList: "Back to the list"
   WorldReplacedNames:
