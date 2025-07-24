@@ -28,7 +28,7 @@ public class WaystoneData {
         this.location = location;
         this.owner = owner;
         this.globallyAccessible = QuickWaystones.config().getBoolean("DefaultWaystone.GloballyAccessible", true);
-        this.createdAt = new Date().getTime();
+        this.createdAt = System.currentTimeMillis();
         this.ownerUniqueId = ownerUniqueId;
     }
 
@@ -79,7 +79,7 @@ public class WaystoneData {
     }
 
     public void markLastUsed() {
-        setLastUsedAt(new Date().getTime());
+        setLastUsedAt(System.currentTimeMillis());
     }
 
     public void addPlayer(Player player) {
