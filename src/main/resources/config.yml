@@ -18,6 +18,10 @@ Item:
       L: LODESTONE
       R: REDSTONE
       T: TARGET
+Teleportation:
+  DelayBefore: 4
+  DelayAfter: 0
+  DelayBetweenUses: 5
 DefaultWaystone:
   Name: "Waystone #{id}"
   GloballyAccessible: true
@@ -91,3 +95,4 @@ Messages:
   ArrowDown: "↓"
   Close: "Close"
   Done: "Done"
+  WaitBeforeUse: "Wait {time}s before using waystone again!"
