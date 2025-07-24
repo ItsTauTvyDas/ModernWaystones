@@ -21,6 +21,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -130,7 +131,7 @@ public class WaystoneEventsHandler implements Listener {
             WaystoneData data = plugin.getWaystonesMap().get(block.getLocation());
             if (data == null)
                 return;
-            plugin.getWaystoneDialogs().showListDialog(player, data);
+            checkForAvailabilityAndShowListDialog(player, data);
             return;
         }
 
@@ -185,6 +186,7 @@ public class WaystoneEventsHandler implements Listener {
         if (event.getClickedBlock() == null) return;
         if (plugin.isWaystoneBlock(event.getClickedBlock())) return;
         if (event.getPlayer().getNoDamageTicks() > 0) return;
+        if (event.getPlayer().isInsideVehicle()) return;
 
         pressurePlate(event.getClickedBlock(), event.getPlayer(), event);
     }
@@ -202,7 +204,7 @@ public class WaystoneEventsHandler implements Listener {
                     }
                     List<MetadataValue> list = player.getMetadata("was_damaged");
                     if (list.isEmpty())
-                        plugin.getWaystoneDialogs().showListDialog(player, data);
+                        checkForAvailabilityAndShowListDialog(player, data);
                     return;
                 }
             }
@@ -218,7 +220,7 @@ public class WaystoneEventsHandler implements Listener {
             Location location = block.getRelative(event.getDirection()).getLocation();
             for (Entity entity : location.getWorld().getNearbyEntities(location, 1, 1, 1, x -> x instanceof Player)) {
                 Player player = (Player) entity;
-                player.setMetadata("was_damaged", new FixedMetadataValue(plugin, new Date().getTime()));
+                player.setMetadata("was_damaged", new FixedMetadataValue(plugin, System.currentTimeMillis()));
             }
         }
     }
@@ -226,7 +228,7 @@ public class WaystoneEventsHandler implements Listener {
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         if (event.getFrom().getBlock().getType() == Material.WATER) {
-            event.getPlayer().setMetadata("was_damaged", new FixedMetadataValue(plugin, new Date().getTime()));
+            event.getPlayer().setMetadata("was_damaged", new FixedMetadataValue(plugin, System.currentTimeMillis()));
             return;
         }
         if (event.getFrom().getYaw() == event.getTo().getYaw() && event.getFrom().getPitch() == event.getTo().getPitch()) {
@@ -235,7 +237,7 @@ public class WaystoneEventsHandler implements Listener {
                     continue;
                 Location entityLocation = entity.getLocation();
                 if (entityLocation.distance(event.getFrom()) <= 0.7) {
-                    event.getPlayer().setMetadata("was_damaged", new FixedMetadataValue(plugin, new Date().getTime()));
+                    event.getPlayer().setMetadata("was_damaged", new FixedMetadataValue(plugin, System.currentTimeMillis()));
                     return;
                 }
             }
@@ -243,7 +245,7 @@ public class WaystoneEventsHandler implements Listener {
         List<MetadataValue> list = event.getPlayer().getMetadata("was_damaged");
         if (list.isEmpty()) return;
         long timestamp = list.getFirst().asLong();
-        if (timestamp + 1000L >= new Date().getTime())
+        if (timestamp + 1000L >= System.currentTimeMillis())
             return;
         event.getPlayer().removeMetadata("was_damaged", plugin);
     }
@@ -258,5 +260,27 @@ public class WaystoneEventsHandler implements Listener {
     public void onPlayerKnockback(EntityKnockbackEvent event) {
         if (event.getEntity() instanceof Player player)
             player.setMetadata("was_damaged", new FixedMetadataValue(plugin, null));
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        plugin.getWaystoneDialogs().cleanupPlayerCache(event.getPlayer().getUniqueId());
+    }
+
+    private void checkForAvailabilityAndShowListDialog(Player player, WaystoneData data) {
+        List<MetadataValue> list = player.getMetadata("teleported_at");
+        if (!list.isEmpty()) {
+            long current = System.currentTimeMillis();
+            long last = list.getFirst().asLong();
+            long delayAfter = plugin.getConfig().getLong("Teleportation.DelayBetweenUses") * 1000;
+            if (last + delayAfter >= current) {
+                Map<String, String> placeholders = new HashMap<>();
+                placeholders.put("time", String.format("%.1f", (last + delayAfter - current) / 1000.0));
+                player.sendActionBar(QuickWaystones.message("WaitBeforeUse", placeholders));
+                return;
+            }
+            player.removeMetadata("teleported_at", plugin);
+        }
+        plugin.getWaystoneDialogs().showListDialog(player, data);
     }
 }

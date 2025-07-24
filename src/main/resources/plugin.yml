@@ -3,3 +3,4 @@ version: '${project.version}'
 main: fun.pozzoo.quickwaystones.QuickWaystones
 authors: [Pozzoo, SkyboundLab, ItsTauTvyDas]
 api-version: '1.21'
+softdepend: [floodgate]

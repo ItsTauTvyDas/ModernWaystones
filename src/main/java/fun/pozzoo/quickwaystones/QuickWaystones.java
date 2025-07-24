@@ -4,10 +4,10 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import fun.pozzoo.quickwaystones.data.WaystoneData;
 import fun.pozzoo.quickwaystones.events.WaystoneEventsHandler;
-import fun.pozzoo.quickwaystones.gui.WaystoneDialogs;
+import fun.pozzoo.quickwaystones.gui.DialogGUI;
+import fun.pozzoo.quickwaystones.gui.UniDialogs;
 import fun.pozzoo.quickwaystones.managers.CraftManager;
 import fun.pozzoo.quickwaystones.managers.DataManager;
-import io.github.projectunified.unidialog.paper.PaperDialogManager;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
@@ -37,10 +37,11 @@ public final class QuickWaystones extends JavaPlugin {
     private static int lastWaystoneID = 0;
     private static Metrics metrics;
 
+    private static boolean bedrockSupported;
+
     private DataManager dataManager;
     private CraftManager craftManager;
-    private PaperDialogManager dialogManager;
-    private WaystoneDialogs waystoneDialogs;
+    private DialogGUI waystoneDialogs;
     private Material waystoneBlockType;
     private Map<Location, WaystoneData> waystonesMap;
 
@@ -61,11 +62,8 @@ public final class QuickWaystones extends JavaPlugin {
         dataManager = new DataManager(this);
         dataManager.loadWaystonesData();
 
-        dialogManager = new PaperDialogManager(this, "quickwaystones");
-        dialogManager.register();
-
-        waystoneDialogs = new WaystoneDialogs(this);
-        waystoneDialogs.registerEvents();
+        waystoneDialogs = UniDialogs.tryCreate(this);
+        waystoneDialogs.register();
 
         lastWaystoneID = waystonesMap.size();
 
@@ -98,14 +96,16 @@ public final class QuickWaystones extends JavaPlugin {
                                     })));
             commands.registrar().register(command.build());
         });
+
+        bedrockSupported = getServer().getPluginManager().getPlugin("floodgate") != null;
     }
 
     @Override
     public void onDisable() {
         if (dataManager != null)
             dataManager.saveWaystoneData();
-        if (dialogManager != null)
-            dialogManager.unregister();
+        if (waystoneDialogs != null)
+            waystoneDialogs.unregister();
         if (metrics != null)
             metrics.shutdown();
     }
@@ -132,10 +132,6 @@ public final class QuickWaystones extends JavaPlugin {
         return dataManager;
     }
 
-    public PaperDialogManager getDialogManager() {
-        return dialogManager;
-    }
-
     public CraftManager getCraftManager() {
         return craftManager;
     }
@@ -156,7 +152,7 @@ public final class QuickWaystones extends JavaPlugin {
         return waystonesMap;
     }
 
-    public WaystoneDialogs getWaystoneDialogs() {
+    public DialogGUI getWaystoneDialogs() {
         return waystoneDialogs;
     }
 
@@ -189,5 +185,9 @@ public final class QuickWaystones extends JavaPlugin {
 
     public static FileConfiguration config() {
         return getInstance().getConfig();
+    }
+
+    public static boolean isFloodgateRunning() {
+        return bedrockSupported;
     }
 }

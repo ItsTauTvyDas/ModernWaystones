@@ -4,9 +4,11 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.geysermc.floodgate.api.FloodgateApi;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class Utils {
     public static Component formatString(String string) {
@@ -26,5 +28,11 @@ public class Utils {
 
     public static Component formatItemName(String itemName) {
         return MiniMessage.miniMessage().deserialize(itemName).decoration(TextDecoration.ITALIC, false);
+    }
+
+    public static boolean isBedrockPlayer(UUID uuid) {
+        if (!QuickWaystones.isFloodgateRunning())
+            return false;
+        return FloodgateApi.getInstance().isFloodgatePlayer(uuid);
     }
 }
