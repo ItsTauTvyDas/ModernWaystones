@@ -12,7 +12,8 @@ import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.*;
+import java.util.Locale;
+import java.util.Objects;
 
 public class CraftManager {
     private final QuickWaystones plugin;
@@ -59,7 +60,7 @@ public class CraftManager {
     public ItemStack createWaystoneItem(String name, Boolean visibility) {
         ItemStack item = new ItemStack(Material.valueOf(plugin.getConfig().getString("Item.Material", Material.LODESTONE.name()).toUpperCase(Locale.ROOT)));
         ItemMeta meta = item.getItemMeta();
-        // For now , only visibility
+        // For now, only visibility
         meta.getPersistentDataContainer().set(persistentWaystoneNameKey, PersistentDataType.STRING, name == null ? "" : name);
         if (visibility == null)
             visibility = plugin.getConfig().getBoolean("DefaultWaystone.GloballyAccessible");
