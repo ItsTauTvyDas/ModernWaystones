@@ -22,13 +22,17 @@ Teleportation:
   DelayBefore: 4
   DelayAfter: 0
   DelayBetweenUses: 5
+PlayerLimitations:
+  MaxWaystonesPerPlayer: 25
+  MinDistanceBetweenWaystones: -1
 DefaultWaystone:
   Name: "Waystone #{id}"
   GloballyAccessible: true
+  PromptRenameDialogUponPlacing: false # not implemented
 Features:
   RenameByNameTag:
     Enabled: true
-    UseDialog: false
+    UseDialog: false # not implemented
     Material: NAME_TAG
     SubtractItemCount: true
   AddFriends:
@@ -38,6 +42,9 @@ Features:
     Enabled: true
     Material: ECHO_SHARD
     SubtractItemCount: true
+  ServerWaystone:
+    Enabled: true
+    Material: DEBUG_STICK
 Sounds:
   Activation:
     Enabled: true
@@ -67,32 +74,68 @@ Messages:
     Title: "Waystones"
     Notice: "Your waystone will be open to public, unless visibility is changed using <blue>echo shard"
     InputLabel: "Enter waystone name:"
+    InputLabelRequired: "Enter waystone name: <red>(Required)</red>"
   WaystonesListDialog:
     Title: "Current waystone - <bold>{current_name}"
-    WaystoneButton: "{name} ({attributes})"
+    WaystoneButton: "{name}<reset> ({attributes})"
+    ServerWaystoneButton: "{name}"
+    PrivateWaystoneNotice: "<red>This waystone is private, teleporting away means you won't be able to get back!"
+    NoWaystonesNotice: "<red>You do not have any waystones to teleport to!"
+    Teleporting:
+      Title: "Teleporting to {name}"
+      Text: "Teleporting in <green>{seconds}</green>..."
     WaystoneTooltip:
-      - "Location: <aqua>{x}, {y}, {z}"
-      - "World: {world}"
+      - "Location: {world} <aqua>{x}, {y}, {z}"
       - "Owner: {owner}"
+      - "Last used: <gold>{last_used_ago}"
+    CurrentWaystoneTooltip:
+      - "Location: {current_world} <aqua>{current_x}, {current_y}, {current_z}"
+      - "Owner: {current_owner}"
+      - "Last used: <gold>{current_last_used_ago}"
   WaystoneDestroyedNoticeDialog:
     Title: "Something happened"
     Message: "<red>Waystone <white>{name}</white> doesn't exist anymore! This can happen when your waystone block gets destroyed by a player, explosion or something else.</red>"
     Checkbox: "Remove this waystone from the list (<red>irreversible</red>)"
     BackToList: "Back to the list"
+  FriendsSettingDialog:
+    Title: "Added players to the waystone"
+    Text: "Added players will be able to teleport to your waystone! If your waystone is <green>public</green>, this has no effect."
+    PlayerFormat: "{username} ({online_status})"
+    PlayerTooltipFormat:
+      - "Click to copy username!"
+    LoadingPlayers: "Loading offline players..."
+    ActionButtons:
+      Width: 20
+      Add:
+        Text: "<green><bold>+"
+        Tooltip: "<green>Add"
+      Remove:
+        Text: "<red><bold>-"
+        Tooltip: "<red>Remove"
+  ServerWaystoneMarking:
+    Set: "Waystone was converted to server's global waystone!"
+    Unset: "Waystone was converted back to normal"
   WorldReplacedNames:
     world: "<green>Overworld</green>"
     world_nether: "<red>Nether</red>"
     world_the_end: "<yellow>The End</yellow>"
+  PlayerStatuses:
+    Online: "<green>Online</green>"
+    Offline: "<red>Offline</red>"
   WaystoneAttributes:
     Separator: ", "
     Public: "<green>public</green>"
     Private: "<red>private</red>"
     Destroyed: "<red>destroyed</red>"
     LastlyUsed: "<yellow>recent</yellow>"
+    WasAdded: "<green>added</green>"
+  Limitations:
+    WaystoneCountLimitReached: "You have reached your waystones limit ({max})!"
   VisibilityChanged: "Waystone's <gold>{name}</gold> visibility changed to {type}."
   Renamed: "Waystone <gold>{name}</gold> renamed to <green>{new_name}</green>"
   ArrowUp: "↑"
   ArrowDown: "↓"
   Close: "Close"
+  Cancel: "Cancel"
   Done: "Done"
   WaitBeforeUse: "Wait {time}s before using waystone again!"
