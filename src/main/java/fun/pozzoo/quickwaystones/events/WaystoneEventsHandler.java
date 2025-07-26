@@ -7,7 +7,10 @@ import fun.pozzoo.quickwaystones.data.WaystoneData;
 import io.papermc.paper.event.entity.EntityKnockbackEvent;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.ConfigurationSection;
@@ -16,7 +19,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.*;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -28,7 +34,10 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class WaystoneEventsHandler implements Listener {
     private final QuickWaystones plugin;
@@ -80,6 +89,8 @@ public class WaystoneEventsHandler implements Listener {
         Player player = event.getPlayer();
         WaystoneData waystone = plugin.getWaystonesMap().get(event.getBlock().getLocation());
 
+        if (waystone.isInternal()) return;
+
         Location location = event.getBlock().getLocation();
         if ((player.isOp() && player.getGameMode() == GameMode.CREATIVE) || player.getUniqueId().equals(waystone.getOwnerUniqueId()))
             destroyWaystone(location);
@@ -93,7 +104,7 @@ public class WaystoneEventsHandler implements Listener {
     }
 
     @EventHandler
-    public void onBlockPlaceEvent(BlockPlaceEvent event) {
+    public void onBlockPlace(BlockPlaceEvent event) {
         ItemStack item = event.getItemInHand();
         Block block = event.getBlockPlaced();
         if (!canPlaceBlock(event.getBlockPlaced())) {
@@ -104,6 +115,14 @@ public class WaystoneEventsHandler implements Listener {
         if (!plugin.isWaystoneItem(item))
             return;
         Player player = event.getPlayer();
+        int limit = plugin.getConfig().getInt("PlayerLimitations.MaxWaystonesPerPlayer", -1);
+        if (limit != -1 && plugin.getWaystones(player.getUniqueId()).size() >= limit) {
+            Map<String, String> placeholders = new HashMap<>();
+            placeholders.put("max", Integer.toString(limit));
+            player.sendActionBar(QuickWaystones.message("Limitations.WaystoneCountLimitReached", placeholders));
+            event.setCancelled(true);
+            return;
+        }
         WaystoneData data = new WaystoneData(block.getLocation(), player.getName(), player.getUniqueId());
         plugin.getWaystonesMap().put(block.getLocation(), data);
         String name = item.getItemMeta().getPersistentDataContainer().get(plugin.getCraftManager().getPersistentWaystoneNameKey(), PersistentDataType.STRING);
@@ -120,31 +139,40 @@ public class WaystoneEventsHandler implements Listener {
     public void onPlayerInteractWaystone(PlayerInteractEvent event) {
         if (event.getHand() == EquipmentSlot.OFF_HAND) return;
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
-        if (event.getClickedBlock() == null) return;
-        if (!plugin.isWaystoneBlock(event.getClickedBlock())) return;
-        if (plugin.isWaystoneDestroyed(event.getClickedBlock())) return;
-
-        Player player = event.getPlayer();
         Block block = event.getClickedBlock();
+        if (block == null) return;
+        boolean clickedFriendsBlock = false;
+        if (plugin.isWaystoneFriendsBlock(block)) {
+            block = block.getRelative(BlockFace.UP);
+            clickedFriendsBlock = true;
+        }
+        if (!plugin.isWaystoneBlock(block)) return;
+        WaystoneData waystone = plugin.getWaystonesMap().get(block.getLocation());
+        if (waystone == null)
+            return;
+        if (!waystone.isInternal() && plugin.isWaystoneDestroyed(block)) return;
+        Player player = event.getPlayer();
 
         if (event.getItem() == null) {
-            WaystoneData data = plugin.getWaystonesMap().get(block.getLocation());
-            if (data == null)
+            if (clickedFriendsBlock) {
+                if (waystone.isOwner(player) && !waystone.isInternal())
+                    plugin.getWaystoneDialogs().showFriendsSettingsDialog(player, waystone, true);
                 return;
-            checkForAvailabilityAndShowListDialog(player, data);
+            }
+            checkForAvailabilityAndShowListDialog(player, waystone);
             return;
         }
 
-        WaystoneData waystone = plugin.getWaystonesMap().get(block.getLocation());
+        if (!waystone.isOwner(player))
+            return;
+
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("name", waystone.getName());
         ConfigurationSection section = plugin.getConfig().getConfigurationSection("Features.RenameByNameTag");
         if (section != null && section.getBoolean("Enabled")
                 && event.getItem().getType() == Material.getMaterial(section.getString("Material", "NAME_TAG"))) {
             TextComponent textComponent = (TextComponent) event.getItem().getItemMeta().displayName();
-
             if (textComponent == null) return;
-
             waystone.setName(textComponent.decoration(TextDecoration.ITALIC, false).content());
             placeholders.put("new_name", waystone.getName());
             plugin.getDataManager().saveWaystoneData();
@@ -171,6 +199,15 @@ public class WaystoneEventsHandler implements Listener {
             }
             placeholders.put("type", plugin.getConfig().getString("Messages.WaystoneAttributes." + type));
             player.sendActionBar(QuickWaystones.message("VisibilityChanged", placeholders));
+        }
+        section = plugin.getConfig().getConfigurationSection("Features.ServerWaystone");
+        if (section != null && section.getBoolean("Enabled") && player.isOp() && player.getGameMode() == GameMode.CREATIVE
+                && event.getItem().getType() == Material.getMaterial(section.getString("Material", "DEBUG_STICK"))) {
+            waystone.setInternal(!waystone.isInternal());
+            waystone.setGloballyAccessible(true);
+            plugin.getDataManager().saveWaystoneData();
+            event.setCancelled(true);
+            player.sendActionBar(QuickWaystones.message("ServerWaystoneMarking." + (waystone.isInternal() ? "Set" : "Unset"), placeholders));
         }
     }
 
