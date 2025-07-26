@@ -4,6 +4,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.geysermc.floodgate.api.FloodgateApi;
 
 import java.util.ArrayList;
@@ -34,5 +36,11 @@ public class Utils {
         if (!QuickWaystones.isFloodgateRunning())
             return false;
         return FloodgateApi.getInstance().isFloodgatePlayer(uuid);
+    }
+
+    public static void loadChunkIfNeeded(Location location) {
+        Chunk chunk = location.getChunk();
+        if (!chunk.isLoaded())
+            chunk.load();
     }
 }

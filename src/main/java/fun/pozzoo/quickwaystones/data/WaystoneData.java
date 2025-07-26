@@ -6,15 +6,18 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 public class WaystoneData {
     private String name;
     private boolean globallyAccessible;
 
-    private final long createdAt;
     private long lastUsedAt;
+    private boolean internal;
 
+    private final long createdAt;
     private final String id;
     private final String owner;
     private final UUID ownerUniqueId;
@@ -74,6 +77,28 @@ public class WaystoneData {
         return lastUsedAt;
     }
 
+    public String getLastUsedAtFormatted() {
+        long totalSeconds = (System.currentTimeMillis() - getLastUsedAt()) / 1000;
+        long days = totalSeconds / 86400;
+        long hours = (totalSeconds % 86400) / 3600;
+        long minutes = (totalSeconds % 3600) / 60;
+        long seconds = totalSeconds % 60;
+        StringBuilder sb = new StringBuilder();
+        if (days > 0) {
+            sb.append(days).append("d");
+            if (hours > 0) sb.append(" ").append(hours).append("h");
+        } else if (hours > 0) {
+            sb.append(hours).append("h");
+            if (minutes > 0) sb.append(" ").append(minutes).append("m");
+        } else if (minutes > 0) {
+            sb.append(minutes).append("m");
+            if (seconds > 0) sb.append(" ").append(seconds).append("s");
+        } else {
+            sb.append(seconds).append("s");
+        }
+        return sb.toString();
+    }
+
     public void setLastUsedAt(long timestamp) {
         this.lastUsedAt = timestamp;
     }
@@ -82,12 +107,22 @@ public class WaystoneData {
         setLastUsedAt(System.currentTimeMillis());
     }
 
-    public void addPlayer(Player player) {
-        this.addedPlayers.add(player.getUniqueId());
+    public void setInternal(boolean internal) {
+        this.internal = internal;
     }
 
-    public void removePlayer(Player player) {
-        this.addedPlayers.remove(player.getUniqueId());
+    public boolean isInternal() {
+        return internal;
+    }
+
+    public boolean addPlayer(UUID player) {
+        if (!player.equals(ownerUniqueId))
+            return this.addedPlayers.add(player);
+        return false;
+    }
+
+    public boolean removePlayer(UUID player) {
+        return this.addedPlayers.remove(player);
     }
 
     public Set<UUID> getAddedPlayers() {
@@ -114,6 +149,14 @@ public class WaystoneData {
         return location;
     }
 
+    public boolean isOwner(Player player) {
+        return player.getUniqueId().equals(ownerUniqueId);
+    }
+
+    public boolean isOwner(UUID playerUniqueId) {
+        return playerUniqueId.equals(ownerUniqueId);
+    }
+
     @Override
     public String toString() {
         return "WaystoneData{" +
@@ -121,9 +164,11 @@ public class WaystoneData {
                 ", name='" + name + '\'' +
                 ", location=" + location +
                 ", owner='" + owner + '\'' +
-                ", globallyAccessible='" + globallyAccessible + '\'' +
-                ", createdAt='" + createdAt + '\'' +
-                ", lastUsedAt='" + lastUsedAt + '\'' +
+                ", globallyAccessible=" + globallyAccessible +
+                ", createdAt=" + createdAt +
+                ", lastUsedAt=" + lastUsedAt +
+                ", internal=" + internal +
+                ", addedPlayers=" + addedPlayers +
                 '}';
     }
 }

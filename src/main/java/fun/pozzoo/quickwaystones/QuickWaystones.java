@@ -21,16 +21,14 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public final class QuickWaystones extends JavaPlugin {
     private static QuickWaystones plugin;
@@ -43,6 +41,7 @@ public final class QuickWaystones extends JavaPlugin {
     private CraftManager craftManager;
     private DialogGUI waystoneDialogs;
     private Material waystoneBlockType;
+    private Material friendsBlockType;
     private Map<Location, WaystoneData> waystonesMap;
 
     @SuppressWarnings("UnstableApiUsage")
@@ -70,6 +69,7 @@ public final class QuickWaystones extends JavaPlugin {
         metrics = new Metrics(this, 22064);
 
         waystoneBlockType = Material.valueOf(Objects.requireNonNull(getConfig().getString("Item.Material")).toUpperCase(Locale.ROOT));
+        friendsBlockType = Material.valueOf(Objects.requireNonNull(getConfig().getString("Features.AddFriends.SpecialBlockMaterial")).toUpperCase(Locale.ROOT));
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("quickwaystones")
@@ -144,12 +144,20 @@ public final class QuickWaystones extends JavaPlugin {
         return waystonesMap.containsKey(block.getLocation());
     }
 
+    public boolean isWaystoneFriendsBlock(Block block) {
+        return block.getType() == friendsBlockType && isWaystoneBlock(block.getRelative(BlockFace.UP));
+    }
+
     public boolean isWaystoneItem(ItemStack item) {
         return item.getItemMeta().getPersistentDataContainer().has(craftManager.getPersistentWaystoneNameKey(), PersistentDataType.STRING);
     }
 
     public Map<Location, WaystoneData> getWaystonesMap() {
         return waystonesMap;
+    }
+
+    public List<WaystoneData> getWaystones(UUID ownerUniqueId) {
+        return getWaystonesMap().values().stream().filter(x -> x.isOwner(ownerUniqueId)).toList();
     }
 
     public DialogGUI getWaystoneDialogs() {
@@ -168,7 +176,7 @@ public final class QuickWaystones extends JavaPlugin {
     public static String multiMessage(String path) {
         path = "Messages." + path;
         if (config().isList(path))
-            return String.join("\n<reset>", config().getStringList( path));
+            return String.join("\n<reset>", config().getStringList(path));
         return config().getString(path, "<message_not_found>");
     }
 
@@ -177,10 +185,13 @@ public final class QuickWaystones extends JavaPlugin {
     }
 
     public static Component message(String path, Map<String, String> placeholders) {
-        String text = multiMessage(path);
+        return rawMessage(multiMessage(path), placeholders);
+    }
+
+    public static Component rawMessage(String message, Map<String, String> placeholders) {
         for (Map.Entry<String, String> entry : placeholders.entrySet())
-            text = text.replace("{" + entry.getKey() + "}", entry.getValue() == null ? "<null_error>" : entry.getValue());
-        return Utils.formatString(text);
+            message = message.replace("{" + entry.getKey() + "}", entry.getValue() == null ? "<null_error>" : entry.getValue());
+        return Utils.formatString(message);
     }
 
     public static FileConfiguration config() {
