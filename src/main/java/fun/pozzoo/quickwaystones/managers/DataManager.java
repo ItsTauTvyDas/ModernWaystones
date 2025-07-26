@@ -52,7 +52,12 @@ public class DataManager {
                         config.getLong("Waystones." + key + ".createdAt")
                 );
                 waystoneData.setLastUsedAt(config.getLong("Waystones." + key + ".lastUsedAt"));
+                waystoneData.setInternal(config.getBoolean("Waystones." + key + ".internal"));
                 waystoneData.setGloballyAccessible(config.getBoolean("Waystones." + key + ".global"));
+                for (String uuidString : config.getStringList("Waystones." + key + ".addedPlayers")) {
+                    UUID uuid = UUID.fromString(uuidString);
+                    waystoneData.addPlayer(uuid);
+                }
                 plugin.getWaystonesMap().put(waystoneData.getLocation(), waystoneData);
             }
         } catch (InvalidConfigurationException | IOException e) {
@@ -68,9 +73,16 @@ public class DataManager {
             configOverwrite.set("Waystones." + waystone.getID() + ".location", waystone.getLocation());
             configOverwrite.set("Waystones." + waystone.getID() + ".owner", waystone.getOwner());
             configOverwrite.set("Waystones." + waystone.getID() + ".ownerId", waystone.getOwnerUniqueId().toString());
-            configOverwrite.set("Waystones." + waystone.getID() + ".global", waystone.isGloballyAccessible());
+            configOverwrite.set("Waystones." + waystone.getID() + ".global", waystone.isInternal() || waystone.isGloballyAccessible());
             configOverwrite.set("Waystones." + waystone.getID() + ".createdAt", waystone.getCreatedAt());
             configOverwrite.set("Waystones." + waystone.getID() + ".lastUsedAt", waystone.getLastUsedAt());
+            if (waystone.isInternal())
+                configOverwrite.set("Waystones." + waystone.getID() + ".internal", waystone.isInternal());
+            if (!waystone.getAddedPlayers().isEmpty())
+                configOverwrite.set("Waystones." + waystone.getID() + ".addedPlayers", waystone.getAddedPlayers()
+                        .stream()
+                        .map(UUID::toString)
+                        .toList());
         }
 
         save();
