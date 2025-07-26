@@ -2,10 +2,13 @@ package fun.pozzoo.quickwaystones.gui;
 
 import fun.pozzoo.quickwaystones.QuickWaystones;
 import fun.pozzoo.quickwaystones.data.WaystoneData;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.geysermc.floodgate.api.FloodgateApi;
 
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class UniDialogs extends DialogGUI {
     private final JavaDialogs java;
@@ -35,6 +38,7 @@ public class UniDialogs extends DialogGUI {
         java.unregister();
     }
 
+    @Override
     public void cleanupPlayerCache(UUID uuid) {
         java.cleanupPlayerCache(uuid);
     }
@@ -54,6 +58,42 @@ public class UniDialogs extends DialogGUI {
             bedrock.showListDialog(player, viewer, clickedWaystone);
         } else {
             java.showListDialog(player, viewer, clickedWaystone);
+        }
+    }
+
+    @Override
+    public void showRenameDialog(Player player, Player viewer, WaystoneData clickedWaystone, String initialInput, boolean showNotice, boolean showError) {
+        if (bedrockAPI.isFloodgatePlayer(player.getUniqueId())) {
+            bedrock.showRenameDialog(player, viewer, clickedWaystone, initialInput, showNotice, showError);
+        } else {
+            java.showRenameDialog(player, viewer, clickedWaystone, initialInput, showNotice, showError);
+        }
+    }
+
+    @Override
+    public void showFriendsSettingsDialog(Player viewer, WaystoneData waystone, boolean canEdit) {
+        if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
+            bedrock.showFriendsSettingsDialog(viewer, waystone, canEdit);
+        } else {
+            java.showFriendsSettingsDialog(viewer, waystone, canEdit);
+        }
+    }
+
+    @Override
+    public void showWaitingDialog(Player viewer, Component title, Function<Long, Component> text, Component cancelButton, long waitTicks, Runnable onClose, Runnable onFinish) {
+        if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
+            bedrock.showWaitingDialog(viewer, title, text, cancelButton, waitTicks, onClose, onFinish);
+        } else {
+            java.showWaitingDialog(viewer, title, text, cancelButton, waitTicks, onClose, onFinish);
+        }
+    }
+
+    @Override
+    public void showSimpleNotice(Player viewer, Component title, Component text, Component button, Consumer<Player> action, boolean closeOnEscape) {
+        if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
+            bedrock.showSimpleNotice(viewer, title, text, button, action, closeOnEscape);
+        } else {
+            java.showSimpleNotice(viewer, title, text, button, action, closeOnEscape);
         }
     }
 }

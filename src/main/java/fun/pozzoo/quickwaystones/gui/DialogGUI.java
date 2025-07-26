@@ -4,6 +4,7 @@ import fun.pozzoo.quickwaystones.QuickWaystones;
 import fun.pozzoo.quickwaystones.Utils;
 import fun.pozzoo.quickwaystones.WaystoneSound;
 import fun.pozzoo.quickwaystones.data.WaystoneData;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -12,6 +13,8 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public abstract class DialogGUI {
     public static final String KEY_LAST_WAYSTONE = "last_waystone";
@@ -33,12 +36,24 @@ public abstract class DialogGUI {
     public void showWaystoneDestroyedNoticeDialog(Player player, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone) {
         showWaystoneDestroyedNoticeDialog(player, player, previousClickedWaystone, clickedWaystone);
     }
+
     public void showListDialog(Player player, WaystoneData clickedWaystone) {
         showListDialog(player, player, clickedWaystone);
     }
 
     public abstract void showWaystoneDestroyedNoticeDialog(Player player, Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone);
     public abstract void showListDialog(Player player, Player viewer, WaystoneData clickedWaystone);
+    public abstract void showRenameDialog(Player player, Player viewer, WaystoneData clickedWaystone, String initialInput, boolean showNotice, boolean showError);
+    public abstract void showSimpleNotice(Player viewer, Component title, Component text, Component button, Consumer<Player> action, boolean closeOnEscape);
+    public abstract void showFriendsSettingsDialog(Player viewer, WaystoneData waystone, boolean canEdit);
+    public abstract void showWaitingDialog(Player viewer, Component title, Function<Long, Component> text, Component cancelButton, long waitTicks, Runnable onClose, Runnable onFinish);
+
+    private boolean isPlayerAdded(WaystoneData waystone, Player player) {
+        Utils.loadChunkIfNeeded(waystone.getLocation());
+        if (!plugin.isWaystoneFriendsBlock(waystone.getLocation().clone().add(0, -1, 0).getBlock()))
+            return false;
+        return waystone.getAddedPlayers().contains(player.getUniqueId());
+    }
 
     protected List<WaystoneData> getSortedWaystones(Player player, WaystoneData clickedWaystone) {
         Map<Location, WaystoneData> waystones = plugin.getWaystonesMap();
@@ -46,10 +61,11 @@ public abstract class DialogGUI {
                 .filter(x ->
                         (clickedWaystone == null && x.getOwnerUniqueId().equals(player.getUniqueId())) ||
                                 (clickedWaystone != null && (x.isGloballyAccessible()
-                                        || x.getAddedPlayers().contains(player.getUniqueId())
+                                        || isPlayerAdded(x, player)
                                         || x.getOwnerUniqueId().equals(player.getUniqueId())
                                 )))
                 .sorted(Comparator.comparing(WaystoneData::getCreatedAt))
+                .sorted(Comparator.comparing(x -> !x.isInternal()))
                 .toList();
     }
 
@@ -57,10 +73,7 @@ public abstract class DialogGUI {
         Player dialogViewer = Bukkit.getPlayer(uuid);
         if (dialogViewer == null)
             return;
-        if (plugin.isWaystoneDestroyed(waystone.getBlock())) {
-            showWaystoneDestroyedNoticeDialog(dialogViewer, clickedWaystone, waystone);
-            return;
-        }
+        Utils.loadChunkIfNeeded(waystone.getLocation());
         plugin.playWaystoneSound(null, dialogViewer.getLocation(), WaystoneSound.TELEPORTED);
         Location location = waystone.getTeleportLocation();
         dialogViewer.getWorld().spawnParticle(Particle.PORTAL, dialogViewer.getLocation(), 5);
@@ -96,7 +109,13 @@ public abstract class DialogGUI {
     private void fillPlaceholders(Map<String, String> placeholders, Player player, WaystoneData waystone, String prefix) {
         placeholders.put(prefix + "name", waystone.getName());
         placeholders.put(prefix + "id", waystone.getID());
-        placeholders.put(prefix + "owner", waystone.getOwner());
+        if (waystone.isInternal()) {
+            placeholders.put(prefix + "owner", "Server");
+            placeholders.put(prefix + "owner_id", "Server");
+        } else {
+            placeholders.put(prefix + "owner", waystone.getOwner());
+            placeholders.put(prefix + "owner_id", waystone.getOwnerUniqueId().toString());
+        }
         placeholders.put(prefix + "x", Integer.toString(waystone.getLocation().getBlockX()));
         placeholders.put(prefix + "y", Integer.toString(waystone.getLocation().getBlockY()));
         placeholders.put(prefix + "z", Integer.toString(waystone.getLocation().getBlockZ()));
@@ -106,15 +125,21 @@ public abstract class DialogGUI {
                 ));
         placeholders.put(prefix + "world_name", waystone.getLocation().getWorld().getName());
 
+        placeholders.put(prefix + "last_used_ago", waystone.getLastUsedAtFormatted());
+
         List<String> attributes = new ArrayList<>();
         attributes.add(plugin.getConfig().getString("Messages.WaystoneAttributes." + (waystone.isGloballyAccessible() ? "Public" : "Private")));
         if (plugin.isWaystoneDestroyed(waystone.getLocation().getBlock()))
             attributes.add(plugin.getConfig().getString("Messages.WaystoneAttributes.Destroyed"));
-        if (player.hasMetadata(KEY_LAST_WAYSTONE)) {
-            List<MetadataValue> metadata = player.getMetadata(KEY_LAST_WAYSTONE);
-            if (!metadata.isEmpty() && waystone.getID().equals(player.getMetadata(KEY_LAST_WAYSTONE).getFirst().asString()))
-                attributes.add(plugin.getConfig().getString("Messages.WaystoneAttributes.LastlyUsed"));
+        if (player != null) {
+            if (player.hasMetadata(KEY_LAST_WAYSTONE)) {
+                List<MetadataValue> metadata = player.getMetadata(KEY_LAST_WAYSTONE);
+                if (!metadata.isEmpty() && waystone.getID().equals(player.getMetadata(KEY_LAST_WAYSTONE).getFirst().asString()))
+                    attributes.add(plugin.getConfig().getString("Messages.WaystoneAttributes.LastlyUsed"));
+            }
+            if (!waystone.isGloballyAccessible() && waystone.getAddedPlayers().contains(player.getUniqueId()))
+                attributes.add(plugin.getConfig().getString("Messages.WaystoneAttributes.WasAdded"));
+            placeholders.put(prefix + "attributes", String.join(plugin.getConfig().getString("Messages.WaystoneAttributes.Separator", ", "), attributes));
         }
-        placeholders.put(prefix + "attributes", String.join(plugin.getConfig().getString("Messages.WaystoneAttributes.Separator", ", "), attributes));
     }
 }
