@@ -2,7 +2,7 @@ package fun.pozzoo.quickwaystones.gui;
 
 import fun.pozzoo.quickwaystones.QuickWaystones;
 import fun.pozzoo.quickwaystones.Utils;
-import fun.pozzoo.quickwaystones.WaystoneSound;
+import fun.pozzoo.quickwaystones.enums.WaystoneSound;
 import fun.pozzoo.quickwaystones.data.WaystoneData;
 import io.github.projectunified.unidialog.core.dialog.Dialog;
 import io.github.projectunified.unidialog.paper.PaperDialogManager;
@@ -16,6 +16,8 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
@@ -29,6 +31,7 @@ public class JavaDialogs extends DialogGUI {
     public static final String KEY_NAME_DIALOG_DONE = "waystone_name_input_done";
     public static final String KEY_NAME_DIALOG_CANCEL = "waystone_name_input_cancel";
     public static final String KEY_TELEPORT = "teleport";
+    public static final String KEY_MOVE_WAYSTONE = "move_waystone";
     public static final String KEY_UP = "up";
     public static final String KEY_DOWN = "down";
     public static final String KEY_CLOSE = "close";
@@ -67,13 +70,15 @@ public class JavaDialogs extends DialogGUI {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null)
                 player.closeInventory();
+            cleanupPlayerCache(uuid);
         });
 
         dialogManager.registerCustomAction(KEY_SAVE_AND_CLOSE, (uuid, data) -> {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null)
                 player.closeInventory();
-            plugin.getDataManager().saveWaystoneData();
+            plugin.getWaystoneDataManager().saveData();
+            cleanupPlayerCache(uuid);
         });
     }
 
@@ -122,7 +127,7 @@ public class JavaDialogs extends DialogGUI {
             throw new IllegalArgumentException("initialInput can't be null/blank!");
         }
 
-        String baseId = player.getUniqueId() + "_" + clickedWaystone.getID() + "_";
+        String baseId = player.getUniqueId() + "_" + clickedWaystone.getUniqueId() + "_";
 
         dialogManager.registerCustomAction(storeCustomActionIdentity(player, baseId + KEY_NAME_DIALOG_DONE), (uuid, data) -> {
             Player dialogViewer = Bukkit.getPlayer(uuid);
@@ -131,10 +136,10 @@ public class JavaDialogs extends DialogGUI {
             String name = data.getOrDefault(KEY_NAME_DIALOG_INPUT, "");
             if (name.isBlank()) {
                 showRenameDialog(player, dialogViewer, clickedWaystone, initialInput, showNotice, true);
-                plugin.getDataManager().saveWaystoneData();
+                plugin.getWaystoneDataManager().saveData();
             } else {
                 clickedWaystone.setName(name);
-                plugin.getDataManager().saveWaystoneData();
+                plugin.getWaystoneDataManager().saveData();
             }
             removeCustomActionIdentity(dialogViewer, baseId + KEY_NAME_DIALOG_DONE);
             removeCustomActionIdentity(dialogViewer, baseId + KEY_NAME_DIALOG_CANCEL);
@@ -146,7 +151,7 @@ public class JavaDialogs extends DialogGUI {
             if (dialogViewer == null)
                 return;
             clickedWaystone.setName(initialInput);
-            plugin.getDataManager().saveWaystoneData();
+            plugin.getWaystoneDataManager().saveData();
             removeCustomActionIdentity(dialogViewer, baseId + KEY_NAME_DIALOG_DONE);
             removeCustomActionIdentity(dialogViewer, baseId + KEY_NAME_DIALOG_CANCEL);
             dialogViewer.closeInventory();
@@ -192,6 +197,8 @@ public class JavaDialogs extends DialogGUI {
                         .dynamicCustom(KEY_SAVE_AND_CLOSE))
                 .pause(false);
         for (OfflinePlayer player : cachedPlayers) {
+            if (player.getUniqueId().equals(waystone.getOwnerUniqueId()))
+                continue;
             boolean isAdded = waystone.getAddedPlayers().contains(player.getUniqueId());
 
             UUID playerId = player.getUniqueId();
@@ -208,9 +215,10 @@ public class JavaDialogs extends DialogGUI {
                     .copyToClipboard(player.getName()));
 
             if (canEdit) {
-                String dynamicId = viewer.getUniqueId() + "_" + waystone.getID() + "_" + player.getUniqueId();
+                String dynamicId = viewer.getUniqueId() + "_" + waystone.getUniqueId() + "_" + player.getUniqueId();
                 dialogManager.registerCustomAction(storeCustomActionIdentity(viewer, dynamicId), (uuid, data) -> {
                     Player dialogViewer = Bukkit.getPlayer(uuid);
+                    System.out.println(data);
                     if (dialogViewer == null)
                         return;
                     if (isAdded)
@@ -258,7 +266,7 @@ public class JavaDialogs extends DialogGUI {
     public void showWaystoneDestroyedNoticeDialog(Player player, Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone) {
         Map<String, String> placeholders = new HashMap<>();
         fillPlaceholders(placeholders, player, clickedWaystone, null);
-        String baseId = player.getUniqueId() + "_" + clickedWaystone.getID() + "_";
+        String baseId = player.getUniqueId() + "_" + clickedWaystone.getUniqueId() + "_";
 
         dialogManager.registerCustomAction(storeCustomActionIdentity(player, baseId + KEY_BACK_TO_THE_LIST), (uuid, data) -> {
             Player dialogViewer = Bukkit.getPlayer(uuid);
@@ -266,11 +274,11 @@ public class JavaDialogs extends DialogGUI {
                 return;
             if (data.getOrDefault(KEY_REMOVE_DEAD_WAYSTONE, "0.0").equals("1.0")) {
                 plugin.getWaystonesMap().remove(clickedWaystone.getLocation());
-                plugin.getDataManager().saveWaystoneData();
+                plugin.getWaystoneDataManager().saveData();
                 plugin.playWaystoneSound(dialogViewer, dialogViewer.getLocation(), WaystoneSound.DEACTIVATED);
             }
+            cleanupPlayerCache(uuid);
             showListDialog(player, dialogViewer, previousClickedWaystone);
-            removeCustomActionIdentity(dialogViewer, baseId + KEY_BACK_TO_THE_LIST);
         });
 
         PaperMultiActionDialog dialog = dialogManager
@@ -291,7 +299,7 @@ public class JavaDialogs extends DialogGUI {
                         .label(QuickWaystones.message("WaystoneDestroyedNoticeDialog.BackToList", placeholders)))
                 .pause(false);
 
-        if (clickedWaystone.getOwnerUniqueId().equals(viewer.getUniqueId())) {
+        if (clickedWaystone.isOwner(viewer)) {
             dialog.input(KEY_REMOVE_DEAD_WAYSTONE, builder -> builder.booleanInput()
                     .label(QuickWaystones.message("WaystoneDestroyedNoticeDialog.Checkbox", placeholders))
                     .initial(false));
@@ -326,7 +334,21 @@ public class JavaDialogs extends DialogGUI {
     }
 
     @Override
+    public void showSortSettingsDialog(Player viewer, WaystoneData clickedWaystone) {
+        showListDialog(viewer, viewer, clickedWaystone, true);
+    }
+
+    @Override
     public void showListDialog(Player player, Player viewer, WaystoneData clickedWaystone) {
+        showListDialog(player, viewer, clickedWaystone, false);
+    }
+
+    private void showListDialog(Player player, Player viewer, WaystoneData clickedWaystone, boolean isSorting) {
+        boolean allowManualSorting = plugin.getConfig().getBoolean("WaystoneScreen.AllowManualSort");
+        boolean moveFromToButtons = plugin.getConfig().getBoolean("WaystoneScreen.MoveFromToButtons");
+        if (isSorting && !allowManualSorting && !moveFromToButtons)
+            return;
+
         List<WaystoneData> sortedWaystones = getSortedWaystones(player, clickedWaystone);
         Map<String, String> placeholders = new HashMap<>();
         fillPlaceholders(placeholders, player, null, clickedWaystone);
@@ -334,67 +356,127 @@ public class JavaDialogs extends DialogGUI {
         PaperMultiActionDialog dialog = dialogManager.createMultiActionDialog();
 
         boolean empty = true;
+        int index = 0;
+        int failedWaystones = 0; // clickedWaystone is always going to be there anyway
         for (WaystoneData waystone : sortedWaystones) {
-            if (waystone == clickedWaystone)
+            Utils.loadChunkIfNeeded(waystone.getLocation());
+            if (waystone.getAddedPlayers().contains(player.getUniqueId()) && !plugin.isWaystoneFriendsBlock(waystone.getLocation().clone().add(0, -1, 0).getBlock())) {
+                failedWaystones++;
                 continue;
-            if (plugin.isWaystoneDestroyed(waystone.getBlock()) && !waystone.isOwner(player))
+            }
+            if (plugin.isWaystoneDestroyed(waystone.getBlock()) && !waystone.isOwner(player)) {
+                failedWaystones++;
                 continue;
+            }
             empty = false;
             fillPlaceholders(placeholders, player, waystone, null);
-            String baseId = player.getUniqueId() + "_" + waystone.getID() + "_";
+            String baseId = player.getUniqueId() + "_" + waystone.getUniqueId() + "_";
 
-            dialogManager.registerCustomAction(storeCustomActionIdentity(player, baseId + KEY_TELEPORT), (uuid, data) -> {
-                Player dialogViewer = Bukkit.getPlayer(uuid);
-                if (dialogViewer == null)
-                    return;
-                long delayBefore = Math.max(0, plugin.getConfig().getLong("Teleportation.DelayBefore"));
-                cleanupPlayerCache(uuid);
-                fillPlaceholders(placeholders, player, waystone, null);
+            if (!isSorting) {
+                dialogManager.registerCustomAction(storeCustomActionIdentity(player, baseId + KEY_TELEPORT), (uuid, data) -> {
+                    Player dialogViewer = Bukkit.getPlayer(uuid);
+                    if (dialogViewer == null)
+                        return;
+                    long delayBefore = Math.max(0, plugin.getConfig().getLong("Teleportation.DelayBefore"));
+                    cleanupPlayerCache(uuid);
+                    fillPlaceholders(placeholders, player, waystone, null);
 
-                Utils.loadChunkIfNeeded(waystone.getLocation());
-                if (plugin.isWaystoneDestroyed(waystone.getBlock())) {
-                    showWaystoneDestroyedNoticeDialog(dialogViewer, clickedWaystone, waystone);
-                    return;
-                }
+                    Utils.loadChunkIfNeeded(waystone.getLocation());
+                    if (plugin.isWaystoneDestroyed(waystone.getBlock())) {
+                        showWaystoneDestroyedNoticeDialog(dialogViewer, clickedWaystone, waystone);
+                        return;
+                    }
 
-                showWaitingDialog(dialogViewer,
-                        QuickWaystones.message("WaystonesListDialog.Teleporting.Title", placeholders),
-                        ticksLeft -> {
-                            placeholders.put("seconds", Long.toString(ticksLeft / 20));
-                            return QuickWaystones.message("WaystonesListDialog.Teleporting.Text", placeholders);
-                        },
-                        QuickWaystones.message("Cancel"),
-                        delayBefore * 20,
-                        null, () -> doTeleport(uuid, dialogViewer != player, waystone, clickedWaystone));
-            });
-            // Sorting
-            dialogManager.registerCustomAction(storeCustomActionIdentity(player, baseId + KEY_UP), (uuid, data) -> {
-                Player dialogViewer = Bukkit.getPlayer(uuid);
-                if (dialogViewer == null)
-                    return;
-                showListDialog(player, dialogViewer, clickedWaystone);
-            });
-            dialogManager.registerCustomAction(storeCustomActionIdentity(player, baseId + KEY_DOWN), (uuid, data) -> {
-                Player dialogViewer = Bukkit.getPlayer(uuid);
-                if (dialogViewer == null)
-                    return;
-                showListDialog(player, dialogViewer, clickedWaystone);
-            });
+                    showWaitingDialog(dialogViewer,
+                            QuickWaystones.message("WaystonesListDialog.Teleporting.Title", placeholders),
+                            ticksLeft -> {
+                                placeholders.put("seconds", Long.toString(ticksLeft / 20));
+                                return QuickWaystones.message("WaystonesListDialog.Teleporting.Text", placeholders);
+                            },
+                            QuickWaystones.message("Cancel"),
+                            delayBefore * 20,
+                            null, () -> doTeleport(uuid, dialogViewer != player, waystone, clickedWaystone));
+                });
+            }
+
+            boolean canMoveUp = index - 1 >= 0;
+            boolean canMoveDown = index + 1 < sortedWaystones.size() - failedWaystones;
 
             fillPlaceholders(placeholders, player, waystone, clickedWaystone);
 
+            if (plugin.getConfig().getBoolean("WaystoneScreen.ShowNumbers")) {
+                int finalIndex = index + 1;
+                dialog.action(builder -> builder.width(20).label(Component.text(finalIndex)));
+            }
+
             dialog.action(builder -> builder.width(200)
-                    .label(QuickWaystones.message("WaystonesListDialog." + (waystone.isInternal() ? "ServerWaystoneButton" : "WaystoneButton"), placeholders))
+                    .label(QuickWaystones.message(
+                            "WaystonesListDialog." + (waystone.isInternal() ?
+                                    "ServerWaystoneButton" :
+                                    (waystone == clickedWaystone ?
+                                            "CurrentWaystoneButton" :
+                                            "WaystoneButton")), placeholders))
                     .tooltip(QuickWaystones.message("WaystonesListDialog.WaystoneTooltip", placeholders))
                     .dynamicCustom(baseId + KEY_TELEPORT));
 
-            dialog.action(builder -> builder.width(20)
-                    .label(QuickWaystones.message("ArrowUp"))
-                    .dynamicCustom(baseId + KEY_UP));
+            if (isSorting && allowManualSorting) {
+                if (canMoveUp)
+                    dialogManager.registerCustomAction(storeCustomActionIdentity(player, baseId + KEY_UP), (uuid, data) -> {
+                        Player dialogViewer = Bukkit.getPlayer(uuid);
+                        if (dialogViewer == null)
+                            return;
+                        showSortSettingsDialog(dialogViewer, clickedWaystone);
+                    });
+                if (canMoveDown)
+                    dialogManager.registerCustomAction(storeCustomActionIdentity(player, baseId + KEY_DOWN), (uuid, data) -> {
+                        Player dialogViewer = Bukkit.getPlayer(uuid);
+                        if (dialogViewer == null)
+                            return;
+                        showSortSettingsDialog(dialogViewer, clickedWaystone);
+                    });
 
-            dialog.action(builder -> builder.width(20)
-                    .label(QuickWaystones.message("ArrowDown"))
-                    .dynamicCustom(baseId + KEY_DOWN));
+                dialog.action(builder -> builder.width(20)
+                        .label(QuickWaystones.message("ArrowUp")
+                                .color(canMoveUp ? NamedTextColor.WHITE : NamedTextColor.DARK_GRAY))
+                        .tooltip(canMoveUp ? null : QuickWaystones.message("WaystonesListDialog.Sorting.DisallowedUp"))
+                        .dynamicCustom(baseId + KEY_UP));
+
+                dialog.action(builder -> builder.width(20)
+                        .label(QuickWaystones.message("ArrowDown")
+                                .color(canMoveDown ? NamedTextColor.WHITE : NamedTextColor.DARK_GRAY))
+                        .tooltip(canMoveDown ? null : QuickWaystones.message("WaystonesListDialog.Sorting.DisallowedDown"))
+                        .dynamicCustom(baseId + KEY_DOWN));
+            }
+
+            if (isSorting && moveFromToButtons) {
+                dialogManager.registerCustomAction(storeCustomActionIdentity(player, baseId + KEY_MOVE_WAYSTONE), (uuid, data) -> {
+                    Player dialogViewer = Bukkit.getPlayer(uuid);
+                    if (dialogViewer == null)
+                        return;
+                    List<MetadataValue> list = viewer.getMetadata(KEY_MOVE_WAYSTONE);
+                    if (!list.isEmpty()) {
+                        viewer.removeMetadata(KEY_MOVE_WAYSTONE, plugin);
+                    } else {
+                        viewer.setMetadata(KEY_MOVE_WAYSTONE, new FixedMetadataValue(plugin, null));
+                    }
+                    showSortSettingsDialog(dialogViewer, clickedWaystone);
+                });
+                List<MetadataValue> list = viewer.getMetadata(KEY_MOVE_WAYSTONE);
+                if (!list.isEmpty()) {
+                    dialog.action(builder -> builder
+                            .label(QuickWaystones.message("WaystonesListDialog.Sorting.MoveButtons.Move.Text"))
+                            .tooltip(QuickWaystones.message("WaystonesListDialog.Sorting.MoveButtons.Move.Tooltip"))
+                            .width(plugin.getConfig().getInt("Messages.WaystonesListDialog.Sorting.MoveButtons.Width"))
+                            .dynamicCustom(baseId + KEY_MOVE_WAYSTONE));
+                } else {
+                    dialog.action(builder -> builder
+                            .label(QuickWaystones.message("WaystonesListDialog.Sorting.MoveButtons.Here.Text"))
+                            .tooltip(QuickWaystones.message("WaystonesListDialog.Sorting.MoveButtons.Here.Tooltip"))
+                            .width(plugin.getConfig().getInt("Messages.WaystonesListDialog.Sorting.MoveButtons.Width"))
+                            .dynamicCustom(baseId + KEY_MOVE_WAYSTONE));
+                }
+            }
+            index++;
         }
 
         if (empty) {
@@ -407,30 +489,41 @@ public class JavaDialogs extends DialogGUI {
             return;
         }
 
-        if (!clickedWaystone.isOwner(player) && !clickedWaystone.getAddedPlayers().contains(player.getUniqueId()))
+        if (!clickedWaystone.isGloballyAccessible() && !clickedWaystone.isOwner(player) && !clickedWaystone.getAddedPlayers().contains(player.getUniqueId()))
             dialog.body(builder -> builder.text()
                     .text(QuickWaystones.message("WaystonesListDialog.PrivateWaystoneNotice"))
                     .width(300));
 
-        ItemStack item = plugin.getCraftManager().createWaystoneItem(clickedWaystone);
-        item.lore(plugin.getConfig()
-                .getStringList("Messages.WaystonesListDialog.CurrentWaystoneTooltip")
-                .stream()
-                .map(x -> QuickWaystones.rawMessage("<reset>" + x, placeholders)
-                        .decoration(TextDecoration.ITALIC, false)
-                        .color(NamedTextColor.WHITE))
-                .toList());
-        ItemMeta meta = item.getItemMeta();
-        meta.displayName(QuickWaystones.rawMessage("<reset>" + clickedWaystone.getName(), placeholders)
-                .decoration(TextDecoration.ITALIC, false)
-                .color(NamedTextColor.WHITE));
-        item.setItemMeta(meta);
+        int columns = 1;
+        if (plugin.getConfig().getBoolean("WaystoneScreen.ShowNumbers"))
+            columns++;
+
+        if (isSorting) {
+            if (moveFromToButtons)
+                columns++;
+            if (allowManualSorting)
+                columns += 2;
+        } else {
+            ItemStack item = plugin.getCraftManager().createWaystoneItem(clickedWaystone);
+            item.lore(plugin.getConfig()
+                    .getStringList("Messages.WaystonesListDialog.CurrentWaystoneTooltip")
+                    .stream()
+                    .map(x -> QuickWaystones.rawMessage("<reset>" + x, placeholders)
+                            .decoration(TextDecoration.ITALIC, false)
+                            .color(NamedTextColor.WHITE))
+                    .toList());
+            ItemMeta meta = item.getItemMeta();
+            meta.displayName(QuickWaystones.rawMessage("<reset>" + clickedWaystone.getName(), placeholders)
+                    .decoration(TextDecoration.ITALIC, false)
+                    .color(NamedTextColor.WHITE));
+            item.setItemMeta(meta);
+            dialog.body(builder -> builder.item().item(item));
+        }
 
         dialog.title(QuickWaystones.message("WaystonesListDialog.Title", placeholders))
                 .afterAction(Dialog.AfterAction.NONE)
                 .canCloseWithEscape(true)
-                .columns(3)
-                .body(builder -> builder.item().item(item))
+                .columns(columns)
                 .exitAction(builder -> builder.label(QuickWaystones.message("Close")).dynamicCustom(KEY_CLOSE))
                 .pause(false)
                 .opener()

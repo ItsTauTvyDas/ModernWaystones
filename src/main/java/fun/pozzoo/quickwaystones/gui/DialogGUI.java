@@ -2,7 +2,7 @@ package fun.pozzoo.quickwaystones.gui;
 
 import fun.pozzoo.quickwaystones.QuickWaystones;
 import fun.pozzoo.quickwaystones.Utils;
-import fun.pozzoo.quickwaystones.WaystoneSound;
+import fun.pozzoo.quickwaystones.enums.WaystoneSound;
 import fun.pozzoo.quickwaystones.data.WaystoneData;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -47,13 +47,7 @@ public abstract class DialogGUI {
     public abstract void showSimpleNotice(Player viewer, Component title, Component text, Component button, Consumer<Player> action, boolean closeOnEscape);
     public abstract void showFriendsSettingsDialog(Player viewer, WaystoneData waystone, boolean canEdit);
     public abstract void showWaitingDialog(Player viewer, Component title, Function<Long, Component> text, Component cancelButton, long waitTicks, Runnable onClose, Runnable onFinish);
-
-    private boolean isPlayerAdded(WaystoneData waystone, Player player) {
-        Utils.loadChunkIfNeeded(waystone.getLocation());
-        if (!plugin.isWaystoneFriendsBlock(waystone.getLocation().clone().add(0, -1, 0).getBlock()))
-            return false;
-        return waystone.getAddedPlayers().contains(player.getUniqueId());
-    }
+    public abstract void showSortSettingsDialog(Player viewer, WaystoneData clickedWaystone);
 
     protected List<WaystoneData> getSortedWaystones(Player player, WaystoneData clickedWaystone) {
         Map<Location, WaystoneData> waystones = plugin.getWaystonesMap();
@@ -61,7 +55,7 @@ public abstract class DialogGUI {
                 .filter(x ->
                         (clickedWaystone == null && x.getOwnerUniqueId().equals(player.getUniqueId())) ||
                                 (clickedWaystone != null && (x.isGloballyAccessible()
-                                        || isPlayerAdded(x, player)
+                                        || x.getAddedPlayers().contains(player.getUniqueId())
                                         || x.getOwnerUniqueId().equals(player.getUniqueId())
                                 )))
                 .sorted(Comparator.comparing(WaystoneData::getCreatedAt))
@@ -82,15 +76,16 @@ public abstract class DialogGUI {
         plugin.playWaystoneSound(null, location, WaystoneSound.TELEPORTED);
         dialogViewer.setNoDamageTicks(10);
         if (!isViewer) {
-            dialogViewer.setMetadata(KEY_LAST_WAYSTONE, new FixedMetadataValue(plugin, waystone.getID()));
+            dialogViewer.setMetadata(KEY_LAST_WAYSTONE, new FixedMetadataValue(plugin, waystone.getUniqueId()));
             waystone.markLastUsed();
             long current = System.currentTimeMillis();
             if (lastSaved + 1000L <= current) {
-                plugin.getDataManager().saveWaystoneData();
+                plugin.getWaystoneDataManager().saveData();
                 lastSaved = current;
             }
         }
         if (!Utils.isBedrockPlayer(uuid)) {
+            // TODO use dialog for waiting
             long delayAfter = plugin.getConfig().getLong("Teleportation.DelayAfter");
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 dialogViewer.closeInventory();
@@ -108,7 +103,7 @@ public abstract class DialogGUI {
 
     private void fillPlaceholders(Map<String, String> placeholders, Player player, WaystoneData waystone, String prefix) {
         placeholders.put(prefix + "name", waystone.getName());
-        placeholders.put(prefix + "id", waystone.getID());
+        placeholders.put(prefix + "id", waystone.getUniqueId().toString());
         if (waystone.isInternal()) {
             placeholders.put(prefix + "owner", "Server");
             placeholders.put(prefix + "owner_id", "Server");
@@ -134,7 +129,7 @@ public abstract class DialogGUI {
         if (player != null) {
             if (player.hasMetadata(KEY_LAST_WAYSTONE)) {
                 List<MetadataValue> metadata = player.getMetadata(KEY_LAST_WAYSTONE);
-                if (!metadata.isEmpty() && waystone.getID().equals(player.getMetadata(KEY_LAST_WAYSTONE).getFirst().asString()))
+                if (!metadata.isEmpty() && waystone.getUniqueId().equals(player.getMetadata(KEY_LAST_WAYSTONE).getFirst().asString()))
                     attributes.add(plugin.getConfig().getString("Messages.WaystoneAttributes.LastlyUsed"));
             }
             if (!waystone.isGloballyAccessible() && waystone.getAddedPlayers().contains(player.getUniqueId()))

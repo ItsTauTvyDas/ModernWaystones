@@ -89,6 +89,15 @@ public class UniDialogs extends DialogGUI {
     }
 
     @Override
+    public void showSortSettingsDialog(Player viewer, WaystoneData clickedWaystone) {
+        if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
+            bedrock.showSortSettingsDialog(viewer, clickedWaystone);
+        } else {
+            java.showSortSettingsDialog(viewer, clickedWaystone);
+        }
+    }
+
+    @Override
     public void showSimpleNotice(Player viewer, Component title, Component text, Component button, Consumer<Player> action, boolean closeOnEscape) {
         if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
             bedrock.showSimpleNotice(viewer, title, text, button, action, closeOnEscape);
