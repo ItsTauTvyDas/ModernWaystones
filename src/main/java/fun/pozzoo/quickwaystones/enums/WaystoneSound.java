@@ -1,4 +1,4 @@
-package fun.pozzoo.quickwaystones;
+package fun.pozzoo.quickwaystones.enums;
 
 public enum WaystoneSound {
     ACTIVATED("Activation"),
