@@ -29,6 +29,11 @@ DefaultWaystone:
   Name: "Waystone #{id}"
   GloballyAccessible: true
   PromptRenameDialogUponPlacing: false # not implemented
+WaystoneScreen: # for Java clients only
+  ShowNumbers: true
+  AutoSort: true
+  AllowManualSort: true
+  MoveFromToButtons: true
 Features:
   RenameByNameTag:
     Enabled: true
@@ -78,9 +83,21 @@ Messages:
   WaystonesListDialog:
     Title: "Current waystone - <bold>{current_name}"
     WaystoneButton: "{name}<reset> ({attributes})"
+    CurrentWaystoneButton: "Current - {name}<reset> ({attributes})"
     ServerWaystoneButton: "{name}"
     PrivateWaystoneNotice: "<red>This waystone is private, teleporting away means you won't be able to get back!"
     NoWaystonesNotice: "<red>You do not have any waystones to teleport to!"
+    Sorting:
+      DisallowedUp: "This waystone can't be moved up!"
+      DisallowedDown: "This waystone can't be moved down!"
+      MoveButtons:
+        Width: 20
+        Move:
+          Text: "S"
+          Tooltip: "(Moving) Select this waystone"
+        Here:
+          Text: "H"
+          Tooltip: "Move selected waystone here"
     Teleporting:
       Title: "Teleporting to {name}"
       Text: "Teleporting in <green>{seconds}</green>..."
