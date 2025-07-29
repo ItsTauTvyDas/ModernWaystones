@@ -2,12 +2,15 @@ package fun.pozzoo.quickwaystones;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import fun.pozzoo.quickwaystones.data.PlayerData;
 import fun.pozzoo.quickwaystones.data.WaystoneData;
+import fun.pozzoo.quickwaystones.enums.WaystoneSound;
 import fun.pozzoo.quickwaystones.events.WaystoneEventsHandler;
 import fun.pozzoo.quickwaystones.gui.DialogGUI;
 import fun.pozzoo.quickwaystones.gui.UniDialogs;
 import fun.pozzoo.quickwaystones.managers.CraftManager;
-import fun.pozzoo.quickwaystones.managers.DataManager;
+import fun.pozzoo.quickwaystones.managers.PlayerDataManager;
+import fun.pozzoo.quickwaystones.managers.WaystoneDataManager;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
@@ -29,6 +32,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public final class QuickWaystones extends JavaPlugin {
     private static QuickWaystones plugin;
@@ -37,12 +41,14 @@ public final class QuickWaystones extends JavaPlugin {
 
     private static boolean bedrockSupported;
 
-    private DataManager dataManager;
+    private WaystoneDataManager waystoneDataManager;
+    private PlayerDataManager playerDataManager;
     private CraftManager craftManager;
     private DialogGUI waystoneDialogs;
     private Material waystoneBlockType;
     private Material friendsBlockType;
     private Map<Location, WaystoneData> waystonesMap;
+    private Map<UUID, PlayerData> playerDataMap;
 
     @SuppressWarnings("UnstableApiUsage")
     @Override
@@ -57,9 +63,19 @@ public final class QuickWaystones extends JavaPlugin {
         new WaystoneEventsHandler(this);
 
         waystonesMap = new HashMap<>();
+        playerDataMap = new HashMap<>();
 
-        dataManager = new DataManager(this);
-        dataManager.loadWaystonesData();
+        try {
+            waystoneDataManager = new WaystoneDataManager(this);
+            waystoneDataManager.loadData();
+
+            playerDataManager = new PlayerDataManager(this);
+            playerDataManager.loadData();
+        } catch (Exception e) {
+            e.printStackTrace();
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
 
         waystoneDialogs = UniDialogs.tryCreate(this);
         waystoneDialogs.register();
@@ -102,8 +118,8 @@ public final class QuickWaystones extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (dataManager != null)
-            dataManager.saveWaystoneData();
+        if (waystoneDataManager != null)
+            waystoneDataManager.saveData();
         if (waystoneDialogs != null)
             waystoneDialogs.unregister();
         if (metrics != null)
@@ -128,8 +144,20 @@ public final class QuickWaystones extends JavaPlugin {
         );
     }
 
-    public DataManager getDataManager() {
-        return dataManager;
+    public WaystoneDataManager getWaystoneDataManager() {
+        return waystoneDataManager;
+    }
+
+    public PlayerDataManager getPlayerDataManager() {
+        return playerDataManager;
+    }
+
+    public PlayerData getPlayerData(Player player) {
+        return playerDataMap.get(player.getUniqueId());
+    }
+
+    public Map<UUID, PlayerData> getPlayerDataMap() {
+        return playerDataMap;
     }
 
     public CraftManager getCraftManager() {
@@ -156,8 +184,11 @@ public final class QuickWaystones extends JavaPlugin {
         return waystonesMap;
     }
 
-    public List<WaystoneData> getWaystones(UUID ownerUniqueId) {
-        return getWaystonesMap().values().stream().filter(x -> x.isOwner(ownerUniqueId)).toList();
+    public Map<String, WaystoneData> getWaystones(UUID ownerUniqueId) {
+        return getWaystonesMap().values()
+                .stream()
+                .filter(x -> x.isOwner(ownerUniqueId) && !x.isInternal())
+                .collect(Collectors.toMap(WaystoneData::getUniqueId, x -> x));
     }
 
     public DialogGUI getWaystoneDialogs() {
