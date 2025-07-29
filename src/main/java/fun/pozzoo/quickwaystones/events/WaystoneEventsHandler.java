@@ -2,7 +2,7 @@ package fun.pozzoo.quickwaystones.events;
 
 import com.destroystokyo.paper.event.block.BlockDestroyEvent;
 import fun.pozzoo.quickwaystones.QuickWaystones;
-import fun.pozzoo.quickwaystones.WaystoneSound;
+import fun.pozzoo.quickwaystones.enums.WaystoneSound;
 import fun.pozzoo.quickwaystones.data.WaystoneData;
 import io.papermc.paper.event.entity.EntityKnockbackEvent;
 import net.kyori.adventure.text.TextComponent;
@@ -63,14 +63,14 @@ public class WaystoneEventsHandler implements Listener {
 
     private void destroyWaystone(Location location) {
         plugin.getWaystonesMap().remove(location);
-        plugin.getDataManager().saveWaystoneData();
+        plugin.getWaystoneDataManager().saveData();
     }
 
     @EventHandler
     public void onBlockDestroy(BlockDestroyEvent event) {
-        if (!plugin.isWaystoneBlock(event.getBlock())) return;
-
         WaystoneData waystone = plugin.getWaystonesMap().get(event.getBlock().getLocation());
+        if (waystone == null) return;
+        if (waystone.isInternal()) return;
         Location location = event.getBlock().getLocation();
         if (event.willDrop()) {
             event.setWillDrop(false);
@@ -84,13 +84,10 @@ public class WaystoneEventsHandler implements Listener {
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
-        if (!plugin.isWaystoneBlock(event.getBlock())) return;
-
-        Player player = event.getPlayer();
         WaystoneData waystone = plugin.getWaystonesMap().get(event.getBlock().getLocation());
-
+        if (waystone == null) return;
         if (waystone.isInternal()) return;
-
+        Player player = event.getPlayer();
         Location location = event.getBlock().getLocation();
         if ((player.isOp() && player.getGameMode() == GameMode.CREATIVE) || player.getUniqueId().equals(waystone.getOwnerUniqueId()))
             destroyWaystone(location);
@@ -116,7 +113,7 @@ public class WaystoneEventsHandler implements Listener {
             return;
         Player player = event.getPlayer();
         int limit = plugin.getConfig().getInt("PlayerLimitations.MaxWaystonesPerPlayer", -1);
-        if (limit != -1 && plugin.getWaystones(player.getUniqueId()).size() >= limit) {
+        if (limit != -1 && plugin.getWaystones(player.getUniqueId()).size() + 1 >= limit) {
             Map<String, String> placeholders = new HashMap<>();
             placeholders.put("max", Integer.toString(limit));
             player.sendActionBar(QuickWaystones.message("Limitations.WaystoneCountLimitReached", placeholders));
@@ -131,7 +128,7 @@ public class WaystoneEventsHandler implements Listener {
             data.setName(name);
         if (visible != null)
             data.setGloballyAccessible(visible);
-        plugin.getDataManager().saveWaystoneData();
+        plugin.getWaystoneDataManager().saveData();
         plugin.playWaystoneSound(null, block.getLocation(), WaystoneSound.ACTIVATED);
     }
 
@@ -146,7 +143,6 @@ public class WaystoneEventsHandler implements Listener {
             block = block.getRelative(BlockFace.UP);
             clickedFriendsBlock = true;
         }
-        if (!plugin.isWaystoneBlock(block)) return;
         WaystoneData waystone = plugin.getWaystonesMap().get(block.getLocation());
         if (waystone == null)
             return;
@@ -163,7 +159,7 @@ public class WaystoneEventsHandler implements Listener {
             return;
         }
 
-        if (!waystone.isOwner(player))
+        if (!waystone.isOwner(player) && !(player.isOp() && player.getGameMode() == GameMode.CREATIVE))
             return;
 
         Map<String, String> placeholders = new HashMap<>();
@@ -175,7 +171,7 @@ public class WaystoneEventsHandler implements Listener {
             if (textComponent == null) return;
             waystone.setName(textComponent.decoration(TextDecoration.ITALIC, false).content());
             placeholders.put("new_name", waystone.getName());
-            plugin.getDataManager().saveWaystoneData();
+            plugin.getWaystoneDataManager().saveData();
             if (section.getBoolean("SubtractItemCount"))
                 player.getInventory().getItemInMainHand().subtract();
             plugin.playWaystoneSound(player, block.getLocation(), WaystoneSound.RENAMED);
@@ -186,7 +182,7 @@ public class WaystoneEventsHandler implements Listener {
         if (section != null && section.getBoolean("Enabled")
                 && event.getItem().getType() == Material.getMaterial(section.getString("Material", "ECHO_SHARD"))) {
             waystone.setGloballyAccessible(!waystone.isGloballyAccessible());
-            plugin.getDataManager().saveWaystoneData();
+            plugin.getWaystoneDataManager().saveData();
             if (section.getBoolean("SubtractItemCount"))
                 player.getInventory().getItemInMainHand().subtract();
             String type;
@@ -205,7 +201,7 @@ public class WaystoneEventsHandler implements Listener {
                 && event.getItem().getType() == Material.getMaterial(section.getString("Material", "DEBUG_STICK"))) {
             waystone.setInternal(!waystone.isInternal());
             waystone.setGloballyAccessible(true);
-            plugin.getDataManager().saveWaystoneData();
+            plugin.getWaystoneDataManager().saveData();
             event.setCancelled(true);
             player.sendActionBar(QuickWaystones.message("ServerWaystoneMarking." + (waystone.isInternal() ? "Set" : "Unset"), placeholders));
         }
@@ -304,7 +300,11 @@ public class WaystoneEventsHandler implements Listener {
         plugin.getWaystoneDialogs().cleanupPlayerCache(event.getPlayer().getUniqueId());
     }
 
-    private void checkForAvailabilityAndShowListDialog(Player player, WaystoneData data) {
+    private void checkForAvailabilityAndShowListDialog(Player player, WaystoneData waystone) {
+        if (player.isSneaking() && waystone.isOwner(player)) {
+            plugin.getWaystoneDialogs().showSortSettingsDialog(player, waystone);
+            return;
+        }
         List<MetadataValue> list = player.getMetadata("teleported_at");
         if (!list.isEmpty()) {
             long current = System.currentTimeMillis();
@@ -318,6 +318,6 @@ public class WaystoneEventsHandler implements Listener {
             }
             player.removeMetadata("teleported_at", plugin);
         }
-        plugin.getWaystoneDialogs().showListDialog(player, data);
+        plugin.getWaystoneDialogs().showListDialog(player, waystone);
     }
 }
