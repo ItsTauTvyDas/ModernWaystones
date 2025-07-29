@@ -18,7 +18,7 @@ public class WaystoneData {
     private boolean internal;
 
     private final long createdAt;
-    private final String id;
+    private final String uniqueId;
     private final String owner;
     private final UUID ownerUniqueId;
     private final Location location;
@@ -26,7 +26,7 @@ public class WaystoneData {
 
     public WaystoneData(Location location, String owner, UUID ownerUniqueId) {
         String waystoneDefaultName = QuickWaystones.config().getString("DefaultWaystone.Name", "Waystone #{id}");
-        this.id = UUID.randomUUID().toString();
+        this.uniqueId = UUID.randomUUID().toString();
         this.name = waystoneDefaultName.replace("{id}", Integer.toString(QuickWaystones.getAndIncrementLastWaystoneID()));
         this.location = location;
         this.owner = owner;
@@ -36,7 +36,7 @@ public class WaystoneData {
     }
 
     public WaystoneData(String id, String name, Location location, String owner, UUID ownerUniqueId, long createdAt) {
-        this.id = id;
+        this.uniqueId = id;
         this.name = name;
         this.location = location;
         this.owner = owner;
@@ -45,8 +45,8 @@ public class WaystoneData {
         this.ownerUniqueId = ownerUniqueId;
     }
 
-    public String getID() {
-        return id;
+    public String getUniqueId() {
+        return uniqueId;
     }
 
     public String getName() {
@@ -116,9 +116,7 @@ public class WaystoneData {
     }
 
     public boolean addPlayer(UUID player) {
-        if (!player.equals(ownerUniqueId))
-            return this.addedPlayers.add(player);
-        return false;
+        return this.addedPlayers.add(player);
     }
 
     public boolean removePlayer(UUID player) {
@@ -160,7 +158,7 @@ public class WaystoneData {
     @Override
     public String toString() {
         return "WaystoneData{" +
-                "id=" + id +
+                "id=" + uniqueId +
                 ", name='" + name + '\'' +
                 ", location=" + location +
                 ", owner='" + owner + '\'' +
