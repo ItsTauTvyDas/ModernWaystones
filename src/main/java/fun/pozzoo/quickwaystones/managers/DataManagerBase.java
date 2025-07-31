@@ -1,7 +1,6 @@
 package fun.pozzoo.quickwaystones.managers;
 
 import fun.pozzoo.quickwaystones.QuickWaystones;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -11,7 +10,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-public abstract class DataManagerBase {
+public abstract class DataManagerBase<D> {
     private final QuickWaystones plugin;
 
     private File file;
@@ -52,6 +51,7 @@ public abstract class DataManagerBase {
 
     public abstract void loadData() throws Exception;
     public abstract void saveData();
+    public abstract D getData();
 
     protected void save() {
         try {
