@@ -14,7 +14,6 @@ public class WaystoneData {
     private String name;
     private boolean globallyAccessible;
 
-    private long lastUsedAt;
     private boolean internal;
 
     private final long createdAt;
@@ -71,40 +70,6 @@ public class WaystoneData {
 
     public long getCreatedAt() {
         return createdAt;
-    }
-
-    public long getLastUsedAt() {
-        return lastUsedAt;
-    }
-
-    public String getLastUsedAtFormatted() {
-        long totalSeconds = (System.currentTimeMillis() - getLastUsedAt()) / 1000;
-        long days = totalSeconds / 86400;
-        long hours = (totalSeconds % 86400) / 3600;
-        long minutes = (totalSeconds % 3600) / 60;
-        long seconds = totalSeconds % 60;
-        StringBuilder sb = new StringBuilder();
-        if (days > 0) {
-            sb.append(days).append("d");
-            if (hours > 0) sb.append(" ").append(hours).append("h");
-        } else if (hours > 0) {
-            sb.append(hours).append("h");
-            if (minutes > 0) sb.append(" ").append(minutes).append("m");
-        } else if (minutes > 0) {
-            sb.append(minutes).append("m");
-            if (seconds > 0) sb.append(" ").append(seconds).append("s");
-        } else {
-            sb.append(seconds).append("s");
-        }
-        return sb.toString();
-    }
-
-    public void setLastUsedAt(long timestamp) {
-        this.lastUsedAt = timestamp;
-    }
-
-    public void markLastUsed() {
-        setLastUsedAt(System.currentTimeMillis());
     }
 
     public void setInternal(boolean internal) {
@@ -164,7 +129,6 @@ public class WaystoneData {
                 ", owner='" + owner + '\'' +
                 ", globallyAccessible=" + globallyAccessible +
                 ", createdAt=" + createdAt +
-                ", lastUsedAt=" + lastUsedAt +
                 ", internal=" + internal +
                 ", addedPlayers=" + addedPlayers +
                 '}';
