@@ -34,6 +34,9 @@ WaystoneScreen: # for Java clients only
   AutoSort: true
   AllowManualSort: true
   MoveFromToButtons: true
+  DefaultPlayerSorting:
+    Type: CREATED_AT
+    Inverse: false
 Features:
   RenameByNameTag:
     Enabled: true
@@ -82,6 +85,7 @@ Messages:
     InputLabelRequired: "Enter waystone name: <red>(Required)</red>"
   WaystonesListDialog:
     Title: "Current waystone - <bold>{current_name}"
+    SortingTitle: "Manual waystone sorting"
     WaystoneButton: "{name}<reset> ({attributes})"
     CurrentWaystoneButton: "Current - {name}<reset> ({attributes})"
     ServerWaystoneButton: "{name}"
@@ -91,24 +95,17 @@ Messages:
       DisallowedUp: "This waystone can't be moved up!"
       DisallowedDown: "This waystone can't be moved down!"
       MoveButtons:
-        Width: 20
+        Width: 45
         Move:
-          Text: "S"
-          Tooltip: "(Moving) Select this waystone"
+          Text: "Move"
+          Tooltip: "Click to move this waystone!"
         Here:
-          Text: "H"
-          Tooltip: "Move selected waystone here"
+          Text: "Here"
+          TextWhenSelected: "<green>Here"
+          Tooltip: "Click to move selected waystone ({selected_waystone}<reset>) here!"
     Teleporting:
       Title: "Teleporting to {name}"
       Text: "Teleporting in <green>{seconds}</green>..."
-    WaystoneTooltip:
-      - "Location: {world} <aqua>{x}, {y}, {z}"
-      - "Owner: {owner}"
-      - "Last used: <gold>{last_used_ago}"
-    CurrentWaystoneTooltip:
-      - "Location: {current_world} <aqua>{current_x}, {current_y}, {current_z}"
-      - "Owner: {current_owner}"
-      - "Last used: <gold>{current_last_used_ago}"
   WaystoneDestroyedNoticeDialog:
     Title: "Something happened"
     Message: "<red>Waystone <white>{name}</white> doesn't exist anymore! This can happen when your waystone block gets destroyed by a player, explosion or something else.</red>"
@@ -129,6 +126,26 @@ Messages:
       Remove:
         Text: "<red><bold>-"
         Tooltip: "<red>Remove"
+  WaystoneSettingsDialog:
+    Title: "Waystone settings"
+    Buttons:
+      ManualSorting: "Manual sorting"
+      SortBy:
+        Label: "Auto Sort by"
+        Values:
+          CREATED_AT: "Creation"
+          NAME: "Name"
+          MANUAL: "Manual"
+          OWNER: "Owner (player's name)"
+      InvertSorting: "Invert waystone listing"
+  WaystoneTooltip:
+    - "Location: {world} <aqua>{x}, {y}, {z}"
+    - "Owner: {owner}"
+    - "Created <gold>{created_ago}</gold> ago"
+  CurrentWaystoneTooltip:
+    - "Location: {current_world} <aqua>{current_x}, {current_y}, {current_z}"
+    - "Owner: {current_owner}"
+    - "Created <gold>{current_created_ago}</gold> ago"
   ServerWaystoneMarking:
     Set: "Waystone was converted to server's global waystone!"
     Unset: "Waystone was converted back to normal"
