@@ -1,6 +1,5 @@
 package fun.pozzoo.quickwaystones.data;
 
-import fun.pozzoo.quickwaystones.QuickWaystones;
 import fun.pozzoo.quickwaystones.enums.PlayerSortType;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -8,24 +7,47 @@ import org.bukkit.entity.Player;
 import java.util.*;
 
 public class PlayerData {
-    private final QuickWaystones plugin;
     private final UUID uniqueId;
-    private final PlayerSortType sortType;
-    private Set<String> sortedWaystones;
+    private boolean inverted;
+    private PlayerSortType sortType;
+    private PlayerSortType oldSortType;
+    private Set<WaystoneData> sortedWaystones;
 
-    private Comparator<String> comparator;
+    private final Comparator<WaystoneData> comparator;
 
-    public PlayerData(QuickWaystones plugin, UUID uniqueId, PlayerSortType sortType, Collection<String> sortedWaystones) {
-        this.plugin = plugin;
+    public PlayerData(UUID uniqueId, PlayerSortType sortType, boolean inverted, Collection<WaystoneData> waystones) {
         this.uniqueId = uniqueId;
         this.sortType = sortType;
+        this.oldSortType = sortType;
+        this.inverted = inverted;
 
-        sort();
-        this.sortedWaystones.addAll(sortedWaystones);
+        comparator = (w1, w2) -> switch (this.sortType) {
+            case CREATED_AT -> Long.compare(w1.getCreatedAt(), w2.getCreatedAt());
+            case NAME -> {
+                int compared = w1.getName().compareToIgnoreCase(w2.getName());
+                if (compared == 0)
+                    yield w1.getName().compareToIgnoreCase(w2.getName() + w1.getName());
+                yield 1;
+            }
+            case OWNER -> {
+                int compared = w1.getOwner().compareToIgnoreCase(w2.getOwner());
+                if (compared == 0)
+                    yield w1.getOwner().compareToIgnoreCase(w2.getOwner() + w1.getOwner());
+                yield 1;
+            }
+            default -> w1.getUniqueId().compareTo(w2.getUniqueId());
+        };
+
+        updateSorting(false);
+        this.sortedWaystones.addAll(waystones);
     }
 
     public UUID getUniqueId() {
         return uniqueId;
+    }
+
+    public boolean isSortingInverted() {
+        return inverted;
     }
 
     public Player getOnlinePlayer() {
@@ -36,40 +58,79 @@ public class PlayerData {
         return sortType;
     }
 
-    public Set<String> getSortedWaystones() {
+    public Set<WaystoneData> getSortedWaystones() {
         return sortedWaystones;
     }
 
-    public void add(Collection<WaystoneData> waystones) {
-        sort();
-        sortedWaystones.addAll(waystones.stream().map(WaystoneData::getUniqueId).toList());
-    }
-
-    public void add(WaystoneData waystone) {
-        sort();
-        sortedWaystones.add(waystone.getUniqueId());
-    }
-
-    private void sort() {
-        if (sortType == PlayerSortType.MANUAL) {
-            sortedWaystones = new LinkedHashSet<>();
-        } else {
-            sortedWaystones = new TreeSet<>((id1, id2) -> {
-                WaystoneData w1 = plugin.getWaystones(uniqueId).get(id1);
-                WaystoneData w2 = plugin.getWaystones(uniqueId).get(id2);
-                if (w1 == null || w2 == null) return 0;
-
-                int result = switch (sortType) {
-                    case CREATED_AT -> Long.compare(w1.getCreatedAt(), w2.getCreatedAt());
-                    case LAST_USED_AT -> Long.compare(w1.getLastUsedAt(), w2.getLastUsedAt());
-                    case NAME -> w1.getName().compareToIgnoreCase(w2.getName());
-                    case OWNER -> w1.getOwner().compareToIgnoreCase(w2.getOwner());
-                    default -> 0;
-                };
-
-                if (result == 0) result = id1.compareTo(id2); // avoid collision
-                return result;
-            });
+    public boolean setSortType(PlayerSortType type, Boolean inverted, boolean updateSorting) {
+        if (this.sortType == type && Boolean.valueOf(this.inverted).equals(inverted))
+            return false;
+        this.sortType = type;
+        if (updateSorting)
+            updateSorting(false);
+        if (inverted != null) {
+            if (this.inverted != inverted)
+                invert();
+            this.inverted = inverted;
         }
+        return true;
+    }
+
+    public void setWaystones(Collection<WaystoneData> waystones) {
+        updateSorting(false);
+        sortedWaystones.clear();
+        sortedWaystones.addAll(waystones);
+    }
+
+    public void addWaystone(WaystoneData waystone) {
+        updateSorting(false);
+        sortedWaystones.add(waystone);
+    }
+
+    private void move(WaystoneData waystone, int i) {
+        setSortType(PlayerSortType.MANUAL, null, true);
+        List<WaystoneData> ids = new ArrayList<>(sortedWaystones);
+        int index = ids.indexOf(waystone);
+        if (index == -1) return;
+        Collections.swap(ids, index, index - i);
+        sortedWaystones = new LinkedHashSet<>(ids);
+    }
+
+    public void moveUp(WaystoneData waystone) {
+        move(waystone, 1);
+    }
+
+    public void moveDown(WaystoneData waystone) {
+        move(waystone, -1);
+    }
+
+    public void exchange(WaystoneData waystone1, WaystoneData waystone2) {
+        setSortType(PlayerSortType.MANUAL, null, true);
+        List<WaystoneData> ids = new ArrayList<>(sortedWaystones);
+        int index1 = ids.indexOf(waystone1);
+        if (index1 < 0) return;
+        int index2 = ids.indexOf(waystone2);
+        if (index2 < 0) return;
+        Collections.swap(ids, index1, index2);
+        sortedWaystones = new LinkedHashSet<>(ids);
+    }
+
+    private void invert() {
+        sortedWaystones = ((SequencedSet<WaystoneData>) sortedWaystones).reversed();
+    }
+
+    public void updateSorting(boolean forced) {
+        if (!forced && oldSortType == sortType && sortedWaystones != null)
+            return;
+        System.out.println("--------------------------------- " + sortType);
+        List<WaystoneData> oldItems = sortedWaystones != null ? new ArrayList<>(sortedWaystones) : List.of();
+        if (sortType == PlayerSortType.MANUAL) {
+            sortedWaystones = new LinkedHashSet<>(oldItems);
+        } else {
+            sortedWaystones = new TreeSet<>(comparator);
+            sortedWaystones.addAll(oldItems);
+        }
+        System.out.println(sortedWaystones);
+        oldSortType = sortType;
     }
 }

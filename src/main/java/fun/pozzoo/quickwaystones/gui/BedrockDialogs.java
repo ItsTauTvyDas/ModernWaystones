@@ -57,4 +57,9 @@ public class BedrockDialogs extends DialogGUI {
     public void showSortSettingsDialog(Player viewer, WaystoneData clickedWaystone) {
 
     }
+
+    @Override
+    public void showWaystoneSettingsDialog(Player viewer, WaystoneData clickedWaystone) {
+
+    }
 }

@@ -2,12 +2,15 @@ package fun.pozzoo.quickwaystones.gui;
 
 import fun.pozzoo.quickwaystones.QuickWaystones;
 import fun.pozzoo.quickwaystones.Utils;
-import fun.pozzoo.quickwaystones.enums.WaystoneSound;
+import fun.pozzoo.quickwaystones.data.PlayerData;
 import fun.pozzoo.quickwaystones.data.WaystoneData;
+import fun.pozzoo.quickwaystones.enums.PlayerSortType;
+import fun.pozzoo.quickwaystones.enums.WaystoneSound;
 import io.github.projectunified.unidialog.core.dialog.Dialog;
 import io.github.projectunified.unidialog.paper.PaperDialogManager;
 import io.github.projectunified.unidialog.paper.dialog.PaperMultiActionDialog;
 import io.github.projectunified.unidialog.paper.dialog.PaperNoticeDialog;
+import io.github.projectunified.unidialog.paper.input.PaperSingleOptionInput;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -35,13 +38,19 @@ public class JavaDialogs extends DialogGUI {
     public static final String KEY_UP = "up";
     public static final String KEY_DOWN = "down";
     public static final String KEY_CLOSE = "close";
-    public static final String KEY_SAVE_AND_CLOSE = "save_and_close";
+    public static final String KEY_SORT = "sort";
+    public static final String KEY_INVERT_SORT = "invert_sort";
+    public static final String KEY_SAVE_WD_AND_CLOSE = "save_wd_and_close";
+    public static final String KEY_SAVE_PD_AND_CLOSE = "save_pd_and_close";
     public static final String KEY_CUSTOM = "custom";
     public static final String KEY_REMOVE_DEAD_WAYSTONE = "remove_dead_waystone";
     public static final String KEY_BACK_TO_THE_LIST = "back_to_the_list";
+    public static final String KEY_OPEN_MANUAL_SORT = "open_manual_sort";
 
     private final Map<UUID, Set<String>> storedDynamicCustomActionIdentities = new HashMap<>();
     private PaperDialogManager dialogManager;
+
+    private final Map<UUID, Consumer<Player>> runAfterClose = new HashMap<>();
 
     public JavaDialogs(QuickWaystones plugin) {
         super(plugin);
@@ -61,25 +70,35 @@ public class JavaDialogs extends DialogGUI {
         dialogManager.unregisterCustomAction(id);
     }
 
+    private void handleClose(String key, UUID uuid, Map<String, String> data) {
+        cleanupPlayerCache(uuid);
+        Player player = Bukkit.getPlayer(uuid);
+        if (player == null)
+            return;
+        player.closeInventory();
+
+        switch (key) {
+            case KEY_SAVE_WD_AND_CLOSE:
+                plugin.getWaystoneDataManager().saveData();
+                break;
+            case KEY_SAVE_PD_AND_CLOSE:
+                plugin.getPlayerDataManager().saveData();
+                break;
+        }
+
+        Consumer<Player> consume = runAfterClose.remove(uuid);
+        if (consume != null)
+            consume.accept(player);
+    }
+
     @Override
     public void register() {
         dialogManager = new PaperDialogManager(plugin, "quickwaystones");
         dialogManager.register();
 
-        dialogManager.registerCustomAction(KEY_CLOSE, (uuid, data) -> {
-            Player player = Bukkit.getPlayer(uuid);
-            if (player != null)
-                player.closeInventory();
-            cleanupPlayerCache(uuid);
-        });
-
-        dialogManager.registerCustomAction(KEY_SAVE_AND_CLOSE, (uuid, data) -> {
-            Player player = Bukkit.getPlayer(uuid);
-            if (player != null)
-                player.closeInventory();
-            plugin.getWaystoneDataManager().saveData();
-            cleanupPlayerCache(uuid);
-        });
+        dialogManager.registerCustomAction(KEY_CLOSE, (uuid, data) -> handleClose(KEY_CLOSE, uuid, data));
+        dialogManager.registerCustomAction(KEY_SAVE_WD_AND_CLOSE, (uuid, data) -> handleClose(KEY_SAVE_WD_AND_CLOSE, uuid, data));
+        dialogManager.registerCustomAction(KEY_SAVE_PD_AND_CLOSE, (uuid, data) -> handleClose(KEY_SAVE_PD_AND_CLOSE, uuid, data));
     }
 
     @Override
@@ -129,7 +148,7 @@ public class JavaDialogs extends DialogGUI {
 
         String baseId = player.getUniqueId() + "_" + clickedWaystone.getUniqueId() + "_";
 
-        dialogManager.registerCustomAction(storeCustomActionIdentity(player, baseId + KEY_NAME_DIALOG_DONE), (uuid, data) -> {
+        dialogManager.registerCustomAction(storeCustomActionIdentity(viewer, baseId + KEY_NAME_DIALOG_DONE), (uuid, data) -> {
             Player dialogViewer = Bukkit.getPlayer(uuid);
             if (dialogViewer == null)
                 return;
@@ -194,7 +213,7 @@ public class JavaDialogs extends DialogGUI {
                 .columns(canEdit ? 2 : 1)
                 .exitAction(builder -> builder
                         .label(QuickWaystones.message("Close"))
-                        .dynamicCustom(KEY_SAVE_AND_CLOSE))
+                        .dynamicCustom(KEY_SAVE_WD_AND_CLOSE))
                 .pause(false);
         for (OfflinePlayer player : cachedPlayers) {
             if (player.getUniqueId().equals(waystone.getOwnerUniqueId()))
@@ -268,7 +287,7 @@ public class JavaDialogs extends DialogGUI {
         fillPlaceholders(placeholders, player, clickedWaystone, null);
         String baseId = player.getUniqueId() + "_" + clickedWaystone.getUniqueId() + "_";
 
-        dialogManager.registerCustomAction(storeCustomActionIdentity(player, baseId + KEY_BACK_TO_THE_LIST), (uuid, data) -> {
+        dialogManager.registerCustomAction(storeCustomActionIdentity(viewer, baseId + KEY_BACK_TO_THE_LIST), (uuid, data) -> {
             Player dialogViewer = Bukkit.getPlayer(uuid);
             if (dialogViewer == null)
                 return;
@@ -338,6 +357,74 @@ public class JavaDialogs extends DialogGUI {
         showListDialog(viewer, viewer, clickedWaystone, true);
     }
 
+    private void saveWaystoneSettings(Player player, Map<String, String> data) {
+        PlayerData playerData = plugin.getPlayerData(player);
+        boolean success = playerData.setSortType(
+                PlayerSortType.valueOf(data.get(KEY_SORT)),
+                data.get(KEY_INVERT_SORT).equals("1.0"),
+                true
+        );
+        if (success)
+            plugin.getPlayerDataManager().saveData();
+    }
+
+    @Override
+    public void showWaystoneSettingsDialog(Player viewer, WaystoneData clickedWaystone) {
+        Map<String, String> placeholders = new HashMap<>();
+        fillPlaceholders(placeholders, viewer, null, clickedWaystone);
+
+        String baseId = viewer.getUniqueId() + "_ws_";
+
+        dialogManager.registerCustomAction(storeCustomActionIdentity(viewer, baseId + KEY_OPEN_MANUAL_SORT), (uuid, data) -> {
+            cleanupPlayerCache(uuid);
+            Player player = Bukkit.getPlayer(uuid);
+            if (player == null)
+                return;
+            saveWaystoneSettings(player, data);
+            showListDialog(player, player, clickedWaystone, true);
+        });
+
+        dialogManager.registerCustomAction(storeCustomActionIdentity(viewer, baseId + KEY_CLOSE), (uuid, data) -> {
+            cleanupPlayerCache(uuid);
+            Player player = Bukkit.getPlayer(uuid);
+            if (player == null)
+                return;
+            player.closeInventory();
+            saveWaystoneSettings(player, data);
+        });
+
+        PlayerData data = plugin.getPlayerData(viewer);
+
+        dialogManager.createMultiActionDialog()
+                .title(QuickWaystones.message("WaystoneSettingsDialog.Title", placeholders))
+                .afterAction(Dialog.AfterAction.NONE)
+                .canCloseWithEscape(true)
+                .columns(1)
+                .body(builder -> builder.item().item(createItem(clickedWaystone, placeholders)))
+                .input(KEY_SORT, builder -> {
+                    PaperSingleOptionInput input = builder.singleOptionInput()
+                            .label(QuickWaystones.message("WaystoneSettingsDialog.Buttons.SortBy.Label", placeholders));
+                    PlayerSortType selectedType = data.getSortType();
+                    for (PlayerSortType type : PlayerSortType.values()) {
+                        input.option(
+                                type.toString(),
+                                QuickWaystones.message("WaystoneSettingsDialog.Buttons.SortBy.Values." + type, placeholders),
+                                type == selectedType
+                        );
+                    }
+                })
+                .input(KEY_INVERT_SORT, builder -> builder.booleanInput()
+                        .label(QuickWaystones.message("WaystoneSettingsDialog.Buttons.InvertSorting", placeholders))
+                        .initial(data.isSortingInverted()))
+                .action(builder -> builder.dynamicCustom(baseId + KEY_OPEN_MANUAL_SORT)
+                        .label(QuickWaystones.message("WaystoneSettingsDialog.Buttons.ManualSorting", placeholders))
+                        .width(200))
+                .exitAction(builder -> builder.label(QuickWaystones.message("Close")).dynamicCustom(baseId + KEY_CLOSE))
+                .pause(false)
+                .opener()
+                .open(viewer);
+    }
+
     @Override
     public void showListDialog(Player player, Player viewer, WaystoneData clickedWaystone) {
         showListDialog(player, viewer, clickedWaystone, false);
@@ -346,15 +433,16 @@ public class JavaDialogs extends DialogGUI {
     private void showListDialog(Player player, Player viewer, WaystoneData clickedWaystone, boolean isSorting) {
         boolean allowManualSorting = plugin.getConfig().getBoolean("WaystoneScreen.AllowManualSort");
         boolean moveFromToButtons = plugin.getConfig().getBoolean("WaystoneScreen.MoveFromToButtons");
+
         if (isSorting && !allowManualSorting && !moveFromToButtons)
             return;
 
-        List<WaystoneData> sortedWaystones = getSortedWaystones(player, clickedWaystone);
         Map<String, String> placeholders = new HashMap<>();
         fillPlaceholders(placeholders, player, null, clickedWaystone);
 
         PaperMultiActionDialog dialog = dialogManager.createMultiActionDialog();
 
+        Collection<WaystoneData> sortedWaystones = getSortedWaystones(player);
         boolean empty = true;
         int index = 0;
         int failedWaystones = 0; // clickedWaystone is always going to be there anyway
@@ -373,7 +461,7 @@ public class JavaDialogs extends DialogGUI {
             String baseId = player.getUniqueId() + "_" + waystone.getUniqueId() + "_";
 
             if (!isSorting) {
-                dialogManager.registerCustomAction(storeCustomActionIdentity(player, baseId + KEY_TELEPORT), (uuid, data) -> {
+                dialogManager.registerCustomAction(storeCustomActionIdentity(viewer, baseId + KEY_TELEPORT), (uuid, data) -> {
                     Player dialogViewer = Bukkit.getPlayer(uuid);
                     if (dialogViewer == null)
                         return;
@@ -399,9 +487,6 @@ public class JavaDialogs extends DialogGUI {
                 });
             }
 
-            boolean canMoveUp = index - 1 >= 0;
-            boolean canMoveDown = index + 1 < sortedWaystones.size() - failedWaystones;
-
             fillPlaceholders(placeholders, player, waystone, clickedWaystone);
 
             if (plugin.getConfig().getBoolean("WaystoneScreen.ShowNumbers")) {
@@ -416,64 +501,82 @@ public class JavaDialogs extends DialogGUI {
                                     (waystone == clickedWaystone ?
                                             "CurrentWaystoneButton" :
                                             "WaystoneButton")), placeholders))
-                    .tooltip(QuickWaystones.message("WaystonesListDialog.WaystoneTooltip", placeholders))
+                    .tooltip(QuickWaystones.message("WaystoneTooltip", placeholders))
                     .dynamicCustom(baseId + KEY_TELEPORT));
 
             if (isSorting && allowManualSorting) {
-                if (canMoveUp)
-                    dialogManager.registerCustomAction(storeCustomActionIdentity(player, baseId + KEY_UP), (uuid, data) -> {
+                boolean canMoveUp = index - 1 >= 0;
+                boolean canMoveDown = index + 1 < sortedWaystones.size() - failedWaystones;
+
+                if (canMoveUp) {
+                    dialogManager.registerCustomAction(storeCustomActionIdentity(viewer, baseId + KEY_UP), (uuid, data) -> {
                         Player dialogViewer = Bukkit.getPlayer(uuid);
                         if (dialogViewer == null)
                             return;
+                        System.out.println("up");
+                        plugin.getPlayerData(dialogViewer).moveUp(waystone);
                         showSortSettingsDialog(dialogViewer, clickedWaystone);
                     });
-                if (canMoveDown)
-                    dialogManager.registerCustomAction(storeCustomActionIdentity(player, baseId + KEY_DOWN), (uuid, data) -> {
+                }
+
+                if (canMoveDown) {
+                    dialogManager.registerCustomAction(storeCustomActionIdentity(viewer, baseId + KEY_DOWN), (uuid, data) -> {
                         Player dialogViewer = Bukkit.getPlayer(uuid);
                         if (dialogViewer == null)
                             return;
+                        System.out.println("down");
+                        plugin.getPlayerData(dialogViewer).moveDown(waystone);
                         showSortSettingsDialog(dialogViewer, clickedWaystone);
                     });
+                }
 
                 dialog.action(builder -> builder.width(20)
                         .label(QuickWaystones.message("ArrowUp")
-                                .color(canMoveUp ? NamedTextColor.WHITE : NamedTextColor.DARK_GRAY))
-                        .tooltip(canMoveUp ? null : QuickWaystones.message("WaystonesListDialog.Sorting.DisallowedUp"))
+                                .color(canMoveUp ? NamedTextColor.WHITE : NamedTextColor.GRAY))
+                        .tooltip(canMoveUp ? null : QuickWaystones.message("WaystonesListDialog.Sorting.DisallowedUp", placeholders))
                         .dynamicCustom(baseId + KEY_UP));
 
                 dialog.action(builder -> builder.width(20)
                         .label(QuickWaystones.message("ArrowDown")
-                                .color(canMoveDown ? NamedTextColor.WHITE : NamedTextColor.DARK_GRAY))
-                        .tooltip(canMoveDown ? null : QuickWaystones.message("WaystonesListDialog.Sorting.DisallowedDown"))
+                                .color(canMoveDown ? NamedTextColor.WHITE : NamedTextColor.GRAY))
+                        .tooltip(canMoveDown ? null : QuickWaystones.message("WaystonesListDialog.Sorting.DisallowedDown", placeholders))
                         .dynamicCustom(baseId + KEY_DOWN));
             }
 
             if (isSorting && moveFromToButtons) {
-                dialogManager.registerCustomAction(storeCustomActionIdentity(player, baseId + KEY_MOVE_WAYSTONE), (uuid, data) -> {
+                runAfterClose.put(viewer.getUniqueId(), x -> x.removeMetadata(KEY_MOVE_WAYSTONE, plugin));
+                dialogManager.registerCustomAction(storeCustomActionIdentity(viewer, baseId + KEY_MOVE_WAYSTONE), (uuid, data) -> {
                     Player dialogViewer = Bukkit.getPlayer(uuid);
                     if (dialogViewer == null)
                         return;
-                    List<MetadataValue> list = viewer.getMetadata(KEY_MOVE_WAYSTONE);
+                    List<MetadataValue> list = dialogViewer.getMetadata(KEY_MOVE_WAYSTONE);
                     if (!list.isEmpty()) {
-                        viewer.removeMetadata(KEY_MOVE_WAYSTONE, plugin);
+                        WaystoneData waystone1 = (WaystoneData) list.getFirst().value();
+                        if (waystone != waystone1 && waystone1 != null)
+                            plugin.getPlayerData(dialogViewer).exchange(waystone1, waystone);
+                        dialogViewer.removeMetadata(KEY_MOVE_WAYSTONE, plugin);
                     } else {
-                        viewer.setMetadata(KEY_MOVE_WAYSTONE, new FixedMetadataValue(plugin, null));
+                        dialogViewer.setMetadata(KEY_MOVE_WAYSTONE, new FixedMetadataValue(plugin, waystone));
                     }
                     showSortSettingsDialog(dialogViewer, clickedWaystone);
                 });
                 List<MetadataValue> list = viewer.getMetadata(KEY_MOVE_WAYSTONE);
-                if (!list.isEmpty()) {
+                if (list.isEmpty()) {
                     dialog.action(builder -> builder
-                            .label(QuickWaystones.message("WaystonesListDialog.Sorting.MoveButtons.Move.Text"))
-                            .tooltip(QuickWaystones.message("WaystonesListDialog.Sorting.MoveButtons.Move.Tooltip"))
+                            .label(QuickWaystones.message("WaystonesListDialog.Sorting.MoveButtons.Move.Text", placeholders))
+                            .tooltip(QuickWaystones.message("WaystonesListDialog.Sorting.MoveButtons.Move.Tooltip", placeholders))
                             .width(plugin.getConfig().getInt("Messages.WaystonesListDialog.Sorting.MoveButtons.Width"))
                             .dynamicCustom(baseId + KEY_MOVE_WAYSTONE));
                 } else {
-                    dialog.action(builder -> builder
-                            .label(QuickWaystones.message("WaystonesListDialog.Sorting.MoveButtons.Here.Text"))
-                            .tooltip(QuickWaystones.message("WaystonesListDialog.Sorting.MoveButtons.Here.Tooltip"))
-                            .width(plugin.getConfig().getInt("Messages.WaystonesListDialog.Sorting.MoveButtons.Width"))
-                            .dynamicCustom(baseId + KEY_MOVE_WAYSTONE));
+                    WaystoneData waystone1 = (WaystoneData) list.getFirst().value();
+                    if (waystone1 != null)
+                        dialog.action(builder -> builder
+                                .label(QuickWaystones.message("WaystonesListDialog.Sorting.MoveButtons.Here." +
+                                        (waystone == waystone1 ? "TextWhenSelected" : "Text"), placeholders))
+                                .tooltip(QuickWaystones.message("WaystonesListDialog.Sorting.MoveButtons.Here.Tooltip", placeholders)
+                                        .replaceText(x -> x.matchLiteral("{selected_waystone}").replacement(waystone1.getName())))
+                                .width(plugin.getConfig().getInt("Messages.WaystonesListDialog.Sorting.MoveButtons.Width"))
+                                .dynamicCustom(baseId + KEY_MOVE_WAYSTONE));
                 }
             }
             index++;
@@ -504,29 +607,32 @@ public class JavaDialogs extends DialogGUI {
             if (allowManualSorting)
                 columns += 2;
         } else {
-            ItemStack item = plugin.getCraftManager().createWaystoneItem(clickedWaystone);
-            item.lore(plugin.getConfig()
-                    .getStringList("Messages.WaystonesListDialog.CurrentWaystoneTooltip")
-                    .stream()
-                    .map(x -> QuickWaystones.rawMessage("<reset>" + x, placeholders)
-                            .decoration(TextDecoration.ITALIC, false)
-                            .color(NamedTextColor.WHITE))
-                    .toList());
-            ItemMeta meta = item.getItemMeta();
-            meta.displayName(QuickWaystones.rawMessage("<reset>" + clickedWaystone.getName(), placeholders)
-                    .decoration(TextDecoration.ITALIC, false)
-                    .color(NamedTextColor.WHITE));
-            item.setItemMeta(meta);
-            dialog.body(builder -> builder.item().item(item));
+            dialog.body(builder -> builder.item().item(createItem(clickedWaystone, placeholders)));
         }
 
-        dialog.title(QuickWaystones.message("WaystonesListDialog.Title", placeholders))
+        dialog.title(QuickWaystones.message("WaystonesListDialog." + (isSorting ? "SortingTitle" : "Title"), placeholders))
                 .afterAction(Dialog.AfterAction.NONE)
                 .canCloseWithEscape(true)
                 .columns(columns)
-                .exitAction(builder -> builder.label(QuickWaystones.message("Close")).dynamicCustom(KEY_CLOSE))
+                .exitAction(builder -> builder.label(QuickWaystones.message("Close"))
+                        .dynamicCustom(isSorting ? KEY_SAVE_PD_AND_CLOSE : KEY_CLOSE))
                 .pause(false)
                 .opener()
                 .open(viewer);
+    }
+
+    private ItemStack createItem(WaystoneData clickedWaystone, Map<String, String> placeholders) {
+        ItemStack item = plugin.getCraftManager().createWaystoneItem(clickedWaystone);
+        item.lore(plugin.getConfig()
+                .getStringList("Messages.CurrentWaystoneTooltip")
+                .stream()
+                .map(x -> QuickWaystones.rawMessage("<reset>" + x, placeholders)
+                        .decoration(TextDecoration.ITALIC, false)
+                        .color(NamedTextColor.WHITE))
+                .toList());
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(Utils.formatItemName(clickedWaystone.getName()));
+        item.setItemMeta(meta);
+        return item;
     }
 }

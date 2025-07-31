@@ -2,8 +2,9 @@ package fun.pozzoo.quickwaystones.gui;
 
 import fun.pozzoo.quickwaystones.QuickWaystones;
 import fun.pozzoo.quickwaystones.Utils;
-import fun.pozzoo.quickwaystones.enums.WaystoneSound;
+import fun.pozzoo.quickwaystones.data.PlayerData;
 import fun.pozzoo.quickwaystones.data.WaystoneData;
+import fun.pozzoo.quickwaystones.enums.WaystoneSound;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -20,7 +21,9 @@ public abstract class DialogGUI {
     public static final String KEY_LAST_WAYSTONE = "last_waystone";
 
     protected final QuickWaystones plugin;
-    private long lastSaved;
+//    private long lastSaved;
+
+    private List<Consumer<Player>> runAfterClose;
 
     public DialogGUI(QuickWaystones plugin) {
         this.plugin = plugin;
@@ -48,19 +51,13 @@ public abstract class DialogGUI {
     public abstract void showFriendsSettingsDialog(Player viewer, WaystoneData waystone, boolean canEdit);
     public abstract void showWaitingDialog(Player viewer, Component title, Function<Long, Component> text, Component cancelButton, long waitTicks, Runnable onClose, Runnable onFinish);
     public abstract void showSortSettingsDialog(Player viewer, WaystoneData clickedWaystone);
+    public abstract void showWaystoneSettingsDialog(Player viewer, WaystoneData clickedWaystone);
 
-    protected List<WaystoneData> getSortedWaystones(Player player, WaystoneData clickedWaystone) {
-        Map<Location, WaystoneData> waystones = plugin.getWaystonesMap();
-        return waystones.values().stream()
-                .filter(x ->
-                        (clickedWaystone == null && x.getOwnerUniqueId().equals(player.getUniqueId())) ||
-                                (clickedWaystone != null && (x.isGloballyAccessible()
-                                        || x.getAddedPlayers().contains(player.getUniqueId())
-                                        || x.getOwnerUniqueId().equals(player.getUniqueId())
-                                )))
-                .sorted(Comparator.comparing(WaystoneData::getCreatedAt))
-                .sorted(Comparator.comparing(x -> !x.isInternal()))
-                .toList();
+    public Collection<WaystoneData> getSortedWaystones(Player player) {
+        PlayerData data = plugin.getPlayerData(player);
+        if (data.getSortedWaystones().size() != plugin.getWaystonesMap().size())
+            data.setWaystones(plugin.getWaystonesMap().values());
+        return data.getSortedWaystones();
     }
 
     protected void doTeleport(UUID uuid, boolean isViewer, WaystoneData waystone, WaystoneData clickedWaystone) {
@@ -77,12 +74,12 @@ public abstract class DialogGUI {
         dialogViewer.setNoDamageTicks(10);
         if (!isViewer) {
             dialogViewer.setMetadata(KEY_LAST_WAYSTONE, new FixedMetadataValue(plugin, waystone.getUniqueId()));
-            waystone.markLastUsed();
-            long current = System.currentTimeMillis();
-            if (lastSaved + 1000L <= current) {
-                plugin.getWaystoneDataManager().saveData();
-                lastSaved = current;
-            }
+//            waystone.markLastUsed();
+//            long current = System.currentTimeMillis();
+//            if (lastSaved + 1000L <= current) {
+//                plugin.getWaystoneDataManager().saveData();
+//                lastSaved = current;
+//            }
         }
         if (!Utils.isBedrockPlayer(uuid)) {
             // TODO use dialog for waiting
@@ -103,7 +100,7 @@ public abstract class DialogGUI {
 
     private void fillPlaceholders(Map<String, String> placeholders, Player player, WaystoneData waystone, String prefix) {
         placeholders.put(prefix + "name", waystone.getName());
-        placeholders.put(prefix + "id", waystone.getUniqueId().toString());
+        placeholders.put(prefix + "id", waystone.getUniqueId());
         if (waystone.isInternal()) {
             placeholders.put(prefix + "owner", "Server");
             placeholders.put(prefix + "owner_id", "Server");
@@ -120,7 +117,8 @@ public abstract class DialogGUI {
                 ));
         placeholders.put(prefix + "world_name", waystone.getLocation().getWorld().getName());
 
-        placeholders.put(prefix + "last_used_ago", waystone.getLastUsedAtFormatted());
+        // TODO add for last_used
+        placeholders.put(prefix + "created_ago", Utils.formatAgoTime(waystone.getCreatedAt()));
 
         List<String> attributes = new ArrayList<>();
         attributes.add(plugin.getConfig().getString("Messages.WaystoneAttributes." + (waystone.isGloballyAccessible() ? "Public" : "Private")));

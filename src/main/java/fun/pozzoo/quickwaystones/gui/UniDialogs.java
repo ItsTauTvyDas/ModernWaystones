@@ -98,6 +98,15 @@ public class UniDialogs extends DialogGUI {
     }
 
     @Override
+    public void showWaystoneSettingsDialog(Player viewer, WaystoneData clickedWaystone) {
+        if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
+            bedrock.showWaystoneSettingsDialog(viewer, clickedWaystone);
+        } else {
+            java.showWaystoneSettingsDialog(viewer, clickedWaystone);
+        }
+    }
+
+    @Override
     public void showSimpleNotice(Player viewer, Component title, Component text, Component button, Consumer<Player> action, boolean closeOnEscape) {
         if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
             bedrock.showSimpleNotice(viewer, title, text, button, action, closeOnEscape);
