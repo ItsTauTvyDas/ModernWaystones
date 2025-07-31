@@ -6,7 +6,7 @@ The plugin was tested with 1.21.7 version, but should work with 1.21.6 (the vers
 
 ## Features:
 - Custom craftable waystone.
-- Renamable waypoints.
+- Renamable waystones.
 - Everything is pretty much configurable (except dialog looks like widths of buttons).
 - Uses minecraft's new dialog system.
   - For bedrock, forms are used but since they are limited, features like sorting are cut down a lot.
@@ -25,7 +25,7 @@ The plugin was tested with 1.21.7 version, but should work with 1.21.6 (the vers
 ## Screenshots
 soon.
 
-## Default configuration
+## Default configurations
 soon.
 
 ## Notes
