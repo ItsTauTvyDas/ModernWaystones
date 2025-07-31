@@ -2,22 +2,29 @@ package fun.pozzoo.quickwaystones.managers;
 
 import fun.pozzoo.quickwaystones.QuickWaystones;
 import fun.pozzoo.quickwaystones.data.WaystoneData;
+import org.bukkit.Location;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
-public class WaystoneDataManager extends DataManagerBase {
+public class WaystoneDataManager extends DataManagerBase<Map<Location, WaystoneData>> {
+    private final Map<Location, WaystoneData> waystonesMap = new HashMap<>();
+
     public WaystoneDataManager(QuickWaystones plugin) throws IOException {
         super(plugin, "waystones");
     }
 
     @Override
-    public void loadData() throws Exception {
+    public void loadData() throws IOException, InvalidConfigurationException {
         load();
-
         for (String key : keys) {
-            WaystoneData waystoneData = new WaystoneData(key,
+            WaystoneData waystoneData = new WaystoneData(
+                    key,
                     config.getString(key + ".name"),
                     config.getLocation(key + ".location"),
                     config.getString(key + ".owner"),
@@ -30,16 +37,14 @@ public class WaystoneDataManager extends DataManagerBase {
                 UUID uuid = UUID.fromString(uuidString);
                 waystoneData.addPlayer(uuid);
             }
-            getPlugin().getWaystonesMap().put(waystoneData.getLocation(), waystoneData);
+            waystonesMap.put(waystoneData.getLocation(), waystoneData);
         }
     }
 
     @Override
     public void saveData() {
-        Collection<WaystoneData> waystones = getPlugin().getWaystonesMap().values();
         config = new YamlConfiguration();
-
-        for (WaystoneData waystone : waystones) {
+        for (WaystoneData waystone : waystonesMap.values()) {
             config.set(waystone.getUniqueId() + ".name", waystone.getName());
             config.set(waystone.getUniqueId() + ".location", waystone.getLocation());
             config.set(waystone.getUniqueId() + ".owner", waystone.getOwner());
@@ -54,7 +59,11 @@ public class WaystoneDataManager extends DataManagerBase {
                         .map(UUID::toString)
                         .toList());
         }
-
         save();
+    }
+
+    @Override
+    public Map<Location, WaystoneData> getData() {
+        return waystonesMap;
     }
 }

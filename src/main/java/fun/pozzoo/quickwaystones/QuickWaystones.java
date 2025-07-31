@@ -31,7 +31,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.*;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public final class QuickWaystones extends JavaPlugin {
@@ -47,8 +50,6 @@ public final class QuickWaystones extends JavaPlugin {
     private DialogGUI waystoneDialogs;
     private Material waystoneBlockType;
     private Material friendsBlockType;
-    private Map<Location, WaystoneData> waystonesMap;
-    private Map<UUID, PlayerData> playerDataMap;
 
     @SuppressWarnings("UnstableApiUsage")
     @Override
@@ -61,9 +62,6 @@ public final class QuickWaystones extends JavaPlugin {
         craftManager.registerRecipes();
 
         new WaystoneEventsHandler(this);
-
-        waystonesMap = new HashMap<>();
-        playerDataMap = new HashMap<>();
 
         try {
             waystoneDataManager = new WaystoneDataManager(this);
@@ -80,7 +78,7 @@ public final class QuickWaystones extends JavaPlugin {
         waystoneDialogs = UniDialogs.tryCreate(this);
         waystoneDialogs.register();
 
-        lastWaystoneID = waystonesMap.size();
+        lastWaystoneID = getWaystonesMap().size();
 
         metrics = new Metrics(this, 22064);
 
@@ -103,7 +101,7 @@ public final class QuickWaystones extends JavaPlugin {
                                     .executes(ctx -> {
                                         final BlockPositionResolver resolver = ctx.getArgument("location", BlockPositionResolver.class);
                                         final Location location = resolver.resolve(ctx.getSource()).toLocation(ctx.getSource().getLocation().getWorld());
-                                        WaystoneData data = waystonesMap.get(location);
+                                        WaystoneData data = getWaystonesMap().get(location);
                                         if (data == null)
                                             ctx.getSource().getSender().sendMessage(Component.text("No data in this location").color(NamedTextColor.RED));
                                         else
@@ -153,11 +151,14 @@ public final class QuickWaystones extends JavaPlugin {
     }
 
     public PlayerData getPlayerData(Player player) {
-        return playerDataMap.get(player.getUniqueId());
+        PlayerData data = getPlayerDataMap().get(player.getUniqueId());
+        if (data == null)
+            return getPlayerDataManager().createData(player, true);
+        return data;
     }
 
     public Map<UUID, PlayerData> getPlayerDataMap() {
-        return playerDataMap;
+        return getPlayerDataManager().getData();
     }
 
     public CraftManager getCraftManager() {
@@ -169,7 +170,7 @@ public final class QuickWaystones extends JavaPlugin {
     }
 
     public boolean isWaystoneBlock(Block block) {
-        return waystonesMap.containsKey(block.getLocation());
+        return getWaystonesMap().containsKey(block.getLocation());
     }
 
     public boolean isWaystoneFriendsBlock(Block block) {
@@ -181,7 +182,13 @@ public final class QuickWaystones extends JavaPlugin {
     }
 
     public Map<Location, WaystoneData> getWaystonesMap() {
-        return waystonesMap;
+        return getWaystoneDataManager().getData();
+    }
+
+    public Map<String, WaystoneData> getSimpleWaystonesMap() {
+        return getWaystonesMap().values()
+                .stream()
+                .collect(Collectors.toMap(WaystoneData::getUniqueId, x -> x));
     }
 
     public Map<String, WaystoneData> getWaystones(UUID ownerUniqueId) {
