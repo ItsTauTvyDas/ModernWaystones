@@ -25,6 +25,7 @@ Teleportation:
 PlayerLimitations:
   MaxWaystonesPerPlayer: 25
   MinDistanceBetweenWaystones: -1
+  UseActionBar: true
 DefaultWaystone:
   Name: "Waystone #{id}"
   GloballyAccessible: true
@@ -53,7 +54,7 @@ Features:
     Material: ECHO_SHARD
     SubtractItemCount: true
     UseActionBar: true
-  ServerWaystone:
+  ServerWaystones:
     Enabled: true
     Material: DEBUG_STICK
     UseActionBar: true

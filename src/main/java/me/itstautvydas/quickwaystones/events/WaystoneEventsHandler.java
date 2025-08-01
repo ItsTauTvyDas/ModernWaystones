@@ -116,7 +116,7 @@ public class WaystoneEventsHandler implements Listener {
         if (limit != -1 && plugin.getWaystones(player.getUniqueId()).size() + 1 >= limit) {
             Map<String, String> placeholders = new HashMap<>();
             placeholders.put("max", Integer.toString(limit));
-            player.sendActionBar(QuickWaystones.message("Limitations.WaystoneCountLimitReached", placeholders));
+            plugin.sendMessage(player, QuickWaystones.message("Limitations.WaystoneCountLimitReached", placeholders), "PlayerLimitations.UseActionBar");
             event.setCancelled(true);
             return;
         }
@@ -175,7 +175,7 @@ public class WaystoneEventsHandler implements Listener {
             if (section.getBoolean("SubtractItemCount"))
                 player.getInventory().getItemInMainHand().subtract();
             plugin.playWaystoneSound(player, block.getLocation(), WaystoneSound.RENAMED);
-            player.sendActionBar(QuickWaystones.message("Renamed", placeholders));
+            plugin.sendMessage(player, QuickWaystones.message("Renamed", placeholders), "Features.RenameByNameTag.UseActionBar");
             return;
         }
         section = plugin.getConfig().getConfigurationSection("Features.ChangeVisibility");
@@ -194,16 +194,20 @@ public class WaystoneEventsHandler implements Listener {
                 plugin.playWaystoneSound(player, block.getLocation(), WaystoneSound.VISIBILITY_CHANGE_TO_PRIVATE);
             }
             placeholders.put("type", plugin.getConfig().getString("Messages.WaystoneAttributes." + type));
-            player.sendActionBar(QuickWaystones.message("VisibilityChanged", placeholders));
+            plugin.sendMessage(player, QuickWaystones.message("VisibilityChanged", placeholders), "Features.RenameByNameTag.UseActionBar");
         }
-        section = plugin.getConfig().getConfigurationSection("Features.ServerWaystone");
+        section = plugin.getConfig().getConfigurationSection("Features.ServerWaystones");
         if (section != null && section.getBoolean("Enabled") && player.isOp() && player.getGameMode() == GameMode.CREATIVE
                 && event.getItem().getType() == Material.getMaterial(section.getString("Material", "DEBUG_STICK"))) {
             waystone.setInternal(!waystone.isInternal());
             waystone.setGloballyAccessible(true);
             plugin.getWaystoneDataManager().saveData();
             event.setCancelled(true);
-            player.sendActionBar(QuickWaystones.message("ServerWaystoneMarking." + (waystone.isInternal() ? "Set" : "Unset"), placeholders));
+            plugin.sendMessage(
+                    player,
+                    QuickWaystones.message("ServerWaystoneMarking." + (waystone.isInternal() ? "Set" : "Unset"), placeholders),
+                    "Features.ServerWaystones.UseActionBar"
+            );
         }
     }
 

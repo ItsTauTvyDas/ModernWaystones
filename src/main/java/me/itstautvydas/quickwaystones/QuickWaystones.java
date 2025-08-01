@@ -202,6 +202,14 @@ public final class QuickWaystones extends JavaPlugin {
         return waystoneDialogs;
     }
 
+    public void sendMessage(Player player, Component component, String configPathToCheckForActionBar) {
+        if (getConfig().getBoolean(configPathToCheckForActionBar, true)) {
+            player.sendActionBar(component);
+            return;
+        }
+        player.sendMessage(component);
+    }
+
     public static QuickWaystones getInstance() {
         return plugin;
     }
