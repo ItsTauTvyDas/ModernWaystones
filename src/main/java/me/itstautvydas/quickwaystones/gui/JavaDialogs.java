@@ -237,7 +237,6 @@ public class JavaDialogs extends DialogGUI {
                 String dynamicId = viewer.getUniqueId() + "_" + waystone.getUniqueId() + "_" + player.getUniqueId();
                 dialogManager.registerCustomAction(storeCustomActionIdentity(viewer, dynamicId), (uuid, data) -> {
                     Player dialogViewer = Bukkit.getPlayer(uuid);
-                    System.out.println(data);
                     if (dialogViewer == null)
                         return;
                     if (isAdded)
@@ -513,7 +512,6 @@ public class JavaDialogs extends DialogGUI {
                         Player dialogViewer = Bukkit.getPlayer(uuid);
                         if (dialogViewer == null)
                             return;
-                        System.out.println("up");
                         plugin.getPlayerData(dialogViewer).moveUp(waystone);
                         showSortSettingsDialog(dialogViewer, clickedWaystone);
                     });
@@ -524,7 +522,6 @@ public class JavaDialogs extends DialogGUI {
                         Player dialogViewer = Bukkit.getPlayer(uuid);
                         if (dialogViewer == null)
                             return;
-                        System.out.println("down");
                         plugin.getPlayerData(dialogViewer).moveDown(waystone);
                         showSortSettingsDialog(dialogViewer, clickedWaystone);
                     });

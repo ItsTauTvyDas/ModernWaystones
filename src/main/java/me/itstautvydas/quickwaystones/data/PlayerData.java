@@ -122,7 +122,6 @@ public class PlayerData {
     public void updateSorting(boolean forced) {
         if (!forced && oldSortType == sortType && sortedWaystones != null)
             return;
-        System.out.println("--------------------------------- " + sortType);
         List<WaystoneData> oldItems = sortedWaystones != null ? new ArrayList<>(sortedWaystones) : List.of();
         if (sortType == PlayerSortType.MANUAL) {
             sortedWaystones = new LinkedHashSet<>(oldItems);
@@ -130,7 +129,6 @@ public class PlayerData {
             sortedWaystones = new TreeSet<>(comparator);
             sortedWaystones.addAll(oldItems);
         }
-        System.out.println(sortedWaystones);
         oldSortType = sortType;
     }
 }
