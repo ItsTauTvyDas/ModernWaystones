@@ -37,12 +37,14 @@ WaystoneScreen: # for Java clients only
   DefaultPlayerSorting:
     Type: CREATED_AT
     Inverse: false
+  ShowRecentUsedWaystoneAttribute: true
 Features:
   RenameByNameTag:
     Enabled: true
     UseDialog: false # not implemented
     Material: NAME_TAG
     SubtractItemCount: true
+    UseActionBar: true
   AddFriends:
     Enabled: true
     SpecialBlockMaterial: TARGET
@@ -50,9 +52,11 @@ Features:
     Enabled: true
     Material: ECHO_SHARD
     SubtractItemCount: true
+    UseActionBar: true
   ServerWaystone:
     Enabled: true
     Material: DEBUG_STICK
+    UseActionBar: true
 Sounds:
   Activation:
     Enabled: true
