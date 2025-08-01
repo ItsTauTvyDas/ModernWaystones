@@ -1,6 +1,6 @@
-package fun.pozzoo.quickwaystones.managers;
+package me.itstautvydas.quickwaystones.managers;
 
-import fun.pozzoo.quickwaystones.QuickWaystones;
+import me.itstautvydas.quickwaystones.QuickWaystones;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;

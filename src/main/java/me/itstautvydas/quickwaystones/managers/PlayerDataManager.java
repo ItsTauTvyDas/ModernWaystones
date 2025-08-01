@@ -1,9 +1,9 @@
-package fun.pozzoo.quickwaystones.managers;
+package me.itstautvydas.quickwaystones.managers;
 
-import fun.pozzoo.quickwaystones.QuickWaystones;
-import fun.pozzoo.quickwaystones.data.PlayerData;
-import fun.pozzoo.quickwaystones.data.WaystoneData;
-import fun.pozzoo.quickwaystones.enums.PlayerSortType;
+import me.itstautvydas.quickwaystones.QuickWaystones;
+import me.itstautvydas.quickwaystones.data.PlayerData;
+import me.itstautvydas.quickwaystones.data.WaystoneData;
+import me.itstautvydas.quickwaystones.enums.PlayerSortType;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;

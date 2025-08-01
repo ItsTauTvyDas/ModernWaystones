@@ -1,11 +1,11 @@
-package fun.pozzoo.quickwaystones.gui;
+package me.itstautvydas.quickwaystones.gui;
 
-import fun.pozzoo.quickwaystones.QuickWaystones;
-import fun.pozzoo.quickwaystones.Utils;
-import fun.pozzoo.quickwaystones.data.PlayerData;
-import fun.pozzoo.quickwaystones.data.WaystoneData;
-import fun.pozzoo.quickwaystones.enums.PlayerSortType;
-import fun.pozzoo.quickwaystones.enums.WaystoneSound;
+import me.itstautvydas.quickwaystones.QuickWaystones;
+import me.itstautvydas.quickwaystones.Utils;
+import me.itstautvydas.quickwaystones.data.PlayerData;
+import me.itstautvydas.quickwaystones.data.WaystoneData;
+import me.itstautvydas.quickwaystones.enums.PlayerSortType;
+import me.itstautvydas.quickwaystones.enums.WaystoneSound;
 import io.github.projectunified.unidialog.core.dialog.Dialog;
 import io.github.projectunified.unidialog.paper.PaperDialogManager;
 import io.github.projectunified.unidialog.paper.dialog.PaperMultiActionDialog;

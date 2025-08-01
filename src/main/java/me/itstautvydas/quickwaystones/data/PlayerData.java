@@ -1,6 +1,6 @@
-package fun.pozzoo.quickwaystones.data;
+package me.itstautvydas.quickwaystones.data;
 
-import fun.pozzoo.quickwaystones.enums.PlayerSortType;
+import me.itstautvydas.quickwaystones.enums.PlayerSortType;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 

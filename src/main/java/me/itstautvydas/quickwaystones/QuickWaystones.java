@@ -1,16 +1,16 @@
-package fun.pozzoo.quickwaystones;
+package me.itstautvydas.quickwaystones;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import fun.pozzoo.quickwaystones.data.PlayerData;
-import fun.pozzoo.quickwaystones.data.WaystoneData;
-import fun.pozzoo.quickwaystones.enums.WaystoneSound;
-import fun.pozzoo.quickwaystones.events.WaystoneEventsHandler;
-import fun.pozzoo.quickwaystones.gui.DialogGUI;
-import fun.pozzoo.quickwaystones.gui.UniDialogs;
-import fun.pozzoo.quickwaystones.managers.CraftManager;
-import fun.pozzoo.quickwaystones.managers.PlayerDataManager;
-import fun.pozzoo.quickwaystones.managers.WaystoneDataManager;
+import me.itstautvydas.quickwaystones.data.PlayerData;
+import me.itstautvydas.quickwaystones.data.WaystoneData;
+import me.itstautvydas.quickwaystones.enums.WaystoneSound;
+import me.itstautvydas.quickwaystones.events.WaystoneEventsHandler;
+import me.itstautvydas.quickwaystones.gui.DialogGUI;
+import me.itstautvydas.quickwaystones.gui.UniDialogs;
+import me.itstautvydas.quickwaystones.managers.CraftManager;
+import me.itstautvydas.quickwaystones.managers.PlayerDataManager;
+import me.itstautvydas.quickwaystones.managers.WaystoneDataManager;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;

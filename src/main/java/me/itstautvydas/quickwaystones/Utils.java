@@ -1,4 +1,4 @@
-package fun.pozzoo.quickwaystones;
+package me.itstautvydas.quickwaystones;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;

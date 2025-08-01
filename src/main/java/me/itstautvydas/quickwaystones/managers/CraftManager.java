@@ -1,8 +1,8 @@
-package fun.pozzoo.quickwaystones.managers;
+package me.itstautvydas.quickwaystones.managers;
 
-import fun.pozzoo.quickwaystones.QuickWaystones;
-import fun.pozzoo.quickwaystones.Utils;
-import fun.pozzoo.quickwaystones.data.WaystoneData;
+import me.itstautvydas.quickwaystones.QuickWaystones;
+import me.itstautvydas.quickwaystones.Utils;
+import me.itstautvydas.quickwaystones.data.WaystoneData;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;

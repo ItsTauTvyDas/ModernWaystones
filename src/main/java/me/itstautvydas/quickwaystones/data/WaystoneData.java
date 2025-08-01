@@ -1,6 +1,6 @@
-package fun.pozzoo.quickwaystones.data;
+package me.itstautvydas.quickwaystones.data;
 
-import fun.pozzoo.quickwaystones.QuickWaystones;
+import me.itstautvydas.quickwaystones.QuickWaystones;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;

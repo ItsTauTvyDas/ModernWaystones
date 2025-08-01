@@ -1,9 +1,9 @@
-package fun.pozzoo.quickwaystones.events;
+package me.itstautvydas.quickwaystones.events;
 
 import com.destroystokyo.paper.event.block.BlockDestroyEvent;
-import fun.pozzoo.quickwaystones.QuickWaystones;
-import fun.pozzoo.quickwaystones.data.WaystoneData;
-import fun.pozzoo.quickwaystones.enums.WaystoneSound;
+import me.itstautvydas.quickwaystones.QuickWaystones;
+import me.itstautvydas.quickwaystones.data.WaystoneData;
+import me.itstautvydas.quickwaystones.enums.WaystoneSound;
 import io.papermc.paper.event.entity.EntityKnockbackEvent;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextDecoration;

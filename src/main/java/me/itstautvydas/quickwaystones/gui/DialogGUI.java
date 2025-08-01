@@ -1,10 +1,10 @@
-package fun.pozzoo.quickwaystones.gui;
+package me.itstautvydas.quickwaystones.gui;
 
-import fun.pozzoo.quickwaystones.QuickWaystones;
-import fun.pozzoo.quickwaystones.Utils;
-import fun.pozzoo.quickwaystones.data.PlayerData;
-import fun.pozzoo.quickwaystones.data.WaystoneData;
-import fun.pozzoo.quickwaystones.enums.WaystoneSound;
+import me.itstautvydas.quickwaystones.QuickWaystones;
+import me.itstautvydas.quickwaystones.Utils;
+import me.itstautvydas.quickwaystones.data.PlayerData;
+import me.itstautvydas.quickwaystones.data.WaystoneData;
+import me.itstautvydas.quickwaystones.enums.WaystoneSound;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
