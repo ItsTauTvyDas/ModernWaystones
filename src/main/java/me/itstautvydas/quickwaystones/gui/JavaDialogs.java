@@ -47,6 +47,7 @@ public class JavaDialogs extends DialogGUI {
     public static final String KEY_WAYSTONE_SCREEN_COLUMNS = "waystone_screen_columns";
     public static final String KEY_SAVE_WD_AND_CLOSE = "save_wd_and_close";
     public static final String KEY_SAVE_PD_AND_CLOSE = "save_pd_and_close";
+    public static final String KEY_SAVE_PSD_AND_CLOSE = "save_psd_and_close";
     public static final String KEY_CUSTOM = "custom";
     public static final String KEY_REMOVE_DEAD_WAYSTONE = "remove_dead_waystone";
     public static final String KEY_BACK_TO_THE_LIST = "back_to_the_list";
@@ -90,6 +91,9 @@ public class JavaDialogs extends DialogGUI {
             case KEY_SAVE_PD_AND_CLOSE:
                 plugin.getPlayerDataManager().saveData();
                 break;
+            case KEY_SAVE_PSD_AND_CLOSE:
+                saveWaystoneSettings(player, data);
+                break;
         }
 
         Consumer<Player> consume = runAfterClose.remove(uuid);
@@ -105,6 +109,7 @@ public class JavaDialogs extends DialogGUI {
         dialogManager.registerCustomAction(KEY_CLOSE, (uuid, data) -> handleClose(KEY_CLOSE, uuid, data));
         dialogManager.registerCustomAction(KEY_SAVE_WD_AND_CLOSE, (uuid, data) -> handleClose(KEY_SAVE_WD_AND_CLOSE, uuid, data));
         dialogManager.registerCustomAction(KEY_SAVE_PD_AND_CLOSE, (uuid, data) -> handleClose(KEY_SAVE_PD_AND_CLOSE, uuid, data));
+        dialogManager.registerCustomAction(KEY_SAVE_PSD_AND_CLOSE, (uuid, data) -> handleClose(KEY_SAVE_PSD_AND_CLOSE, uuid, data));
         dialogManager.registerCustomAction(KEY_RESET_WAYSTONE_SETTINGS, (uuid, data) -> {
             Player player = Bukkit.getPlayer(uuid);
             if (player == null)
@@ -341,7 +346,7 @@ public class JavaDialogs extends DialogGUI {
     }
 
     @Override
-    public void showWaitingDialog(Player viewer, Component title, Function<Long, Component> text, Component cancelButton, long waitTicks, Consumer<Player> onClose, Consumer<Player> onFinish) {
+    public void showWaitingDialog(Player viewer, Component title, Function<Long, Component> text, Component cancelButton, long waitTicks, Consumer<Player> onClose, Consumer<Player> onFinish, boolean closeOnEscape) {
         if (waitTicks == 0) {
             onFinish.accept(viewer);
         } else {
@@ -360,7 +365,7 @@ public class JavaDialogs extends DialogGUI {
                             timer.cancel();
                             if (onClose != null)
                                 onClose.accept(viewer);
-                        }, false);
+                        }, closeOnEscape);
                     }, 0, 20
             );
         }
@@ -415,16 +420,7 @@ public class JavaDialogs extends DialogGUI {
             if (player == null)
                 return;
             saveWaystoneSettings(player, data);
-            showListDialog(player, player, null, true);
-        });
-
-        dialogManager.registerCustomAction(storeCustomActionIdentity(viewer, baseId + KEY_CLOSE), (uuid, data) -> {
-            cleanupPlayerCache(uuid);
-            Player player = Bukkit.getPlayer(uuid);
-            if (player == null)
-                return;
-            player.closeInventory();
-            saveWaystoneSettings(player, data);
+            showSortSettingsDialog(player);
         });
 
         PlayerData data = plugin.getPlayerData(viewer);
@@ -462,8 +458,6 @@ public class JavaDialogs extends DialogGUI {
                             .label(QuickWaystones.message("WaystoneSettingsDialog.Labels.SortBy.Label"));
                     PlayerSortType selectedType = data.getSortType();
                     for (PlayerSortType type : PlayerSortType.values()) {
-                        if (!plugin.getConfig().getBoolean("WaystoneScreen.AllowManualSort") && type == PlayerSortType.MANUAL)
-                            continue;
                         input.option(
                                 type.toString(),
                                 QuickWaystones.message("WaystoneSettingsDialog.Labels.SortBy.Values." + type),
@@ -480,7 +474,7 @@ public class JavaDialogs extends DialogGUI {
                 .action(builder -> builder.dynamicCustom(KEY_RESET_WAYSTONE_SETTINGS)
                         .label(QuickWaystones.message("WaystoneSettingsDialog.ResetButton"))
                         .width(200))
-                .exitAction(builder -> builder.label(QuickWaystones.message("Close")).dynamicCustom(baseId + KEY_CLOSE))
+                .exitAction(builder -> builder.label(QuickWaystones.message("Close")).dynamicCustom(KEY_SAVE_PSD_AND_CLOSE))
                 .pause(false)
                 .opener()
                 .open(viewer);
@@ -492,10 +486,8 @@ public class JavaDialogs extends DialogGUI {
     }
 
     private void showListDialog(Player player, Player viewer, WaystoneData clickedWaystone, boolean isSorting) {
-        boolean allowManualSorting = plugin.getConfig().getBoolean("WaystoneScreen.AllowManualSort");
-        boolean moveFromToButtons = plugin.getConfig().getBoolean("WaystoneScreen.MoveFromToButtons");
-
-        if (isSorting && !allowManualSorting && !moveFromToButtons)
+        boolean sortingEnabled = plugin.getConfig().getBoolean("Features.Sorting.Enabled");
+        if (isSorting && !sortingEnabled)
             return;
 
         PlayerData playerData = plugin.getPlayerData(viewer);
@@ -531,8 +523,7 @@ public class JavaDialogs extends DialogGUI {
                     long delayBefore = Math.max(0, plugin.getConfig().getLong("Teleportation.DelayBefore"));
                     cleanupPlayerCache(uuid);
 
-                    Map<String, String> teleportPlaceholders = new HashMap<>(placeholders);
-
+                    Map<String, String> teleportPlaceholders = new HashMap<>();
                     fillPlaceholders(teleportPlaceholders, player, playerData, waystone, null);
 
                     Utils.loadChunkIfNeeded(waystone.getLocation());
@@ -545,14 +536,14 @@ public class JavaDialogs extends DialogGUI {
                     if (noDamageTicks > 0)
                         dialogViewer.setNoDamageTicks(noDamageTicks);
                     showWaitingDialog(dialogViewer,
-                            QuickWaystones.message("WaystonesListDialog.Teleporting.Title", placeholders),
+                            QuickWaystones.message("WaystonesListDialog.Teleporting.Title", teleportPlaceholders),
                             ticksLeft -> {
                                 teleportPlaceholders.put("seconds", Long.toString(ticksLeft / 20));
-                                return QuickWaystones.message("WaystonesListDialog.Teleporting.Text", placeholders);
+                                return QuickWaystones.message("WaystonesListDialog.Teleporting.Text", teleportPlaceholders);
                             },
                             QuickWaystones.message("Cancel"),
                             delayBefore * 20,
-                            null, p -> doTeleport(dialogViewer, p != player, waystone));
+                            null, p -> doTeleport(dialogViewer, p != player, waystone), true);
                 });
             }
 
@@ -573,7 +564,7 @@ public class JavaDialogs extends DialogGUI {
                     .tooltip(QuickWaystones.message("WaystoneTooltip", placeholders))
                     .dynamicCustom(baseId + KEY_TELEPORT));
 
-            if (isSorting && allowManualSorting) {
+            if (isSorting) {
                 boolean canMoveUp = index - 1 >= 0;
                 boolean canMoveDown = index + 1 < sortedWaystones.size() - failedWaystones;
 
@@ -610,7 +601,7 @@ public class JavaDialogs extends DialogGUI {
                         .dynamicCustom(baseId + KEY_DOWN));
             }
 
-            if (isSorting && moveFromToButtons) {
+            if (isSorting) {
                 runAfterClose.put(viewer.getUniqueId(), x -> x.removeMetadata(KEY_MOVE_WAYSTONE, plugin));
                 dialogManager.registerCustomAction(storeCustomActionIdentity(viewer, baseId + KEY_MOVE_WAYSTONE), (uuid, data) -> {
                     Player dialogViewer = Bukkit.getPlayer(uuid);
@@ -670,10 +661,7 @@ public class JavaDialogs extends DialogGUI {
             columns *= 2;
 
         if (isSorting) {
-            if (moveFromToButtons)
-                columns++;
-            if (allowManualSorting)
-                columns += 2;
+            columns += 3; // Add arrow buttons and move button
         } else {
             dialog.body(builder -> builder.item().item(createItem(clickedWaystone, placeholders)));
         }

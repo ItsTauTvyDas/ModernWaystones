@@ -318,7 +318,8 @@ public class WaystoneEventsHandler implements Listener {
     }
 
     private void checkForAvailabilityAndShowListDialog(Player player, WaystoneData waystone) {
-        if (player.isSneaking() && waystone.isOwner(player)) {
+        if (player.isSneaking() && plugin.getConfig().getBoolean("Features.Sorting.Enabled")
+                && plugin.getConfig().getBoolean("Features.Sorting.ShiftRightClickToActivate")) {
             plugin.getWaystoneDialogs().showWaystonePlayerSettingsDialog(player);
             return;
         }

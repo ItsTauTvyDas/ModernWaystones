@@ -52,9 +52,6 @@ DefaultPlayerData:
     Max: 5
 WaystoneScreen:
   ShowNumbers: true
-  AutoSort: true
-  AllowManualSort: true
-  MoveFromToButtons: true
   DefaultPlayerSorting:
     Type: CREATED_AT
     Inverse: false
@@ -78,6 +75,10 @@ Features:
     Enabled: true
     Material: DEBUG_STICK
     UseActionBar: true
+  Sorting:
+    Enabled: true
+    RegisterCommand: true
+    ShiftRightClickToActivate: true
 Sounds:
   Activation:
     Enabled: true
@@ -165,7 +166,7 @@ Messages:
           OWNER: "Owner (player's name)"
       InvertSorting: "Invert waystone listing"
       ShowNumbers: "Show numbers on waystones"
-      ShowAttributes: "Show attributes"
+      ShowAttributes: "Show waystone attributes"
       HideLocation: "Hide waystone coordinates (visually)"
       WaystoneButtonWidth: "Waypoint button width"
       WaystoneButtonWidthFormat: "%1$s: %2$s pixels"

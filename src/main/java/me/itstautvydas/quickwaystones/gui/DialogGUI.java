@@ -48,7 +48,7 @@ public abstract class DialogGUI {
     public abstract void showRenameDialog(Player player, Player viewer, WaystoneData clickedWaystone, String initialInput, boolean showNotice, boolean showError);
     public abstract void showSimpleNotice(Player viewer, Component title, Component text, Component button, Consumer<Player> action, boolean closeOnEscape);
     public abstract void showFriendsSettingsDialog(Player viewer, WaystoneData waystone, boolean canEdit);
-    public abstract void showWaitingDialog(Player viewer, Component title, Function<Long, Component> text, Component cancelButton, long waitTicks, Consumer<Player> onClose, Consumer<Player> onFinish);
+    public abstract void showWaitingDialog(Player viewer, Component title, Function<Long, Component> text, Component cancelButton, long waitTicks, Consumer<Player> onClose, Consumer<Player> onFinish, boolean closeOnEscape);
     public abstract void showSortSettingsDialog(Player viewer);
     public abstract void showWaystonePlayerSettingsDialog(Player viewer);
 
@@ -118,7 +118,7 @@ public abstract class DialogGUI {
             if (plugin.isWaystoneDestroyed(waystone.getLocation().getBlock()))
                 attributes.add(plugin.getConfig().getString("Messages.WaystoneAttributes.Destroyed"));
             if (player != null) {
-                if (player.hasMetadata(KEY_LAST_WAYSTONE)) {
+                if (plugin.getConfig().getBoolean("WaystoneScreen.ShowRecentUsedWaystoneAttribute") && player.hasMetadata(KEY_LAST_WAYSTONE)) {
                     List<MetadataValue> metadata = player.getMetadata(KEY_LAST_WAYSTONE);
                     if (!metadata.isEmpty() && waystone.getUniqueId().equals(player.getMetadata(KEY_LAST_WAYSTONE).getFirst().asString()))
                         attributes.add(plugin.getConfig().getString("Messages.WaystoneAttributes.LastlyUsed"));

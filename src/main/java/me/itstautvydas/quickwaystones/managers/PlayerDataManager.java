@@ -32,10 +32,11 @@ public class PlayerDataManager extends DataManagerBase<Map<UUID, PlayerData>> {
                     config.getStringList(key + ".sorting.list").stream().map(map::get).toList(),
                     config.getBoolean(key + ".sorting.inverted", getPlugin().getConfig().getBoolean("WaystoneScreen.DefaultPlayerSorting.Inverse"))
             );
-            playerData.setShowNumbers(config.getBoolean(key + ".sorting.showNumbers", getPlugin().getConfig().getBoolean("WaystoneScreen.ShowNumbers")));
+            playerData.setShowNumbers(config.getBoolean(key + ".waystonesListScreen.showNumbers", getPlugin().getConfig().getBoolean("WaystoneScreen.ShowNumbers")));
             playerData.setHideLocation(config.getBoolean(key + ".waystonesListScreen.hideLocation", getPlugin().getConfig().getBoolean("DefaultPlayerData.VisuallyHideLocations")));
             playerData.setWaystoneScreenColumns(config.getInt(key + ".waystonesListScreen.columns", getPlugin().getConfig().getInt("DefaultPlayerData.WaystoneScreenColumns.Default")));
             playerData.setWaystoneButtonWidth(config.getInt(key + ".waystonesListScreen.buttonWidth", getPlugin().getConfig().getInt("DefaultPlayerData.WaystoneButtonWidth.Default")));
+            playerData.setShowAttributes(config.getBoolean(key + ".waystonesListScreen.showAttributes", getPlugin().getConfig().getBoolean("DefaultPlayerData.ShowAttributes")));
             playerDataMap.put(uuid, playerData);
         }
     }
@@ -48,6 +49,7 @@ public class PlayerDataManager extends DataManagerBase<Map<UUID, PlayerData>> {
             if (playerData.isSortingInverted() != getPlugin().getConfig().getBoolean("WaystoneScreen.DefaultPlayerSorting.Inverse")
                     || getPlugin().shouldDefaultDataBeSaved())
                 config.set(playerData.getUniqueId().toString() + ".sorting.inverted", playerData.isSortingInverted());
+
             if (playerData.getShowNumbers() != getPlugin().getConfig().getBoolean("WaystoneScreen.ShowNumbers")
                     || getPlugin().shouldDefaultDataBeSaved())
                 config.set(playerData.getUniqueId().toString() + ".waystonesListScreen.showNumbers", playerData.getShowNumbers());
@@ -58,11 +60,11 @@ public class PlayerDataManager extends DataManagerBase<Map<UUID, PlayerData>> {
 
             if (playerData.getWaystoneScreenColumns() != getPlugin().getConfig().getInt("DefaultPlayerData.WaystoneScreenColumns.Default")
                     || getPlugin().shouldDefaultDataBeSaved())
-                config.set(playerData.getUniqueId().toString() + ".waystonesListScreen.columns", playerData.getHideLocation());
+                config.set(playerData.getUniqueId().toString() + ".waystonesListScreen.columns", playerData.getWaystoneScreenColumns());
 
             if (playerData.getWaystoneButtonWidth() != getPlugin().getConfig().getInt("DefaultPlayerData.WaystoneButtonWidth.Default")
                     || getPlugin().shouldDefaultDataBeSaved())
-                config.set(playerData.getUniqueId().toString() + ".waystonesListScreen.buttonWidth", playerData.getHideLocation());
+                config.set(playerData.getUniqueId().toString() + ".waystonesListScreen.buttonWidth", playerData.getWaystoneButtonWidth());
 
             if (playerData.getShowAttributes() != getPlugin().getConfig().getBoolean("DefaultPlayerData.ShowAttributes")
                     || getPlugin().shouldDefaultDataBeSaved())
@@ -94,7 +96,7 @@ public class PlayerDataManager extends DataManagerBase<Map<UUID, PlayerData>> {
                 getPlugin().getConfig().getBoolean("WaystoneScreen.DefaultPlayerSorting.Inverted")
         );
         data.setHideLocation(getPlugin().getConfig().getBoolean("DefaultPlayerData.VisuallyHideLocations"));
-        data.setShowNumbers(getPlugin().getConfig().getBoolean("DefaultPlayerData.ShowNumbers"));
+        data.setShowNumbers(getPlugin().getConfig().getBoolean("WaystoneScreen.ShowNumbers"));
         data.setShowAttributes(getPlugin().getConfig().getBoolean("DefaultPlayerData.ShowAttributes"));
         data.setWaystoneScreenColumns(getPlugin().getConfig().getInt("DefaultPlayerData.WaystoneScreenColumns.Default"));
         data.setWaystoneButtonWidth(getPlugin().getConfig().getInt("DefaultPlayerData.WaystoneButtonWidth.Default"));

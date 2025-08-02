@@ -80,11 +80,11 @@ public class UniDialogs extends DialogGUI {
     }
 
     @Override
-    public void showWaitingDialog(Player viewer, Component title, Function<Long, Component> text, Component cancelButton, long waitTicks, Consumer<Player> onClose, Consumer<Player> onFinish) {
+    public void showWaitingDialog(Player viewer, Component title, Function<Long, Component> text, Component cancelButton, long waitTicks, Consumer<Player> onClose, Consumer<Player> onFinish, boolean closeOnEscape) {
         if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
-            bedrock.showWaitingDialog(viewer, title, text, cancelButton, waitTicks, onClose, onFinish);
+            bedrock.showWaitingDialog(viewer, title, text, cancelButton, waitTicks, onClose, onFinish, closeOnEscape);
         } else {
-            java.showWaitingDialog(viewer, title, text, cancelButton, waitTicks, onClose, onFinish);
+            java.showWaitingDialog(viewer, title, text, cancelButton, waitTicks, onClose, onFinish, closeOnEscape);
         }
     }
 
