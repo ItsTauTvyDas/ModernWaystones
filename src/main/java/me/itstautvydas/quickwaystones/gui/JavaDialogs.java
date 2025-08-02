@@ -1,16 +1,16 @@
 package me.itstautvydas.quickwaystones.gui;
 
+import io.github.projectunified.unidialog.core.dialog.Dialog;
+import io.github.projectunified.unidialog.paper.PaperDialogManager;
+import io.github.projectunified.unidialog.paper.dialog.PaperMultiActionDialog;
+import io.github.projectunified.unidialog.paper.dialog.PaperNoticeDialog;
+import io.github.projectunified.unidialog.paper.input.PaperSingleOptionInput;
 import me.itstautvydas.quickwaystones.QuickWaystones;
 import me.itstautvydas.quickwaystones.Utils;
 import me.itstautvydas.quickwaystones.data.PlayerData;
 import me.itstautvydas.quickwaystones.data.WaystoneData;
 import me.itstautvydas.quickwaystones.enums.PlayerSortType;
 import me.itstautvydas.quickwaystones.enums.WaystoneSound;
-import io.github.projectunified.unidialog.core.dialog.Dialog;
-import io.github.projectunified.unidialog.paper.PaperDialogManager;
-import io.github.projectunified.unidialog.paper.dialog.PaperMultiActionDialog;
-import io.github.projectunified.unidialog.paper.dialog.PaperNoticeDialog;
-import io.github.projectunified.unidialog.paper.input.PaperSingleOptionInput;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
