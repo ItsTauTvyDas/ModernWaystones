@@ -15,6 +15,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
@@ -25,10 +26,9 @@ import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -160,7 +160,7 @@ public class WaystoneEventsHandler implements Listener {
             return;
         }
 
-        if (!waystone.isOwner(player) && !(player.isOp() && player.getGameMode() == GameMode.CREATIVE))
+        if (!waystone.isOwner(player) || !(player.isOp() && player.getGameMode() == GameMode.CREATIVE))
             return;
 
         Map<String, String> placeholders = new HashMap<>();
@@ -317,9 +317,31 @@ public class WaystoneEventsHandler implements Listener {
         plugin.getWaystoneDataManager().updatePlayerName(event.getPlayer().getUniqueId());
     }
 
+    @EventHandler
+    public void onItemPickup(EntityPickupItemEvent event) {
+        if (event.getEntity() instanceof Player player)
+            tryToDiscoverRecipe(player, event.getItem().getItemStack());
+    }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        tryToDiscoverRecipe(event.getWhoClicked(), event.getCurrentItem());
+    }
+
+    private void tryToDiscoverRecipe(HumanEntity player, ItemStack item) {
+        if (!plugin.getConfig().getBoolean("Item.UnlockRecipe.Enabled") || player == null || item == null)
+            return;
+        if (player.hasDiscoveredRecipe(plugin.getCraftManager().getRecipeKey()))
+            return;
+        Material material = Material.getMaterial(plugin.getConfig().getString("Item.UnlockRecipe.OnMaterial", "AIR"));
+        if (material == null)
+            return;
+        if (item.getType() == material)
+            player.discoverRecipe(plugin.getCraftManager().getRecipeKey());
+    }
+
     private void checkForAvailabilityAndShowListDialog(Player player, WaystoneData waystone) {
-        if (player.isSneaking() && plugin.getConfig().getBoolean("Features.Sorting.Enabled")
-                && plugin.getConfig().getBoolean("Features.Sorting.ShiftRightClickToActivate")) {
+        if (player.isSneaking()) {
             plugin.getWaystoneDialogs().showWaystonePlayerSettingsDialog(player);
             return;
         }
