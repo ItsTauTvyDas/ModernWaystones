@@ -486,17 +486,10 @@ public class JavaDialogs extends DialogGUI {
     }
 
     private void showListDialog(Player player, Player viewer, WaystoneData clickedWaystone, boolean isSorting) {
-        boolean sortingEnabled = plugin.getConfig().getBoolean("Features.Sorting.Enabled");
-        if (isSorting && !sortingEnabled)
-            return;
-
         PlayerData playerData = plugin.getPlayerData(viewer);
-
         Map<String, String> placeholders = new HashMap<>();
         fillPlaceholders(placeholders, player, playerData, null, clickedWaystone);
-
         PaperMultiActionDialog dialog = dialogManager.createMultiActionDialog();
-
         Collection<WaystoneData> sortedWaystones = getSortedWaystones(player);
         boolean empty = true;
         int index = 0;
