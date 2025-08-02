@@ -9,17 +9,28 @@ import java.util.*;
 public class PlayerData {
     private final UUID uniqueId;
     private boolean inverted;
+    private boolean showNumbers;
+    private boolean hideLocation;
     private PlayerSortType sortType;
     private PlayerSortType oldSortType;
     private Set<WaystoneData> sortedWaystones;
 
     private final Comparator<WaystoneData> comparator;
 
-    public PlayerData(UUID uniqueId, PlayerSortType sortType, boolean inverted, Collection<WaystoneData> waystones) {
+    public PlayerData(
+            UUID uniqueId,
+            PlayerSortType sortType,
+            Collection<WaystoneData> waystones,
+            boolean invertedWaystones,
+            boolean showNumbers,
+            boolean hideLocation
+    ) {
         this.uniqueId = uniqueId;
         this.sortType = sortType;
         this.oldSortType = sortType;
-        this.inverted = inverted;
+        this.inverted = invertedWaystones;
+        this.showNumbers = showNumbers;
+        this.hideLocation = hideLocation;
 
         comparator = (w1, w2) -> switch (this.sortType) {
             case CREATED_AT -> Long.compare(w1.getCreatedAt(), w2.getCreatedAt());
@@ -48,6 +59,22 @@ public class PlayerData {
 
     public boolean isSortingInverted() {
         return inverted;
+    }
+
+    public boolean getShowNumbers() {
+        return showNumbers;
+    }
+
+    public void setShowNumbers(boolean showNumbers) {
+        this.showNumbers = showNumbers;
+    }
+
+    public boolean getHideLocation() {
+        return hideLocation;
+    }
+
+    public void setHideLocation(boolean hideLocation) {
+        this.hideLocation = hideLocation;
     }
 
     public Player getOnlinePlayer() {

@@ -29,8 +29,10 @@ public class PlayerDataManager extends DataManagerBase<Map<UUID, PlayerData>> {
             PlayerData playerData = new PlayerData(
                     uuid,
                     PlayerSortType.valueOf(config.getString(key + ".sorting.type")),
-                    config.getBoolean(key + ".sorting.inverted"),
-                    config.getStringList(key + ".sorting.list").stream().map(map::get).toList()
+                    config.getStringList(key + ".sorting.list").stream().map(map::get).toList(),
+                    config.getBoolean(key + ".sorting.inverted", false),
+                    config.getBoolean(key + ".sorting.showNumbers", getPlugin().getConfig().getBoolean("WaystoneScreen.ShowNumbers")),
+                    config.getBoolean(key + ".sorting.hideLocation", getPlugin().getConfig().getBoolean("UncategorizedPlayerData.VisuallyHideLocations"))
             );
             playerDataMap.put(uuid, playerData);
         }
@@ -41,7 +43,12 @@ public class PlayerDataManager extends DataManagerBase<Map<UUID, PlayerData>> {
         config = new YamlConfiguration();
         for (PlayerData playerData : playerDataMap.values()) {
             config.set(playerData.getUniqueId().toString() + ".sorting.type", playerData.getSortType().toString());
-            config.set(playerData.getUniqueId().toString() + ".sorting.inverted", playerData.isSortingInverted());
+            if (playerData.isSortingInverted() || getPlugin().shouldDefaultDataBeSaved())
+                config.set(playerData.getUniqueId().toString() + ".sorting.inverted", playerData.isSortingInverted());
+            if (playerData.getShowNumbers() || getPlugin().shouldDefaultDataBeSaved())
+                config.set(playerData.getUniqueId().toString() + ".sorting.showNumbers", playerData.getShowNumbers());
+            if (playerData.getHideLocation() || getPlugin().shouldDefaultDataBeSaved())
+                config.set(playerData.getUniqueId().toString() + ".sorting.hideLocation", playerData.getHideLocation());
             config.set(playerData.getUniqueId().toString() + ".sorting.list", playerData.getSortedWaystones()
                     .stream()
                     .map(WaystoneData::getUniqueId)
@@ -59,13 +66,15 @@ public class PlayerDataManager extends DataManagerBase<Map<UUID, PlayerData>> {
         PlayerData data = new PlayerData(
                 player.getUniqueId(),
                 PlayerSortType.valueOf(getPlugin().getConfig().getString("WaystoneScreen.DefaultPlayerSorting.Type")),
-                getPlugin().getConfig().getBoolean("WaystoneScreen.DefaultPlayerSorting.Inverted"),
                 getPlugin().getWaystonesMap().values().stream()
                         .filter(x -> x.isOwner(player) ||
                                 x.getAddedPlayers().contains(player.getUniqueId()) ||
                                 x.isInternal() ||
                                 x.isGloballyAccessible())
-                        .toList()
+                        .toList(),
+                getPlugin().getConfig().getBoolean("WaystoneScreen.DefaultPlayerSorting.Inverted"),
+                getPlugin().getConfig().getBoolean("WaystoneScreen.ShowNumbers"),
+                getPlugin().getConfig().getBoolean("UncategorizedPlayerData.VisuallyHideLocations")
         );
         if (save) {
             getPlugin().getPlayerDataMap().put(player.getUniqueId(), data);

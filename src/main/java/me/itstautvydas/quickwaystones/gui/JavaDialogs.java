@@ -40,6 +40,8 @@ public class JavaDialogs extends DialogGUI {
     public static final String KEY_CLOSE = "close";
     public static final String KEY_SORT = "sort";
     public static final String KEY_INVERT_SORT = "invert_sort";
+    public static final String KEY_SHOW_NUMBERS = "show_numbers";
+    public static final String KEY_HIDE_LOCATIONS = "hide_location";
     public static final String KEY_SAVE_WD_AND_CLOSE = "save_wd_and_close";
     public static final String KEY_SAVE_PD_AND_CLOSE = "save_pd_and_close";
     public static final String KEY_CUSTOM = "custom";
@@ -358,12 +360,20 @@ public class JavaDialogs extends DialogGUI {
 
     private void saveWaystoneSettings(Player player, Map<String, String> data) {
         PlayerData playerData = plugin.getPlayerData(player);
-        boolean success = playerData.setSortType(
-                PlayerSortType.valueOf(data.get(KEY_SORT)),
-                data.get(KEY_INVERT_SORT).equals("1.0"),
-                true
-        );
-        if (success)
+        boolean showNumbers = data.get(KEY_SHOW_NUMBERS).equals("1.0");
+        boolean hideLocations = data.get(KEY_HIDE_LOCATIONS).equals("1.0");
+        int i = 0;
+        if (playerData.setSortType(PlayerSortType.valueOf(data.get(KEY_SORT)), data.get(KEY_INVERT_SORT).equals("1.0"), true))
+            i++;
+        if (playerData.getHideLocation() != hideLocations) {
+            playerData.setHideLocation(hideLocations);
+            i++;
+        }
+        if (playerData.getShowNumbers() != showNumbers) {
+            playerData.setShowNumbers(showNumbers);
+            i++;
+        }
+        if (i > 0)
             plugin.getPlayerDataManager().saveData();
     }
 
@@ -400,6 +410,12 @@ public class JavaDialogs extends DialogGUI {
                 .canCloseWithEscape(true)
                 .columns(1)
                 .body(builder -> builder.item().item(createItem(clickedWaystone, placeholders)))
+                .input(KEY_SHOW_NUMBERS, builder -> builder.booleanInput()
+                        .label(QuickWaystones.message("WaystoneSettingsDialog.Buttons.ShowNumbers", placeholders))
+                        .initial(data.getShowNumbers()))
+                .input(KEY_HIDE_LOCATIONS, builder -> builder.booleanInput()
+                        .label(QuickWaystones.message("WaystoneSettingsDialog.Buttons.HideLocation", placeholders))
+                        .initial(data.getHideLocation()))
                 .input(KEY_SORT, builder -> {
                     PaperSingleOptionInput input = builder.singleOptionInput()
                             .label(QuickWaystones.message("WaystoneSettingsDialog.Buttons.SortBy.Label", placeholders));
@@ -435,6 +451,8 @@ public class JavaDialogs extends DialogGUI {
 
         if (isSorting && !allowManualSorting && !moveFromToButtons)
             return;
+
+        PlayerData playerData = plugin.getPlayerData(viewer);
 
         Map<String, String> placeholders = new HashMap<>();
         fillPlaceholders(placeholders, player, null, clickedWaystone);
@@ -488,7 +506,7 @@ public class JavaDialogs extends DialogGUI {
 
             fillPlaceholders(placeholders, player, waystone, clickedWaystone);
 
-            if (plugin.getConfig().getBoolean("WaystoneScreen.ShowNumbers")) {
+            if (playerData.getShowNumbers()) {
                 int finalIndex = index + 1;
                 dialog.action(builder -> builder.width(20).label(Component.text(finalIndex)));
             }
@@ -595,7 +613,7 @@ public class JavaDialogs extends DialogGUI {
                     .width(300));
 
         int columns = 1;
-        if (plugin.getConfig().getBoolean("WaystoneScreen.ShowNumbers"))
+        if (playerData.getShowNumbers())
             columns++;
 
         if (isSorting) {
