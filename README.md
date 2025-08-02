@@ -13,11 +13,12 @@ The plugin was tested with 1.21.7 version, but should work with 1.21.6 (the vers
 - **Bedrock support** (soon).
 - Customizable sounds when waystone is placed, broken or when a player is teleporting to it.
 - Sort waystones listing by either name, when it was made, player's name or manually (by moving them yourself!).
+- Player waystone settings — change waystones numbering, hide coordinates, attributes visibility, waystone button width or columns.
 - Waystone's visibility — public (default) or private, can be changed by special item (echo shard).
   - If your waystone is private, you can add players to it so they could teleport to it (works by placing a special block below waystone, default is target block), configurable via right-clicking special block.
 - Server's waystones — players with operator permissions can make the waystone global, meaning it would behave as /warp.
-- Delays before or after teleporting and delay between waystone uses.
-- Limited waystones — limit how many waystones a player can have and what min distance should be between their other waystones
+- Delays before teleporting and between waystone uses.
+- Limited waystones — limit how many waystones a player can have and what min distance should be between their other waystones.
 
 ### Features I'm considering adding or fixing some things
 - Add a setting to switch back to inventory's GUI (this would allow support for older minecraft versions, <1.21.6).
