@@ -1,10 +1,10 @@
-package me.itstautvydas.quickwaystones.gui;
+package me.itstautvydas.modernwaystones.gui;
 
-import me.itstautvydas.quickwaystones.QuickWaystones;
-import me.itstautvydas.quickwaystones.Utils;
-import me.itstautvydas.quickwaystones.data.PlayerData;
-import me.itstautvydas.quickwaystones.data.WaystoneData;
-import me.itstautvydas.quickwaystones.enums.WaystoneSound;
+import me.itstautvydas.modernwaystones.ModernWaystones;
+import me.itstautvydas.modernwaystones.Utils;
+import me.itstautvydas.modernwaystones.data.PlayerData;
+import me.itstautvydas.modernwaystones.data.WaystoneData;
+import me.itstautvydas.modernwaystones.enums.WaystoneSound;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -19,12 +19,12 @@ import java.util.function.Function;
 public abstract class DialogGUI {
     public static final String KEY_LAST_WAYSTONE = "last_waystone";
 
-    protected final QuickWaystones plugin;
+    protected final ModernWaystones plugin;
 //    private long lastSaved;
 
     private List<Consumer<Player>> runAfterClose;
 
-    public DialogGUI(QuickWaystones plugin) {
+    public DialogGUI(ModernWaystones plugin) {
         this.plugin = plugin;
     }
 

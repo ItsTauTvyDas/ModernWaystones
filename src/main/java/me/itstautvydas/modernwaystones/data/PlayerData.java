@@ -1,6 +1,6 @@
-package me.itstautvydas.quickwaystones.data;
+package me.itstautvydas.modernwaystones.data;
 
-import me.itstautvydas.quickwaystones.enums.PlayerSortType;
+import me.itstautvydas.modernwaystones.enums.PlayerSortType;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 

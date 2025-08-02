@@ -1,7 +1,7 @@
-package me.itstautvydas.quickwaystones.gui;
+package me.itstautvydas.modernwaystones.gui;
 
-import me.itstautvydas.quickwaystones.QuickWaystones;
-import me.itstautvydas.quickwaystones.data.WaystoneData;
+import me.itstautvydas.modernwaystones.ModernWaystones;
+import me.itstautvydas.modernwaystones.data.WaystoneData;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.geysermc.floodgate.api.FloodgateApi;
@@ -15,15 +15,15 @@ public class UniDialogs extends DialogGUI {
     private final BedrockDialogs bedrock;
     private final FloodgateApi bedrockAPI;
 
-    private UniDialogs(QuickWaystones plugin) {
+    private UniDialogs(ModernWaystones plugin) {
         super(plugin);
         java = new JavaDialogs(plugin);
         bedrock = new BedrockDialogs(plugin);
         bedrockAPI = FloodgateApi.getInstance();
     }
 
-    public static DialogGUI tryCreate(QuickWaystones plugin) {
-        if (QuickWaystones.isFloodgateRunning())
+    public static DialogGUI tryCreate(ModernWaystones plugin) {
+        if (ModernWaystones.isFloodgateRunning())
             return new UniDialogs(plugin);
         return new JavaDialogs(plugin);
     }

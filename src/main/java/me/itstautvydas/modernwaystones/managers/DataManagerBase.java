@@ -1,6 +1,6 @@
-package me.itstautvydas.quickwaystones.managers;
+package me.itstautvydas.modernwaystones.managers;
 
-import me.itstautvydas.quickwaystones.QuickWaystones;
+import me.itstautvydas.modernwaystones.ModernWaystones;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -11,23 +11,23 @@ import java.util.HashSet;
 import java.util.Set;
 
 public abstract class DataManagerBase<D> {
-    private final QuickWaystones plugin;
+    private final ModernWaystones plugin;
 
     private File file;
     protected YamlConfiguration config;
     protected Set<String> keys;
 
-    public DataManagerBase(QuickWaystones plugin, String filename) throws IOException {
+    public DataManagerBase(ModernWaystones plugin, String filename) throws IOException {
         this.plugin = plugin;
         keys = new HashSet<>();
         checkFile(filename);
     }
 
     private void checkFile(String filename) throws IOException {
-        file = new File(QuickWaystones.getInstance().getDataFolder(), filename + ".yml");
+        file = new File(ModernWaystones.getInstance().getDataFolder(), filename + ".yml");
 
         if (!file.exists()) {
-            QuickWaystones.getInstance().getLogger().info("Creating " + filename + ".yml");
+            ModernWaystones.getInstance().getLogger().info("Creating " + filename + ".yml");
             file.createNewFile();
         }
 
@@ -37,7 +37,7 @@ public abstract class DataManagerBase<D> {
         keys = config.getKeys(false);
     }
 
-    public final QuickWaystones getPlugin() {
+    public final ModernWaystones getPlugin() {
         return plugin;
     }
 

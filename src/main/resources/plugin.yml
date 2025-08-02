@@ -1,6 +1,6 @@
-name: QuickWaystones
+name: ModernWaystones
 version: '${project.version}'
-main: me.itstautvydas.quickwaystones.QuickWaystones
+main: me.itstautvydas.modernwaystones.ModernWaystones
 authors: [Pozzoo, SkyboundLab, ItsTauTvyDas]
 api-version: '1.21'
 softdepend: [floodgate]

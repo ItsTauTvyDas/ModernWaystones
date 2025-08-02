@@ -1,4 +1,4 @@
-package me.itstautvydas.quickwaystones.enums;
+package me.itstautvydas.modernwaystones.enums;
 
 public enum WaystoneSound {
     ACTIVATED("Activation"),

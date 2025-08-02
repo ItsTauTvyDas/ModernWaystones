@@ -1,5 +1,5 @@
-# QuickWaystones (originally forked)
-A plugin that adds Waystones for *almost* instant travel. This plugin was originally forked from [a fork](https://github.com/SkyboundLab/QuickWaystones) of a [waystones plugin](https://github.com/Pozzoo/QuickWaystones)
+# ModernWaystones (originally forked)
+A plugin that adds Waystones for traveling. This plugin was originally forked from [a fork](https://github.com/SkyboundLab/QuickWaystones) of a [QuickWaystones plugin](https://github.com/Pozzoo/QuickWaystones)
 that I used as the base for this, since I rewrote a lot of its original code, I decided to make this repository standalone and not a fork.
 
 The plugin was tested with 1.21.7 version, but should work with 1.21.6 (the version when dialogs were introduced)

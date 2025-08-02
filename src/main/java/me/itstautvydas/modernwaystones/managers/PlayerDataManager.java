@@ -1,9 +1,9 @@
-package me.itstautvydas.quickwaystones.managers;
+package me.itstautvydas.modernwaystones.managers;
 
-import me.itstautvydas.quickwaystones.QuickWaystones;
-import me.itstautvydas.quickwaystones.data.PlayerData;
-import me.itstautvydas.quickwaystones.data.WaystoneData;
-import me.itstautvydas.quickwaystones.enums.PlayerSortType;
+import me.itstautvydas.modernwaystones.ModernWaystones;
+import me.itstautvydas.modernwaystones.data.PlayerData;
+import me.itstautvydas.modernwaystones.data.WaystoneData;
+import me.itstautvydas.modernwaystones.enums.PlayerSortType;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -16,7 +16,7 @@ import java.util.UUID;
 public class PlayerDataManager extends DataManagerBase<Map<UUID, PlayerData>> {
     private final Map<UUID, PlayerData> playerDataMap = new HashMap<>();
 
-    public PlayerDataManager(QuickWaystones plugin) throws IOException {
+    public PlayerDataManager(ModernWaystones plugin) throws IOException {
         super(plugin, "players");
     }
 

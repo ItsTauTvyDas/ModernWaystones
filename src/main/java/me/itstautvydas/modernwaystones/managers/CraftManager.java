@@ -1,8 +1,8 @@
-package me.itstautvydas.quickwaystones.managers;
+package me.itstautvydas.modernwaystones.managers;
 
-import me.itstautvydas.quickwaystones.QuickWaystones;
-import me.itstautvydas.quickwaystones.Utils;
-import me.itstautvydas.quickwaystones.data.WaystoneData;
+import me.itstautvydas.modernwaystones.ModernWaystones;
+import me.itstautvydas.modernwaystones.Utils;
+import me.itstautvydas.modernwaystones.data.WaystoneData;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
@@ -16,16 +16,16 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class CraftManager {
-    private final QuickWaystones plugin;
+    private final ModernWaystones plugin;
     private final NamespacedKey persistentWaystoneNameKey;
     private final NamespacedKey persistentWaystoneVisibilityKey;
     private final NamespacedKey recipeKey;
 
-    public CraftManager(QuickWaystones plugin) {
+    public CraftManager(ModernWaystones plugin) {
         this.plugin = plugin;
-        this.persistentWaystoneNameKey = new NamespacedKey(QuickWaystones.getInstance(), "name");
-        this.persistentWaystoneVisibilityKey = new NamespacedKey(QuickWaystones.getInstance(), "visibility_attr");
-        this.recipeKey = new NamespacedKey(QuickWaystones.getInstance(), "recipe");
+        this.persistentWaystoneNameKey = new NamespacedKey(ModernWaystones.getInstance(), "name");
+        this.persistentWaystoneVisibilityKey = new NamespacedKey(ModernWaystones.getInstance(), "visibility_attr");
+        this.recipeKey = new NamespacedKey(ModernWaystones.getInstance(), "recipe");
     }
 
     public NamespacedKey getPersistentWaystoneNameKey() {

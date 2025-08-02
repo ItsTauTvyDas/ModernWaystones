@@ -1,10 +1,10 @@
-package me.itstautvydas.quickwaystones.events;
+package me.itstautvydas.modernwaystones.events;
 
 import com.destroystokyo.paper.event.block.BlockDestroyEvent;
 import io.papermc.paper.event.entity.EntityKnockbackEvent;
-import me.itstautvydas.quickwaystones.QuickWaystones;
-import me.itstautvydas.quickwaystones.data.WaystoneData;
-import me.itstautvydas.quickwaystones.enums.WaystoneSound;
+import me.itstautvydas.modernwaystones.ModernWaystones;
+import me.itstautvydas.modernwaystones.data.WaystoneData;
+import me.itstautvydas.modernwaystones.enums.WaystoneSound;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
@@ -44,9 +44,9 @@ import java.util.List;
 import java.util.Map;
 
 public class WaystoneEventsHandler implements Listener {
-    private final QuickWaystones plugin;
+    private final ModernWaystones plugin;
 
-    public WaystoneEventsHandler(QuickWaystones plugin) {
+    public WaystoneEventsHandler(ModernWaystones plugin) {
         this.plugin = plugin;
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
@@ -120,7 +120,7 @@ public class WaystoneEventsHandler implements Listener {
         if (limit != -1 && plugin.getWaystones(player.getUniqueId()).size() + 1 >= limit) {
             Map<String, String> placeholders = new HashMap<>();
             placeholders.put("max", Integer.toString(limit));
-            plugin.sendMessage(player, QuickWaystones.message("Limitations.WaystoneCountLimitReached", placeholders), "PlayerLimitations.UseActionBar");
+            plugin.sendMessage(player, ModernWaystones.message("Limitations.WaystoneCountLimitReached", placeholders), "PlayerLimitations.UseActionBar");
             event.setCancelled(true);
             return;
         }
@@ -179,7 +179,7 @@ public class WaystoneEventsHandler implements Listener {
             if (section.getBoolean("SubtractItemCount"))
                 player.getInventory().getItemInMainHand().subtract();
             plugin.playWaystoneSound(player, block.getLocation(), WaystoneSound.RENAMED);
-            plugin.sendMessage(player, QuickWaystones.message("Renamed", placeholders), "Features.RenameByNameTag.UseActionBar");
+            plugin.sendMessage(player, ModernWaystones.message("Renamed", placeholders), "Features.RenameByNameTag.UseActionBar");
             return;
         }
         section = plugin.getConfig().getConfigurationSection("Features.ChangeVisibility");
@@ -198,7 +198,7 @@ public class WaystoneEventsHandler implements Listener {
                 plugin.playWaystoneSound(player, block.getLocation(), WaystoneSound.VISIBILITY_CHANGE_TO_PRIVATE);
             }
             placeholders.put("type", plugin.getConfig().getString("Messages.WaystoneAttributes." + type));
-            plugin.sendMessage(player, QuickWaystones.message("VisibilityChanged", placeholders), "Features.RenameByNameTag.UseActionBar");
+            plugin.sendMessage(player, ModernWaystones.message("VisibilityChanged", placeholders), "Features.RenameByNameTag.UseActionBar");
         }
         section = plugin.getConfig().getConfigurationSection("Features.ServerWaystones");
         if (section != null && section.getBoolean("Enabled") && player.isOp() && player.getGameMode() == GameMode.CREATIVE
@@ -209,7 +209,7 @@ public class WaystoneEventsHandler implements Listener {
             event.setCancelled(true);
             plugin.sendMessage(
                     player,
-                    QuickWaystones.message("ServerWaystoneMarking." + (waystone.isInternal() ? "Set" : "Unset"), placeholders),
+                    ModernWaystones.message("ServerWaystoneMarking." + (waystone.isInternal() ? "Set" : "Unset"), placeholders),
                     "Features.ServerWaystones.UseActionBar"
             );
         }
@@ -356,7 +356,7 @@ public class WaystoneEventsHandler implements Listener {
             if (last + delayAfter >= current) {
                 Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("time", String.format("%.1f", (last + delayAfter - current) / 1000.0));
-                plugin.sendMessage(player, QuickWaystones.message("WaitBeforeUse", placeholders), "Teleportation.DelayBetweenUses.UseActionBar");
+                plugin.sendMessage(player, ModernWaystones.message("WaitBeforeUse", placeholders), "Teleportation.DelayBetweenUses.UseActionBar");
                 return;
             }
             player.removeMetadata("teleported_at", plugin);

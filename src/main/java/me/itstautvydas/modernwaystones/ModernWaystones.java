@@ -1,4 +1,4 @@
-package me.itstautvydas.quickwaystones;
+package me.itstautvydas.modernwaystones;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -8,15 +8,15 @@ import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.BlockPositionResolver;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import me.itstautvydas.quickwaystones.data.PlayerData;
-import me.itstautvydas.quickwaystones.data.WaystoneData;
-import me.itstautvydas.quickwaystones.enums.WaystoneSound;
-import me.itstautvydas.quickwaystones.events.WaystoneEventsHandler;
-import me.itstautvydas.quickwaystones.gui.DialogGUI;
-import me.itstautvydas.quickwaystones.gui.UniDialogs;
-import me.itstautvydas.quickwaystones.managers.CraftManager;
-import me.itstautvydas.quickwaystones.managers.PlayerDataManager;
-import me.itstautvydas.quickwaystones.managers.WaystoneDataManager;
+import me.itstautvydas.modernwaystones.data.PlayerData;
+import me.itstautvydas.modernwaystones.data.WaystoneData;
+import me.itstautvydas.modernwaystones.enums.WaystoneSound;
+import me.itstautvydas.modernwaystones.events.WaystoneEventsHandler;
+import me.itstautvydas.modernwaystones.gui.DialogGUI;
+import me.itstautvydas.modernwaystones.gui.UniDialogs;
+import me.itstautvydas.modernwaystones.managers.CraftManager;
+import me.itstautvydas.modernwaystones.managers.PlayerDataManager;
+import me.itstautvydas.modernwaystones.managers.WaystoneDataManager;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
@@ -37,8 +37,8 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public final class QuickWaystones extends JavaPlugin {
-    private static QuickWaystones plugin;
+public final class ModernWaystones extends JavaPlugin {
+    private static ModernWaystones plugin;
     private static int lastWaystoneID = 0;
     private static Metrics metrics;
 
@@ -86,7 +86,7 @@ public final class QuickWaystones extends JavaPlugin {
         friendsBlockType = Material.valueOf(Objects.requireNonNull(getConfig().getString("Features.AddFriends.SpecialBlockMaterial")).toUpperCase(Locale.ROOT));
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
-            LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("quickwaystones")
+            LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("modernwaystones")
                     .requires(sender -> sender.getSender().isOp())
                     .then(Commands.literal("listdialog")
                             .then(Commands.argument("target", ArgumentTypes.player())
@@ -214,7 +214,7 @@ public final class QuickWaystones extends JavaPlugin {
         return getConfig().getBoolean("DataConfigurations.SaveDefaultData");
     }
 
-    public static QuickWaystones getInstance() {
+    public static ModernWaystones getInstance() {
         return plugin;
     }
 

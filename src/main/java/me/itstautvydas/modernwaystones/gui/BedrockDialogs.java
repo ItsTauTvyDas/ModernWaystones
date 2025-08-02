@@ -1,7 +1,7 @@
-package me.itstautvydas.quickwaystones.gui;
+package me.itstautvydas.modernwaystones.gui;
 
-import me.itstautvydas.quickwaystones.QuickWaystones;
-import me.itstautvydas.quickwaystones.data.WaystoneData;
+import me.itstautvydas.modernwaystones.ModernWaystones;
+import me.itstautvydas.modernwaystones.data.WaystoneData;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class BedrockDialogs extends DialogGUI {
-    public BedrockDialogs(QuickWaystones plugin) {
+    public BedrockDialogs(ModernWaystones plugin) {
         super(plugin);
     }
 

@@ -1,7 +1,7 @@
-package me.itstautvydas.quickwaystones.managers;
+package me.itstautvydas.modernwaystones.managers;
 
-import me.itstautvydas.quickwaystones.QuickWaystones;
-import me.itstautvydas.quickwaystones.data.WaystoneData;
+import me.itstautvydas.modernwaystones.ModernWaystones;
+import me.itstautvydas.modernwaystones.data.WaystoneData;
 import org.bukkit.Location;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -15,7 +15,7 @@ import java.util.UUID;
 public class WaystoneDataManager extends DataManagerBase<Map<Location, WaystoneData>> {
     private final Map<Location, WaystoneData> waystonesMap = new HashMap<>();
 
-    public WaystoneDataManager(QuickWaystones plugin) throws IOException {
+    public WaystoneDataManager(ModernWaystones plugin) throws IOException {
         super(plugin, "waystones");
     }
 

@@ -1,4 +1,4 @@
-package me.itstautvydas.quickwaystones;
+package me.itstautvydas.modernwaystones;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -33,7 +33,7 @@ public class Utils {
     }
 
     public static boolean isBedrockPlayer(UUID uuid) {
-        if (!QuickWaystones.isFloodgateRunning())
+        if (!ModernWaystones.isFloodgateRunning())
             return false;
         return FloodgateApi.getInstance().isFloodgatePlayer(uuid);
     }

@@ -1,6 +1,6 @@
-package me.itstautvydas.quickwaystones.data;
+package me.itstautvydas.modernwaystones.data;
 
-import me.itstautvydas.quickwaystones.QuickWaystones;
+import me.itstautvydas.modernwaystones.ModernWaystones;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -25,12 +25,12 @@ public class WaystoneData {
     private final Set<UUID> addedPlayers = new HashSet<>();
 
     public WaystoneData(Location location, String owner, UUID ownerUniqueId) {
-        String waystoneDefaultName = QuickWaystones.config().getString("DefaultWaystone.Name", "Waystone #{id}");
+        String waystoneDefaultName = ModernWaystones.config().getString("DefaultWaystone.Name", "Waystone #{id}");
         this.uniqueId = UUID.randomUUID().toString();
-        this.name = waystoneDefaultName.replace("{id}", Integer.toString(QuickWaystones.getAndIncrementLastWaystoneID()));
+        this.name = waystoneDefaultName.replace("{id}", Integer.toString(ModernWaystones.getAndIncrementLastWaystoneID()));
         this.location = location;
         this.owner = owner;
-        this.globallyAccessible = QuickWaystones.config().getBoolean("DefaultWaystone.GloballyAccessible", true);
+        this.globallyAccessible = ModernWaystones.config().getBoolean("DefaultWaystone.GloballyAccessible", true);
         this.createdAt = System.currentTimeMillis();
         this.ownerUniqueId = ownerUniqueId;
     }
@@ -40,7 +40,7 @@ public class WaystoneData {
         this.name = name;
         this.location = location;
         this.owner = owner;
-        this.globallyAccessible = QuickWaystones.config().getBoolean("DefaultWaystone.GloballyAccessible", true);
+        this.globallyAccessible = ModernWaystones.config().getBoolean("DefaultWaystone.GloballyAccessible", true);
         this.createdAt = createdAt;
         this.ownerUniqueId = ownerUniqueId;
     }
