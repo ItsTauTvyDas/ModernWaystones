@@ -11,6 +11,9 @@ public class PlayerData {
     private boolean inverted;
     private boolean showNumbers;
     private boolean hideLocation;
+    private boolean showAttributes;
+    private int waystoneButtonWidth;
+    private int columns;
     private PlayerSortType sortType;
     private PlayerSortType oldSortType;
     private Set<WaystoneData> sortedWaystones;
@@ -21,16 +24,12 @@ public class PlayerData {
             UUID uniqueId,
             PlayerSortType sortType,
             Collection<WaystoneData> waystones,
-            boolean invertedWaystones,
-            boolean showNumbers,
-            boolean hideLocation
+            boolean invertedWaystones
     ) {
         this.uniqueId = uniqueId;
         this.sortType = sortType;
         this.oldSortType = sortType;
         this.inverted = invertedWaystones;
-        this.showNumbers = showNumbers;
-        this.hideLocation = hideLocation;
 
         comparator = (w1, w2) -> switch (this.sortType) {
             case CREATED_AT -> Long.compare(w1.getCreatedAt(), w2.getCreatedAt());
@@ -61,6 +60,14 @@ public class PlayerData {
         return inverted;
     }
 
+    public boolean getShowAttributes() {
+        return showAttributes;
+    }
+
+    public void setShowAttributes(boolean showAttributes) {
+        this.showAttributes = showAttributes;
+    }
+
     public boolean getShowNumbers() {
         return showNumbers;
     }
@@ -87,6 +94,22 @@ public class PlayerData {
 
     public Set<WaystoneData> getSortedWaystones() {
         return sortedWaystones;
+    }
+
+    public int getWaystoneScreenColumns() {
+        return columns;
+    }
+
+    public void setWaystoneScreenColumns(int columns) {
+        this.columns = columns;
+    }
+
+    public int getWaystoneButtonWidth() {
+        return waystoneButtonWidth;
+    }
+
+    public void setWaystoneButtonWidth(int width) {
+        this.waystoneButtonWidth = width;
     }
 
     public boolean setSortType(PlayerSortType type, Boolean inverted, boolean updateSorting) {

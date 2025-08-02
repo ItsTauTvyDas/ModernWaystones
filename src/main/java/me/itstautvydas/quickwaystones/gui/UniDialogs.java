@@ -80,7 +80,7 @@ public class UniDialogs extends DialogGUI {
     }
 
     @Override
-    public void showWaitingDialog(Player viewer, Component title, Function<Long, Component> text, Component cancelButton, long waitTicks, Runnable onClose, Runnable onFinish) {
+    public void showWaitingDialog(Player viewer, Component title, Function<Long, Component> text, Component cancelButton, long waitTicks, Consumer<Player> onClose, Consumer<Player> onFinish) {
         if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
             bedrock.showWaitingDialog(viewer, title, text, cancelButton, waitTicks, onClose, onFinish);
         } else {
@@ -89,20 +89,20 @@ public class UniDialogs extends DialogGUI {
     }
 
     @Override
-    public void showSortSettingsDialog(Player viewer, WaystoneData clickedWaystone) {
+    public void showSortSettingsDialog(Player viewer) {
         if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
-            bedrock.showSortSettingsDialog(viewer, clickedWaystone);
+            bedrock.showSortSettingsDialog(viewer);
         } else {
-            java.showSortSettingsDialog(viewer, clickedWaystone);
+            java.showSortSettingsDialog(viewer);
         }
     }
 
     @Override
-    public void showWaystoneSettingsDialog(Player viewer, WaystoneData clickedWaystone) {
+    public void showWaystonePlayerSettingsDialog(Player viewer) {
         if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
-            bedrock.showWaystoneSettingsDialog(viewer, clickedWaystone);
+            bedrock.showWaystonePlayerSettingsDialog(viewer);
         } else {
-            java.showWaystoneSettingsDialog(viewer, clickedWaystone);
+            java.showWaystonePlayerSettingsDialog(viewer);
         }
     }
 

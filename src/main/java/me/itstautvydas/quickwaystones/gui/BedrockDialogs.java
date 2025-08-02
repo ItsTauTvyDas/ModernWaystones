@@ -49,17 +49,17 @@ public class BedrockDialogs extends DialogGUI {
     }
 
     @Override
-    public void showWaitingDialog(Player viewer, Component title, Function<Long, Component> text, Component cancelButton, long waitTicks, Runnable onClose, Runnable onFinish) {
+    public void showWaitingDialog(Player viewer, Component title, Function<Long, Component> text, Component cancelButton, long waitTicks, Consumer<Player> onClose, Consumer<Player> onFinish) {
 
     }
 
     @Override
-    public void showSortSettingsDialog(Player viewer, WaystoneData clickedWaystone) {
+    public void showSortSettingsDialog(Player viewer) {
 
     }
 
     @Override
-    public void showWaystoneSettingsDialog(Player viewer, WaystoneData clickedWaystone) {
+    public void showWaystonePlayerSettingsDialog(Player viewer) {
 
     }
 }
