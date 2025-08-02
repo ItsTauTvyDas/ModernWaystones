@@ -210,6 +210,10 @@ public final class QuickWaystones extends JavaPlugin {
         player.sendMessage(component);
     }
 
+    public boolean shouldDefaultDataBeSaved() {
+        return getConfig().getBoolean("DataConfigurations.SaveDefaultData");
+    }
+
     public static QuickWaystones getInstance() {
         return plugin;
     }
