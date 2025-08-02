@@ -53,7 +53,7 @@ public class WaystoneDataManager extends DataManagerBase<Map<Location, WaystoneD
             config.set(waystone.getUniqueId() + ".createdAt", waystone.getCreatedAt());
             if (waystone.isInternal() || getPlugin().shouldDefaultDataBeSaved())
                 config.set(waystone.getUniqueId() + ".internal", waystone.isInternal());
-            if (!waystone.getAddedPlayers().isEmpty() || getPlugin().shouldDefaultDataBeSaved())
+            if (!waystone.getAddedPlayers().isEmpty())
                 config.set(waystone.getUniqueId() + ".addedPlayers", waystone.getAddedPlayers()
                         .stream()
                         .map(UUID::toString)
