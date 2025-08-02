@@ -38,6 +38,7 @@ DefaultWaystone:
   GloballyAccessible: true
   PromptRenameDialogUponPlacing: false # not implemented
 DefaultPlayerData:
+  # Other default settings can be found in WaystoneScreen category
   VisuallyHideLocations: false
   ShowAttributes: true
   WaystoneButtonWidth:
@@ -49,7 +50,7 @@ DefaultPlayerData:
     Min: 1
     Default: 1
     Max: 5
-WaystoneScreen: # for Java clients only
+WaystoneScreen:
   ShowNumbers: true
   AutoSort: true
   AllowManualSort: true
