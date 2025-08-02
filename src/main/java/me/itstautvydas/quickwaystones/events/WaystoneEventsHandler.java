@@ -223,8 +223,15 @@ public class WaystoneEventsHandler implements Listener {
         if (event.getAction() != Action.PHYSICAL) return;
         if (event.getClickedBlock() == null) return;
         if (plugin.isWaystoneBlock(event.getClickedBlock())) return;
-        if (event.getPlayer().getNoDamageTicks() > 0) return;
         if (event.getPlayer().isInsideVehicle()) return;
+
+        List<MetadataValue> list = event.getPlayer().getMetadata("teleported_at");
+        if (!list.isEmpty()) {
+            long current = System.currentTimeMillis();
+            long last = list.getFirst().asLong();
+            if (last + 500 >= current)
+                return;
+        }
 
         pressurePlate(event.getClickedBlock(), event.getPlayer(), event);
     }
@@ -312,18 +319,18 @@ public class WaystoneEventsHandler implements Listener {
 
     private void checkForAvailabilityAndShowListDialog(Player player, WaystoneData waystone) {
         if (player.isSneaking() && waystone.isOwner(player)) {
-            plugin.getWaystoneDialogs().showWaystoneSettingsDialog(player, waystone);
+            plugin.getWaystoneDialogs().showWaystonePlayerSettingsDialog(player);
             return;
         }
         List<MetadataValue> list = player.getMetadata("teleported_at");
         if (!list.isEmpty()) {
             long current = System.currentTimeMillis();
             long last = list.getFirst().asLong();
-            long delayAfter = plugin.getConfig().getLong("Teleportation.DelayBetweenUses") * 1000;
+            long delayAfter = plugin.getConfig().getLong("Teleportation.DelayBetweenUses.Value") * 1000;
             if (last + delayAfter >= current) {
                 Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("time", String.format("%.1f", (last + delayAfter - current) / 1000.0));
-                player.sendActionBar(QuickWaystones.message("WaitBeforeUse", placeholders));
+                plugin.sendMessage(player, QuickWaystones.message("WaitBeforeUse", placeholders), "Teleportation.DelayBetweenUses.UseActionBar");
                 return;
             }
             player.removeMetadata("teleported_at", plugin);
