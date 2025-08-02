@@ -7,6 +7,9 @@ Item:
   EnchantmentGlint: true
   Rarity: UNCOMMON
   MaxStackSize: 1
+  UnlockRecipe:
+    Enabled: true
+    OnMaterial: LODESTONE
   Recipe:
     Layout:
       - SES
@@ -75,10 +78,6 @@ Features:
     Enabled: true
     Material: DEBUG_STICK
     UseActionBar: true
-  Sorting:
-    Enabled: true
-    RegisterCommand: true
-    ShiftRightClickToActivate: true
 Sounds:
   Activation:
     Enabled: true
