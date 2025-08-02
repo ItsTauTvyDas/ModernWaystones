@@ -18,6 +18,10 @@ Item:
       L: LODESTONE
       R: REDSTONE
       T: TARGET
+DataConfigurations:
+  # for example, setting this false will make "showNumbers" not be present in
+  # player's data if it's the same value as in WaystoneScreen configuration
+  SaveDefaultData: false
 Teleportation:
   DelayBefore: 4
   DelayAfter: 0
@@ -30,6 +34,8 @@ DefaultWaystone:
   Name: "Waystone #{id}"
   GloballyAccessible: true
   PromptRenameDialogUponPlacing: false # not implemented
+UncategorizedPlayerData:
+  VisuallyHideLocations: false
 WaystoneScreen: # for Java clients only
   ShowNumbers: true
   AutoSort: true
@@ -143,6 +149,8 @@ Messages:
           MANUAL: "Manual"
           OWNER: "Owner (player's name)"
       InvertSorting: "Invert waystone listing"
+      ShowNumbers: "Show numbers on waystones"
+      HideLocation: "Hide waystone coordinates (visually)"
   WaystoneTooltip:
     - "Location: {world} <aqua>{x}, {y}, {z}"
     - "Owner: {owner}"
