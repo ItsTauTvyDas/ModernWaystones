@@ -19,13 +19,13 @@ public class CraftManager {
     private final QuickWaystones plugin;
     private final NamespacedKey persistentWaystoneNameKey;
     private final NamespacedKey persistentWaystoneVisibilityKey;
-    private final NamespacedKey craftKey;
+    private final NamespacedKey recipeKey;
 
     public CraftManager(QuickWaystones plugin) {
         this.plugin = plugin;
         this.persistentWaystoneNameKey = new NamespacedKey(QuickWaystones.getInstance(), "name");
         this.persistentWaystoneVisibilityKey = new NamespacedKey(QuickWaystones.getInstance(), "visibility_attr");
-        this.craftKey = new NamespacedKey(QuickWaystones.getInstance(), "recipe");
+        this.recipeKey = new NamespacedKey(QuickWaystones.getInstance(), "recipe");
     }
 
     public NamespacedKey getPersistentWaystoneNameKey() {
@@ -36,10 +36,14 @@ public class CraftManager {
         return persistentWaystoneVisibilityKey;
     }
 
+    public NamespacedKey getRecipeKey() {
+        return recipeKey;
+    }
+
     public void registerRecipes() {
-        if (plugin.getServer().getRecipe(craftKey) != null)
-            plugin.getServer().removeRecipe(craftKey, true);
-        ShapedRecipe recipe = new ShapedRecipe(craftKey, createWaystoneItem(null, null));
+        if (plugin.getServer().getRecipe(recipeKey) != null)
+            plugin.getServer().removeRecipe(recipeKey, true);
+        ShapedRecipe recipe = new ShapedRecipe(recipeKey, createWaystoneItem(null, null));
         recipe.shape(plugin.getConfig().getStringList("Item.Recipe.Layout").toArray(new String[0]));
         ConfigurationSection ingredients = plugin.getConfig().getConfigurationSection("Item.Recipe.Ingredients");
         if (ingredients == null)
