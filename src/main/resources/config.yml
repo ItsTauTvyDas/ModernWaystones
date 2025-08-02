@@ -24,8 +24,11 @@ DataConfigurations:
   SaveDefaultData: false
 Teleportation:
   DelayBefore: 4
-  DelayAfter: 0
-  DelayBetweenUses: 5
+  NoDamageTicksBefore: 0
+  NoDamageTicksAfter: 10
+  DelayBetweenUses:
+    Value: 5
+    UseActionBar: true
 PlayerLimitations:
   MaxWaystonesPerPlayer: 25
   MinDistanceBetweenWaystones: -1
@@ -34,8 +37,18 @@ DefaultWaystone:
   Name: "Waystone #{id}"
   GloballyAccessible: true
   PromptRenameDialogUponPlacing: false # not implemented
-UncategorizedPlayerData:
+DefaultPlayerData:
   VisuallyHideLocations: false
+  ShowAttributes: true
+  WaystoneButtonWidth:
+    Min: 100
+    Default: 200
+    SliderStep: 5
+    Max: 300
+  WaystoneScreenColumns:
+    Min: 1
+    Default: 1
+    Max: 5
 WaystoneScreen: # for Java clients only
   ShowNumbers: true
   AutoSort: true
@@ -97,8 +110,8 @@ Messages:
   WaystonesListDialog:
     Title: "Current waystone - <bold>{current_name}"
     SortingTitle: "Manual waystone sorting"
-    WaystoneButton: "{name}<reset> ({attributes})"
-    CurrentWaystoneButton: "Current - {name}<reset> ({attributes})"
+    WaystoneButton: "{name}<reset>{attributes}"
+    CurrentWaystoneButton: "Current - {name}<reset>{attributes}"
     ServerWaystoneButton: "{name}"
     PrivateWaystoneNotice: "<red>This waystone is private, teleporting away means you won't be able to get back!"
     NoWaystonesNotice: "<red>You do not have any waystones to teleport to!"
@@ -139,7 +152,8 @@ Messages:
         Tooltip: "<red>Remove"
   WaystoneSettingsDialog:
     Title: "Waystone settings"
-    Buttons:
+    ResetButton: "<red>Reset Settings"
+    Labels:
       ManualSorting: "Manual sorting"
       SortBy:
         Label: "Auto Sort by"
@@ -150,7 +164,12 @@ Messages:
           OWNER: "Owner (player's name)"
       InvertSorting: "Invert waystone listing"
       ShowNumbers: "Show numbers on waystones"
+      ShowAttributes: "Show attributes"
       HideLocation: "Hide waystone coordinates (visually)"
+      WaystoneButtonWidth: "Waypoint button width"
+      WaystoneButtonWidthFormat: "%1$s: %2$s pixels"
+      WaystoneColumns: "Waystone columns"
+      WaystoneColumnsFormat: "%1$s: %2$s"
   WaystoneTooltip:
     - "Location: {world} <aqua>{x}, {y}, {z}"
     - "Owner: {owner}"
@@ -171,6 +190,8 @@ Messages:
     Offline: "<red>Offline</red>"
   WaystoneAttributes:
     Separator: ", "
+    Prefix: " ("
+    Suffix: ")"
     Public: "<green>public</green>"
     Private: "<red>private</red>"
     Destroyed: "<red>destroyed</red>"
