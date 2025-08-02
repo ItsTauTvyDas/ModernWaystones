@@ -51,9 +51,9 @@ public class WaystoneDataManager extends DataManagerBase<Map<Location, WaystoneD
             config.set(waystone.getUniqueId() + ".ownerId", waystone.getOwnerUniqueId().toString());
             config.set(waystone.getUniqueId() + ".global", waystone.isInternal() || waystone.isGloballyAccessible());
             config.set(waystone.getUniqueId() + ".createdAt", waystone.getCreatedAt());
-            if (waystone.isInternal())
+            if (waystone.isInternal() || getPlugin().shouldDefaultDataBeSaved())
                 config.set(waystone.getUniqueId() + ".internal", waystone.isInternal());
-            if (!waystone.getAddedPlayers().isEmpty())
+            if (!waystone.getAddedPlayers().isEmpty() || getPlugin().shouldDefaultDataBeSaved())
                 config.set(waystone.getUniqueId() + ".addedPlayers", waystone.getAddedPlayers()
                         .stream()
                         .map(UUID::toString)
@@ -65,5 +65,12 @@ public class WaystoneDataManager extends DataManagerBase<Map<Location, WaystoneD
     @Override
     public Map<Location, WaystoneData> getData() {
         return waystonesMap;
+    }
+
+    public void updatePlayerName(UUID uuid) {
+        waystonesMap.values()
+                .stream()
+                .filter(x -> x.isOwner(uuid))
+                .forEach(WaystoneData::updateOwnerName);
     }
 }
