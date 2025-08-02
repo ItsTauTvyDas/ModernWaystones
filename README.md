@@ -19,8 +19,9 @@ The plugin was tested with 1.21.7 version, but should work with 1.21.6 (the vers
 - Delays before or after teleporting and delay between waystone uses.
 - Limited waystones — limit how many waystones a player can have and what min distance should be between their other waystones
 
-### Features I'm considering adding
+### Features I'm considering adding or fixing some things
 - Add a setting to switch back to inventory's GUI (this would allow support for older minecraft versions, <1.21.6).
+- Do not use player's name in waystone configuration (I hate working with offline players, like getting their usernames).
 
 ## Screenshots
 soon.
