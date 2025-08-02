@@ -1,6 +1,7 @@
 package me.itstautvydas.quickwaystones.data;
 
 import me.itstautvydas.quickwaystones.QuickWaystones;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -18,7 +19,7 @@ public class WaystoneData {
 
     private final long createdAt;
     private final String uniqueId;
-    private final String owner;
+    private String owner;
     private final UUID ownerUniqueId;
     private final Location location;
     private final Set<UUID> addedPlayers = new HashSet<>();
@@ -39,7 +40,7 @@ public class WaystoneData {
         this.name = name;
         this.location = location;
         this.owner = owner;
-        this.globallyAccessible = QuickWaystones.config().getBoolean("DefaultWaystone.GloballyAccessible", true);;
+        this.globallyAccessible = QuickWaystones.config().getBoolean("DefaultWaystone.GloballyAccessible", true);
         this.createdAt = createdAt;
         this.ownerUniqueId = ownerUniqueId;
     }
@@ -118,6 +119,12 @@ public class WaystoneData {
 
     public boolean isOwner(UUID playerUniqueId) {
         return playerUniqueId.equals(ownerUniqueId);
+    }
+
+    public void updateOwnerName() {
+        Player player = Bukkit.getPlayer(uniqueId);
+        if (player != null)
+            this.owner = player.getName();
     }
 
     @Override
