@@ -108,9 +108,10 @@ public abstract class DialogGUI {
             placeholders.put(prefix + "owner", waystone.getOwner());
             placeholders.put(prefix + "owner_id", waystone.getOwnerUniqueId().toString());
         }
-        placeholders.put(prefix + "x", Integer.toString(waystone.getLocation().getBlockX()));
-        placeholders.put(prefix + "y", Integer.toString(waystone.getLocation().getBlockY()));
-        placeholders.put(prefix + "z", Integer.toString(waystone.getLocation().getBlockZ()));
+        boolean hideLocation = player != null && plugin.getPlayerData(player).getHideLocation();
+        placeholders.put(prefix + "x", hideLocation ? "?" : Integer.toString(waystone.getLocation().getBlockX()));
+        placeholders.put(prefix + "y", hideLocation ? "?" : Integer.toString(waystone.getLocation().getBlockY()));
+        placeholders.put(prefix + "z", hideLocation ? "?" : Integer.toString(waystone.getLocation().getBlockZ()));
         placeholders.put(prefix + "world", plugin.getConfig()
                 .getString("Messages.WorldReplacedNames." + waystone.getLocation().getWorld().getName(),
                         waystone.getLocation().getWorld().getName()
