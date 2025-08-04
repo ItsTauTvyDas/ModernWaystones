@@ -40,6 +40,7 @@ DefaultWaystone:
   Name: "Waystone #{id}"
   GloballyAccessible: true
   PromptRenameDialogUponPlacing: false # not implemented
+  DeleteWaystoneAfterDestroyMark: 21600 # 6 hours
 DefaultPlayerData:
   # Other default settings can be found in WaystoneScreen category
   VisuallyHideLocations: false
@@ -109,13 +110,14 @@ Messages:
     InputLabel: "Enter waystone name:"
     InputLabelRequired: "Enter waystone name: <red>(Required)</red>"
   WaystonesListDialog:
-    Title: "Current waystone - <bold>{current_name}"
+    Title: "Waystones list"
     SortingTitle: "Manual waystone sorting"
     WaystoneButton: "{name}<reset>{attributes}"
     CurrentWaystoneButton: "Current - {name}<reset>{attributes}"
     ServerWaystoneButton: "{name}"
     PrivateWaystoneNotice: "<red>This waystone is private, teleporting away means you won't be able to get back!"
     NoWaystonesNotice: "<red>You do not have any waystones to teleport to!"
+    DeletingWaystoneIn: "Deleting waystone in {time_until_deletion}"
     Sorting:
       DisallowedUp: "This waystone can't be moved up!"
       DisallowedDown: "This waystone can't be moved down!"
@@ -131,9 +133,13 @@ Messages:
     Teleporting:
       Title: "Teleporting to {name}"
       Text: "Teleporting in <green>{seconds}</green>..."
+  WaystoneInaccessibleNoticeDialog:
+    Title: "Inaccessible waystone"
+    Message: "<red>Waystone <white>{name}</white> can't be accessed anymore, maybe you lost your access to it while you had waystone list opened up..?</red>"
+    BackToList: "Back to the list"
   WaystoneDestroyedNoticeDialog:
-    Title: "Something happened"
-    Message: "<red>Waystone <white>{name}</white> doesn't exist anymore! This can happen when your waystone block gets destroyed by a player, explosion or something else.</red>"
+    Title: "Inaccessible waystone"
+    Message: "<red>Waystone <white>{name}</white> doesn't exist anymore! This can happen when your waystone block gets destroyed by a player, explosion or something else. This waystone will be deleted in {time_until_deletion}!</red>"
     Checkbox: "Remove this waystone from the list (<red>irreversible</red>)"
     BackToList: "Back to the list"
   FriendsSettingDialog:
@@ -208,3 +214,12 @@ Messages:
   Cancel: "Cancel"
   Done: "Done"
   WaitBeforeUse: "Wait {time}s before using waystone again!"
+  BedrockExtraMessages:
+    SelectWaystone: "Select your waystone to teleport to"
+    CurrentWaystoneTooltip:
+      - "Current waystone information"
+      - ""
+      - "Name: <bold>{current_name}</bold>"
+      - "Location: {current_world} <aqua>{current_x}, {current_y}, {current_z}"
+      - "Owner: {current_owner}"
+      - "Created <gold>{current_created_ago}</gold> ago"
