@@ -24,9 +24,7 @@ import org.bukkit.metadata.MetadataValue;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class JavaDialogs extends DialogGUI {

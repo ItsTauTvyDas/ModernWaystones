@@ -8,7 +8,6 @@ import org.geysermc.floodgate.api.FloodgateApi;
 
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class UniDialogs extends DialogGUI {
     private final JavaDialogs java;
