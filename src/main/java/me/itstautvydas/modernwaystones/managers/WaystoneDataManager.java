@@ -1,16 +1,14 @@
 package me.itstautvydas.modernwaystones.managers;
 
 import me.itstautvydas.modernwaystones.ModernWaystones;
+import me.itstautvydas.modernwaystones.Utils;
 import me.itstautvydas.modernwaystones.data.WaystoneData;
 import org.bukkit.Location;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public class WaystoneDataManager extends DataManagerBase<Map<Location, WaystoneData>> {
     private final Map<Location, WaystoneData> waystonesMap = new HashMap<>();
@@ -67,10 +65,33 @@ public class WaystoneDataManager extends DataManagerBase<Map<Location, WaystoneD
         return waystonesMap;
     }
 
+    public List<WaystoneData> filterPlayerWaystones(UUID playerUUID) {
+        return getData().values().stream()
+                .filter(waystone -> {
+                    Utils.loadChunkIfNeeded(waystone.getLocation());
+                    if (getPlugin().isWaystoneDestroyed(waystone.getBlock()) && !waystone.isOwner(playerUUID))
+                        return false;
+                    if (waystone.isOwner(playerUUID) || waystone.isInternal() || waystone.isGloballyAccessible())
+                        return true;
+                    if (waystone.getAddedPlayers().contains(playerUUID)) {
+                        return getPlugin().isWaystoneFriendsBlock(waystone.getLocation().clone().add(0, -1, 0).getBlock());
+                    }
+                    return false;
+                }).toList();
+    }
+
     public void updatePlayerName(UUID uuid) {
         waystonesMap.values()
                 .stream()
                 .filter(x -> x.isOwner(uuid))
                 .forEach(WaystoneData::updateOwnerName);
+    }
+
+    public WaystoneData findById(String uuid) {
+        return waystonesMap.values()
+                .stream()
+                .filter(x -> Objects.equals(x.getUniqueId(), uuid))
+                .findFirst()
+                .orElse(null);
     }
 }
