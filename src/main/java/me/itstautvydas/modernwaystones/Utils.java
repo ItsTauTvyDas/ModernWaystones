@@ -65,4 +65,10 @@ public class Utils {
         }
         return sb.toString();
     }
+
+    public static void printStackTrace(ModernWaystones plugin, Exception ex) {
+        for (StackTraceElement element : ex.getStackTrace())
+            if (element.getClassName().startsWith("me.itstautvydas"))
+                plugin.getLogger().severe(element.toString());
+    }
 }
