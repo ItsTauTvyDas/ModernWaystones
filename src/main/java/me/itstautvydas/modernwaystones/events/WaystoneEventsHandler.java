@@ -3,6 +3,7 @@ package me.itstautvydas.modernwaystones.events;
 import com.destroystokyo.paper.event.block.BlockDestroyEvent;
 import io.papermc.paper.event.entity.EntityKnockbackEvent;
 import me.itstautvydas.modernwaystones.ModernWaystones;
+import me.itstautvydas.modernwaystones.data.PlayerData;
 import me.itstautvydas.modernwaystones.data.WaystoneData;
 import me.itstautvydas.modernwaystones.enums.WaystoneSound;
 import net.kyori.adventure.text.TextComponent;
@@ -38,10 +39,7 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class WaystoneEventsHandler implements Listener {
     private final ModernWaystones plugin;
@@ -117,7 +115,7 @@ public class WaystoneEventsHandler implements Listener {
             return;
         Player player = event.getPlayer();
         int limit = plugin.getConfig().getInt("PlayerLimitations.MaxWaystonesPerPlayer", -1);
-        if (limit != -1 && plugin.getWaystones(player.getUniqueId()).size() + 1 >= limit) {
+        if (limit != -1 && plugin.getPlayerOwnedWaystones(player.getUniqueId()).size() + 1 >= limit) {
             Map<String, String> placeholders = new HashMap<>();
             placeholders.put("max", Integer.toString(limit));
             plugin.sendMessage(player, ModernWaystones.message("Limitations.WaystoneCountLimitReached", placeholders), "PlayerLimitations.UseActionBar");
@@ -186,17 +184,15 @@ public class WaystoneEventsHandler implements Listener {
         if (section != null && section.getBoolean("Enabled")
                 && event.getItem().getType() == Material.getMaterial(section.getString("Material", "ECHO_SHARD"))) {
             waystone.setGloballyAccessible(!waystone.isGloballyAccessible());
+            plugin.getPlayerDataManager().updatePlayersAccesses(waystone, true, false, true);
             plugin.getWaystoneDataManager().saveData();
             if (section.getBoolean("SubtractItemCount"))
                 player.getInventory().getItemInMainHand().subtract();
-            String type;
-            if (waystone.isGloballyAccessible()) {
-                type = "Public";
-                plugin.playWaystoneSound(player, block.getLocation(), WaystoneSound.VISIBILITY_CHANGE_TO_PUBLIC);
-            } else {
-                type = "Private";
-                plugin.playWaystoneSound(player, block.getLocation(), WaystoneSound.VISIBILITY_CHANGE_TO_PRIVATE);
-            }
+            String type = waystone.isGloballyAccessible() ? "Public" : "Private";
+            plugin.playWaystoneSound(player,
+                    block.getLocation(),
+                    waystone.isGloballyAccessible() ? WaystoneSound.VISIBILITY_CHANGE_TO_PUBLIC
+                            : WaystoneSound.VISIBILITY_CHANGE_TO_PRIVATE);
             placeholders.put("type", plugin.getConfig().getString("Messages.WaystoneAttributes." + type));
             plugin.sendMessage(player, ModernWaystones.message("VisibilityChanged", placeholders), "Features.RenameByNameTag.UseActionBar");
         }
@@ -205,6 +201,7 @@ public class WaystoneEventsHandler implements Listener {
                 && event.getItem().getType() == Material.getMaterial(section.getString("Material", "DEBUG_STICK"))) {
             waystone.setInternal(!waystone.isInternal());
             waystone.setGloballyAccessible(true);
+            plugin.getPlayerDataManager().updatePlayersAccesses(waystone, true, false, true);
             plugin.getWaystoneDataManager().saveData();
             event.setCancelled(true);
             plugin.sendMessage(
@@ -318,6 +315,12 @@ public class WaystoneEventsHandler implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         plugin.getWaystoneDataManager().updatePlayerName(event.getPlayer().getUniqueId());
+        Collection<WaystoneData> waystones = plugin.getWaystoneDataManager().filterPlayerWaystones(event.getPlayer().getUniqueId());
+        if (!waystones.isEmpty()) {
+            PlayerData data = plugin.getPlayerData(event.getPlayer());
+            data.setWaystones(waystones);
+            plugin.getPlayerDataManager().saveData();
+        }
     }
 
     @EventHandler
