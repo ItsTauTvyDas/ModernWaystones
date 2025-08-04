@@ -18,13 +18,15 @@ public class UniDialogs extends DialogGUI {
     private UniDialogs(ModernWaystones plugin) {
         super(plugin);
         java = new JavaDialogs(plugin);
-        bedrock = new BedrockDialogs(plugin);
         bedrockAPI = FloodgateApi.getInstance();
+        bedrock = new BedrockDialogs(plugin, bedrockAPI);
     }
 
     public static DialogGUI tryCreate(ModernWaystones plugin) {
-        if (ModernWaystones.isFloodgateRunning())
+        if (ModernWaystones.isFloodgateRunning()) {
+            plugin.getLogger().info("Floodgate is detected");
             return new UniDialogs(plugin);
+        }
         return new JavaDialogs(plugin);
     }
 
@@ -44,29 +46,29 @@ public class UniDialogs extends DialogGUI {
     }
 
     @Override
-    public void showWaystoneDestroyedNoticeDialog(Player player, Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone) {
-        if (bedrockAPI.isFloodgatePlayer(player.getUniqueId())) {
-            bedrock.showWaystoneDestroyedNoticeDialog(player, viewer, previousClickedWaystone, clickedWaystone);
+    public void showWaystoneDestroyedNoticeDialog(Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone, boolean actuallyDestroyed) {
+        if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
+            bedrock.showWaystoneDestroyedNoticeDialog(viewer, previousClickedWaystone, clickedWaystone, actuallyDestroyed);
         } else {
-            java.showWaystoneDestroyedNoticeDialog(player, viewer, previousClickedWaystone, clickedWaystone);
+            java.showWaystoneDestroyedNoticeDialog(viewer, previousClickedWaystone, clickedWaystone, actuallyDestroyed);
         }
     }
 
     @Override
-    public void showListDialog(Player player, Player viewer, WaystoneData clickedWaystone) {
-        if (bedrockAPI.isFloodgatePlayer(player.getUniqueId())) {
-            bedrock.showListDialog(player, viewer, clickedWaystone);
+    public void showListDialog(Player viewer, WaystoneData clickedWaystone) {
+        if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
+            bedrock.showListDialog(viewer, clickedWaystone);
         } else {
-            java.showListDialog(player, viewer, clickedWaystone);
+            java.showListDialog(viewer, clickedWaystone);
         }
     }
 
     @Override
-    public void showRenameDialog(Player player, Player viewer, WaystoneData clickedWaystone, String initialInput, boolean showNotice, boolean showError) {
-        if (bedrockAPI.isFloodgatePlayer(player.getUniqueId())) {
-            bedrock.showRenameDialog(player, viewer, clickedWaystone, initialInput, showNotice, showError);
+    public void showRenameDialog(Player viewer, WaystoneData clickedWaystone, String initialInput, boolean showNotice, boolean showError) {
+        if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
+            bedrock.showRenameDialog(viewer, clickedWaystone, initialInput, showNotice, showError);
         } else {
-            java.showRenameDialog(player, viewer, clickedWaystone, initialInput, showNotice, showError);
+            java.showRenameDialog(viewer, clickedWaystone, initialInput, showNotice, showError);
         }
     }
 
@@ -76,15 +78,6 @@ public class UniDialogs extends DialogGUI {
             bedrock.showFriendsSettingsDialog(viewer, waystone, canEdit);
         } else {
             java.showFriendsSettingsDialog(viewer, waystone, canEdit);
-        }
-    }
-
-    @Override
-    public void showWaitingDialog(Player viewer, Component title, Function<Long, Component> text, Component cancelButton, long waitTicks, Consumer<Player> onClose, Consumer<Player> onFinish, boolean closeOnEscape) {
-        if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
-            bedrock.showWaitingDialog(viewer, title, text, cancelButton, waitTicks, onClose, onFinish, closeOnEscape);
-        } else {
-            java.showWaitingDialog(viewer, title, text, cancelButton, waitTicks, onClose, onFinish, closeOnEscape);
         }
     }
 
