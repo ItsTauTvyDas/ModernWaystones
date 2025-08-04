@@ -14,9 +14,8 @@ import java.util.UUID;
 public class WaystoneData {
     private String name;
     private boolean globallyAccessible;
-
     private boolean internal;
-
+    private long markedAsDestroyedSince;
     private final long createdAt;
     private final String uniqueId;
     private String owner;
@@ -125,6 +124,18 @@ public class WaystoneData {
         Player player = Bukkit.getPlayer(uniqueId);
         if (player != null)
             this.owner = player.getName();
+    }
+
+    public void markForDeletion() {
+        markedAsDestroyedSince = System.currentTimeMillis();
+    }
+
+    public long getMarkedForDeletionSince() {
+        return markedAsDestroyedSince;
+    }
+
+    public boolean isMarkedForDeletion() {
+        return markedAsDestroyedSince >0;
     }
 
     @Override
