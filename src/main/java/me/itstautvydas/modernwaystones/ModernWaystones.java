@@ -28,13 +28,12 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public final class ModernWaystones extends JavaPlugin {
@@ -55,6 +54,9 @@ public final class ModernWaystones extends JavaPlugin {
     @Override
     public void onEnable() {
         plugin = this;
+
+        Plugin plugin = getServer().getPluginManager().getPlugin("floodgate");
+        bedrockSupported = plugin != null && plugin.isEnabled();
 
         saveDefaultConfig();
 
@@ -80,7 +82,7 @@ public final class ModernWaystones extends JavaPlugin {
 
         lastWaystoneID = getWaystonesMap().size();
 
-        metrics = new Metrics(this, 22064);
+//        metrics = new Metrics(this, 22064);
 
         waystoneBlockType = Material.valueOf(Objects.requireNonNull(getConfig().getString("Item.Material")).toUpperCase(Locale.ROOT));
         friendsBlockType = Material.valueOf(Objects.requireNonNull(getConfig().getString("Features.AddFriends.SpecialBlockMaterial")).toUpperCase(Locale.ROOT));
@@ -93,7 +95,8 @@ public final class ModernWaystones extends JavaPlugin {
                                     .executes(ctx -> {
                                         final PlayerSelectorArgumentResolver resolver = ctx.getArgument("target", PlayerSelectorArgumentResolver.class);
                                         final Player target = resolver.resolve(ctx.getSource()).getFirst();
-                                        waystoneDialogs.showListDialog(target, (Player) ctx.getSource().getExecutor(), null);
+//                                        waystoneDialogs.showListDialog(target, (Player) ctx.getSource().getExecutor(), null);
+                                        // TODO make a simple dialog
                                         return Command.SINGLE_SUCCESS;
                                     })))
                     .then(Commands.literal("check")
@@ -110,8 +113,6 @@ public final class ModernWaystones extends JavaPlugin {
                                     })));
             commands.registrar().register(command.build());
         });
-
-        bedrockSupported = getServer().getPluginManager().getPlugin("floodgate") != null;
     }
 
     @Override
@@ -122,6 +123,15 @@ public final class ModernWaystones extends JavaPlugin {
             waystoneDialogs.unregister();
         if (metrics != null)
             metrics.shutdown();
+    }
+
+    public WaystoneData getRecentWaystone(Player player) {
+        List<MetadataValue> metadata = player.getMetadata(DialogGUI.KEY_LAST_WAYSTONE);
+        if (!metadata.isEmpty()) {
+            String uuid = player.getMetadata(DialogGUI.KEY_LAST_WAYSTONE).getFirst().asString();
+            return getWaystoneDataManager().findById(uuid);
+        }
+        return null;
     }
 
     @SuppressWarnings("PatternValidation")
@@ -153,7 +163,7 @@ public final class ModernWaystones extends JavaPlugin {
     public PlayerData getPlayerData(Player player) {
         PlayerData data = getPlayerDataMap().get(player.getUniqueId());
         if (data == null)
-            return getPlayerDataManager().createData(player, true);
+            return getPlayerDataManager().createData(player.getUniqueId(), true);
         return data;
     }
 
@@ -191,10 +201,10 @@ public final class ModernWaystones extends JavaPlugin {
                 .collect(Collectors.toMap(WaystoneData::getUniqueId, x -> x));
     }
 
-    public Map<String, WaystoneData> getWaystones(UUID ownerUniqueId) {
+    public Map<String, WaystoneData> getPlayerOwnedWaystones(UUID playerUUID) {
         return getWaystonesMap().values()
                 .stream()
-                .filter(x -> x.isOwner(ownerUniqueId) && !x.isInternal())
+                .filter(x -> x.isOwner(playerUUID) && !x.isInternal())
                 .collect(Collectors.toMap(WaystoneData::getUniqueId, x -> x));
     }
 
