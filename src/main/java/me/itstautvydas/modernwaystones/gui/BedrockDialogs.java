@@ -6,16 +6,14 @@ import me.itstautvydas.modernwaystones.data.WaystoneData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.geysermc.cumulus.form.CustomForm;
 import org.geysermc.cumulus.form.Form;
 import org.geysermc.cumulus.form.SimpleForm;
 import org.geysermc.floodgate.api.FloodgateApi;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class BedrockDialogs extends DialogGUI {
@@ -99,9 +97,43 @@ public class BedrockDialogs extends DialogGUI {
         sendForm(viewer, form.build());
     }
 
+    public void showFriendsSettingsDialog(Player viewer, WaystoneData waystone, boolean canEdit, List<OfflinePlayer> cachedPlayers) {
+        Map<String, String> placeholders = new HashMap<>();
+        fillPlaceholders(placeholders, null, null, waystone, null);
+
+        CustomForm.Builder form = CustomForm.builder()
+                .title(serialize(ModernWaystones.message("FriendsSettingDialog.Title", placeholders)))
+                .optionalLabel(serialize(ModernWaystones.message("FriendsSettingDialog.Text", placeholders)), canEdit);
+
+        for (OfflinePlayer player : cachedPlayers) {
+            if (player.getUniqueId().equals(waystone.getOwnerUniqueId()))
+                continue;
+            boolean isAdded = waystone.getAddedPlayers().contains(player.getUniqueId());
+            fillPlaceholders(placeholders, player);
+
+            if (canEdit) {
+                form.toggle(serialize(ModernWaystones.message("FriendsSettingDialog.PlayerFormat", placeholders)), isAdded);
+                form.validResultHandler(response -> {
+                    // start from 1 because 0 is a label
+                    for (int i = 1; i <= cachedPlayers.size(); i++) {
+                        if (response.asToggle(i))
+                            waystone.addPlayer(cachedPlayers.get(i).getUniqueId());
+                        else
+                            waystone.removePlayer(cachedPlayers.get(i).getUniqueId());
+                    }
+                    plugin.getPlayerDataManager().updatePlayersAccesses(waystone, false, true, true);
+                });
+            } else {
+                form.optionalLabel(serialize(ModernWaystones.message("FriendsSettingDialog.PlayerFormat", placeholders)), isAdded);
+            }
+        }
+
+        sendForm(viewer, form.build());
+    }
+
     @Override
     public void showFriendsSettingsDialog(Player viewer, WaystoneData waystone, boolean canEdit) {
-
+        showLoadingOfflinePlayersDialog(viewer, players -> showFriendsSettingsDialog(viewer, waystone, canEdit, players));
     }
 
     @Override
