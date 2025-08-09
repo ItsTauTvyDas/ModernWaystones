@@ -144,6 +144,8 @@ public class WaystoneEventsHandler implements Listener {
         if (plugin.isWaystoneFriendsBlock(block)) {
             block = block.getRelative(BlockFace.UP);
             clickedFriendsBlock = true;
+            if (!plugin.getConfig().getBoolean("Features.AddFriends.Enabled"))
+                return;
         }
         WaystoneData waystone = plugin.getWaystonesMap().get(block.getLocation());
         if (waystone == null)
@@ -153,7 +155,7 @@ public class WaystoneEventsHandler implements Listener {
 
         if (event.getItem() == null) {
             if (clickedFriendsBlock) {
-                if (waystone.isOwner(player) && !waystone.isInternal())
+                if (!waystone.isInternal() && (waystone.isOwner(player) || plugin.getConfig().getBoolean("Features.AddFriends.AllowEveryoneViewAddedPlayersList")))
                     plugin.getWaystoneDialogs().showFriendsSettingsDialog(player, waystone, true);
                 return;
             }
