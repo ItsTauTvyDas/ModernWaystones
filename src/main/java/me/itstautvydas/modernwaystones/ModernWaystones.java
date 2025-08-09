@@ -125,10 +125,13 @@ public final class ModernWaystones extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (waystoneDialogs != null) {
+            for (Player player : getServer().getOnlinePlayers())
+                waystoneDialogs.closeDialogIfOpened(player);
+            waystoneDialogs.unregister();
+        }
         if (waystoneDataManager != null)
             waystoneDataManager.saveData();
-        if (waystoneDialogs != null)
-            waystoneDialogs.unregister();
         if (metrics != null)
             metrics.shutdown();
     }

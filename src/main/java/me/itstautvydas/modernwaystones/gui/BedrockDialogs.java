@@ -158,6 +158,11 @@ public class BedrockDialogs extends DialogGUI {
         sendForm(player, null);
     }
 
+    @Override
+    public void closeDialogIfOpened(Player player) {
+        sendForm(player, null);
+    }
+
     @SuppressWarnings("deprecation")
     private String serialize(Component component) {
         return ChatColor.translateAlternateColorCodes('&', LegacyComponentSerializer.legacyAmpersand().serialize(component));

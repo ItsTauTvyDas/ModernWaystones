@@ -131,6 +131,15 @@ public class JavaDialogs extends DialogGUI {
     }
 
     @Override
+    public void closeDialogIfOpened(Player player) {
+        Set<String> list = storedDynamicCustomActionIdentities.remove(player.getUniqueId());
+        if (list != null) {
+            list.forEach(dialogManager::unregisterCustomAction);
+            player.closeInventory();
+        }
+    }
+
+    @Override
     public void showSimpleNotice(Player viewer, Component title, Component text, Component button, Consumer<Player> closeAction, boolean closeOnEscape) {
         String baseId = viewer.getUniqueId() + "_";
 

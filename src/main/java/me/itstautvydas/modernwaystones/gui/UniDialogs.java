@@ -45,6 +45,15 @@ public class UniDialogs extends DialogGUI {
     }
 
     @Override
+    public void closeDialogIfOpened(Player player) {
+        if (bedrockAPI.isFloodgatePlayer(player.getUniqueId())) {
+            bedrock.closeDialogIfOpened(player);
+        } else {
+            java.closeDialogIfOpened(player);
+        }
+    }
+
+    @Override
     public void showWaystoneDestroyedNoticeDialog(Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone, boolean actuallyDestroyed) {
         if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
             bedrock.showWaystoneDestroyedNoticeDialog(viewer, previousClickedWaystone, clickedWaystone, actuallyDestroyed);

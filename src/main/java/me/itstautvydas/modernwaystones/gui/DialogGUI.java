@@ -22,9 +22,6 @@ import java.util.function.Function;
 
 public abstract class DialogGUI {
     protected final ModernWaystones plugin;
-//    private long lastSaved;
-
-    private List<Consumer<Player>> runAfterClose;
 
     public DialogGUI(ModernWaystones plugin) {
         this.plugin = plugin;
@@ -93,6 +90,8 @@ public abstract class DialogGUI {
     public void closeDialog(Player player) {
         player.closeInventory();
     }
+
+    public abstract void closeDialogIfOpened(Player player);
 
     protected void onWaystoneClick(Player viewer, PlayerData playerData, WaystoneData waystone, WaystoneData clickedWaystone) {
         Map<String, String> teleportPlaceholders = new HashMap<>();
