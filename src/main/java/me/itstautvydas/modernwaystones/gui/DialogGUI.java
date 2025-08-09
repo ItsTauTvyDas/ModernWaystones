@@ -119,18 +119,18 @@ public abstract class DialogGUI {
                 ModernWaystones.message("Cancel"),
                 delayBefore * 20,
                 null, p -> {
-                    if (!waystone.isOwner(p) && !(waystone.isGloballyAccessible() || waystone.getAddedPlayers().contains(p.getUniqueId()))) {
-                        showWaystoneInaccesibleNoticeDialog(p, clickedWaystone, waystone, false);
+                    boolean destroyed = plugin.isWaystoneDestroyed(waystone.getBlock());
+                    if (destroyed || (!waystone.isOwner(p) && !(waystone.isGloballyAccessible() || waystone.getAddedPlayers().contains(p.getUniqueId())))) {
+                        showWaystoneInaccesibleNoticeDialog(p, clickedWaystone, waystone, destroyed);
                         return;
                     }
                     if (delayBefore == 0)
                         tryApplyingPotionEffect(p, potionSection, null);
-                    doTeleport(p, false, waystone, () -> {
-                        int noDamageTicks = plugin.getConfig().getInt("Teleportation.NoDamageTicksAfter");
-                        if (noDamageTicks > 0)
-                            p.setNoDamageTicks(noDamageTicks);
-                        tryApplyingSicknessEffects(p);
-                    });
+                    doTeleportation(p, false, waystone);
+                    int noDamageTicks = plugin.getConfig().getInt("Teleportation.NoDamageTicksAfter");
+                    if (noDamageTicks > 0)
+                        p.setNoDamageTicks(noDamageTicks);
+                    tryApplyingSicknessEffects(p);
                 }, true);
     }
 
@@ -194,7 +194,7 @@ public abstract class DialogGUI {
                 true);
     }
 
-    protected void doTeleport(Player dialogViewer, boolean isViewer, WaystoneData waystone, Runnable afterTeleport) {
+    protected void doTeleportation(Player dialogViewer, boolean isViewer, WaystoneData waystone) {
         Utils.loadChunkIfNeeded(waystone.getLocation());
         dialogViewer.setMetadata(ModernWaystones.LAST_USED_WAYSTONE_AT, new FixedMetadataValue(plugin, System.currentTimeMillis()));
         plugin.playWaystoneSound(null, dialogViewer.getLocation(), WaystoneSound.TELEPORTED);
@@ -203,8 +203,6 @@ public abstract class DialogGUI {
         dialogViewer.teleport(location);
         dialogViewer.getWorld().spawnParticle(Particle.PORTAL, location, 5);
         plugin.playWaystoneSound(null, location, WaystoneSound.TELEPORTED);
-        if (afterTeleport != null)
-            afterTeleport.run();
         if (!isViewer) {
             dialogViewer.setMetadata(ModernWaystones.LAST_WAYSTONE, new FixedMetadataValue(plugin, waystone.getUniqueId()));
 //            waystone.markLastUsed();

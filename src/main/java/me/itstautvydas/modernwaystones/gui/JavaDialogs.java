@@ -304,37 +304,37 @@ public class JavaDialogs extends DialogGUI {
                     data.getOrDefault(KEY_REMOVE_DEAD_WAYSTONE, "0.0").equals("1.0")) {
                 plugin.getWaystonesMap().remove(clickedWaystone.getLocation());
                 plugin.getWaystoneDataManager().saveData();
-                plugin.playWaystoneSound(dialogViewer, dialogViewer.getLocation(), WaystoneSound.DEACTIVATED);
+                plugin.playWaystoneSound(dialogViewer, dialogViewer.getEyeLocation(), WaystoneSound.DEACTIVATED);
             }
             showListDialog(dialogViewer, previousClickedWaystone);
         });
 
-        String message = actuallyDestroyed ? "WaystoneDestroyedNoticeDialog" : "WaystoneInaccessibleNoticeDialog";
+        String message = actuallyDestroyed ? "WaystoneDestroyedNoticeDialog." : "WaystoneInaccessibleNoticeDialog.";
 
         if (actuallyDestroyed)
             placeholders.put("time_until_deletion", "0"); // TODO
 
         PaperMultiActionDialog dialog = dialogManager
                 .createMultiActionDialog()
-                .title(ModernWaystones.message(message + ".Title", placeholders))
-                .afterAction(Dialog.AfterAction.WAIT_FOR_RESPONSE)
+                .title(ModernWaystones.message(message + "Title", placeholders))
+                .afterAction(Dialog.AfterAction.NONE)
                 .canCloseWithEscape(true)
                 .columns(1)
                 .body(builder -> builder
                         .text()
                         .width(300)
-                        .text(ModernWaystones.message(message + ".Message", placeholders)))
+                        .text(ModernWaystones.message(message + "Message", placeholders)))
                 .body(builder -> builder
                         .item()
                         .item(plugin.getCraftManager().createWaystoneItem(clickedWaystone)))
                 .action(builder -> builder
                         .dynamicCustom(baseId + KEY_BACK_TO_THE_LIST)
-                        .label(ModernWaystones.message(message + ".BackToList", placeholders)))
+                        .label(ModernWaystones.message(message + "BackToList", placeholders)))
                 .pause(false);
 
         if (actuallyDestroyed && clickedWaystone.isOwner(viewer)) {
             dialog.input(KEY_REMOVE_DEAD_WAYSTONE, builder -> builder.booleanInput()
-                    .label(ModernWaystones.message("WaystoneDestroyedNoticeDialog.Checkbox", placeholders))
+                    .label(ModernWaystones.message(message + "Checkbox", placeholders))
                     .initial(false));
         }
 
