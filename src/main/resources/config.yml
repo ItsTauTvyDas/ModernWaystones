@@ -31,7 +31,7 @@ Teleportation:
     Enabled: true
     # e.g., apple effect when 1 second is left before teleporting
     # if DelayBefore is 0 then this setting has no effect
-    ApplyWhenSecondsLeft: 1
+    ApplyWhenSecondsLeft: 3
     Effect: blindness
     Duration: 2
     Amplifier: 1
