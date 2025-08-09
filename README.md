@@ -19,6 +19,7 @@ The plugin was tested with 1.21.7 version, but should work with 1.21.6 (the vers
 - Server's waystones — players with operator permissions can make the waystone global, meaning it would behave as /warp.
 - Delays before teleporting and between waystone uses.
 - Limited waystones — limit how many waystones a player can have and what min distance should be between their other waystones.
+- Teleportation sickness — give players effects (based on chances) as if teleportation could have impact on player's mentality.
 
 ### Features I'm considering adding or fixing some things
 - Add a setting to switch back to inventory's GUI (this would allow support for older minecraft versions, <1.21.6).
