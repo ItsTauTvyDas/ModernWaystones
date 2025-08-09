@@ -41,6 +41,10 @@ public final class ModernWaystones extends JavaPlugin {
     private static int lastWaystoneID = 0;
     private static Metrics metrics;
 
+    public static final String LAST_USED_WAYSTONE_AT = "last_used_waystone_at";
+    public static final String LAST_USED_FRIENDS_BLOCK_AT = "last_used_friends_block_at";
+    public static final String LAST_WAYSTONE = "last_waystone";
+
     private static boolean bedrockSupported;
 
     private WaystoneDataManager waystoneDataManager;
@@ -134,9 +138,9 @@ public final class ModernWaystones extends JavaPlugin {
     }
 
     public WaystoneData getRecentWaystone(Player player) {
-        List<MetadataValue> metadata = player.getMetadata(DialogGUI.KEY_LAST_WAYSTONE);
+        List<MetadataValue> metadata = player.getMetadata(ModernWaystones.LAST_WAYSTONE);
         if (!metadata.isEmpty()) {
-            String uuid = player.getMetadata(DialogGUI.KEY_LAST_WAYSTONE).getFirst().asString();
+            String uuid = player.getMetadata(ModernWaystones.LAST_WAYSTONE).getFirst().asString();
             return getWaystoneDataManager().findById(uuid);
         }
         return null;

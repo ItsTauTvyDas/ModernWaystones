@@ -33,7 +33,7 @@ Teleportation:
     # if DelayBefore is 0 then this setting has no effect
     ApplyWhenSecondsLeft: 3
     Effect: blindness
-    Duration: 2
+    Duration: 4
     Amplifier: 1
   NoDamageTicksBefore: 0
   NoDamageTicksAfter: 10
@@ -45,12 +45,12 @@ Teleportation:
     MultipleEffectsAtOnce: true
     Effects:
       nausea:
-        Duration: 5
-        Chance: 30
+        Duration: 10
+        Chance: 35
       slowness:
         Duration: 3
         Amplifier: 2
-        Chance: 20
+        Chance: 60
 PlayerLimitations:
   MaxWaystonesPerPlayer: 25
   MinDistanceBetweenWaystones: -1

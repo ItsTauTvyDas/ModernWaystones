@@ -156,12 +156,12 @@ public class WaystoneEventsHandler implements Listener {
         if (event.getItem() == null) {
             if (clickedFriendsBlock) {
                 if (!waystone.isInternal() && (waystone.isOwner(player) || plugin.getConfig().getBoolean("Features.AddFriends.AllowEveryoneViewAddedPlayersList")))
-                    canUseWaystone(player, () ->
-                            plugin.getWaystoneDialogs().showFriendsSettingsDialog(player, waystone, waystone.isOwner(player)),
-                    true);
+                    canUseWaystone(player, ModernWaystones.LAST_USED_FRIENDS_BLOCK_AT, true, () ->
+                            plugin.getWaystoneDialogs().showFriendsSettingsDialog(player, waystone, waystone.isOwner(player))
+                    );
                 return;
             }
-            canUseWaystone(player, () -> plugin.getWaystoneDialogs().showListDialog(player, waystone), false);
+            canUseWaystone(player, ModernWaystones.LAST_USED_WAYSTONE_AT, false, () -> plugin.getWaystoneDialogs().showListDialog(player, waystone));
             return;
         }
 
@@ -253,7 +253,7 @@ public class WaystoneEventsHandler implements Listener {
                     }
                     List<MetadataValue> list = player.getMetadata("was_damaged");
                     if (list.isEmpty())
-                        canUseWaystone(player, () -> plugin.getWaystoneDialogs().showListDialog(player, waystone), false);
+                        canUseWaystone(player, ModernWaystones.LAST_USED_WAYSTONE_AT, false, () -> plugin.getWaystoneDialogs().showListDialog(player, waystone));
                     return;
                 }
             }
@@ -350,12 +350,12 @@ public class WaystoneEventsHandler implements Listener {
             player.discoverRecipe(plugin.getCraftManager().getRecipeKey());
     }
 
-    private void canUseWaystone(Player player, Runnable success, boolean markLastUsed) {
+    private void canUseWaystone(Player player, String key, boolean markLastUsed, Runnable success) {
         if (player.isSneaking()) {
             plugin.getWaystoneDialogs().showWaystonePlayerSettingsDialog(player);
             return;
         }
-        List<MetadataValue> list = player.getMetadata("last_used_at");
+        List<MetadataValue> list = player.getMetadata(key);
         if (!list.isEmpty()) {
             long current = System.currentTimeMillis();
             long last = list.getFirst().asLong();
@@ -366,10 +366,10 @@ public class WaystoneEventsHandler implements Listener {
                 plugin.sendMessage(player, ModernWaystones.message("WaitBeforeUse", placeholders), "Teleportation.DelayBetweenUses.UseActionBar");
                 return;
             }
-            player.removeMetadata("last_used_at", plugin);
+            player.removeMetadata(key, plugin);
         }
         success.run();
         if (markLastUsed)
-            player.setMetadata("last_used_at", new FixedMetadataValue(plugin, System.currentTimeMillis()));
+            player.setMetadata(key, new FixedMetadataValue(plugin, System.currentTimeMillis()));
     }
 }

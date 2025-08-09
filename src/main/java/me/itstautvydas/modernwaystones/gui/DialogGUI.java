@@ -21,8 +21,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public abstract class DialogGUI {
-    public static final String KEY_LAST_WAYSTONE = "last_waystone";
-
     protected final ModernWaystones plugin;
 //    private long lastSaved;
 
@@ -140,24 +138,32 @@ public abstract class DialogGUI {
     protected void tryApplyingSicknessEffects(Player player) {
         ConfigurationSection section = plugin.getConfig().getConfigurationSection("Teleportation.Sickness");
         if (section == null || !section.getBoolean("Enabled")) return;
-        ConfigurationSection effects = section.getConfigurationSection("Effects");
-        if (effects == null) return;
-        for (String effectName : effects.getKeys(false)) {
-            ConfigurationSection potionSection = effects.getConfigurationSection(effectName.toLowerCase());
-            if (potionSection == null) return;
-            PotionEffectType effect = Registry.POTION_EFFECT_TYPE.get(
-                    NamespacedKey.minecraft(Objects.requireNonNull(effectName))
-            );
-            if (effect == null) continue; // TODO log a warning about invalid potion effect
+        ConfigurationSection effectsSection = section.getConfigurationSection("Effects");
+        if (effectsSection == null) return;
+        List<PotionEffect> effects = new ArrayList<>();
+        for (String effectName : effectsSection.getKeys(false)) {
+            ConfigurationSection potionSection = effectsSection.getConfigurationSection(effectName);
+            if (potionSection == null) continue;
+            PotionEffectType effect = Registry.POTION_EFFECT_TYPE.get(NamespacedKey.minecraft(effectName.toLowerCase()));
+            if (effect == null) {
+                plugin.getLogger().warning("[Teleportation Sickness] potion effect '" + effectName + "' doesn't exist!");
+                continue;
+            }
             int chance = Math.clamp(potionSection.getInt("Chance", 0), 0, 100);
             int random = plugin.getRandom().nextInt(0, 100);
-            if (chance < random)
-                player.addPotionEffect(new PotionEffect(
+            if (random < chance)
+                effects.add(new PotionEffect(
                         effect,
                         (int) (potionSection.getDouble("Duration", 1) * 20),
                         potionSection.getInt("Amplifier", 1))
                 );
         }
+        if (!effectsSection.getBoolean("MultipleEffectsAtOnce")) {
+            if (!effects.isEmpty())
+                player.addPotionEffect(effects.getFirst());
+            return;
+        }
+        player.addPotionEffects(effects);
     }
 
     protected void tryApplyingPotionEffect(Player player, ConfigurationSection section, Long ticksLeft) {
@@ -191,7 +197,7 @@ public abstract class DialogGUI {
 
     protected void doTeleport(Player dialogViewer, boolean isViewer, WaystoneData waystone, Runnable afterTeleport) {
         Utils.loadChunkIfNeeded(waystone.getLocation());
-        dialogViewer.setMetadata("last_used_at", new FixedMetadataValue(plugin, System.currentTimeMillis()));
+        dialogViewer.setMetadata(ModernWaystones.LAST_USED_WAYSTONE_AT, new FixedMetadataValue(plugin, System.currentTimeMillis()));
         plugin.playWaystoneSound(null, dialogViewer.getLocation(), WaystoneSound.TELEPORTED);
         Location location = waystone.getTeleportLocation();
         dialogViewer.getWorld().spawnParticle(Particle.PORTAL, dialogViewer.getLocation(), 5);
@@ -201,7 +207,7 @@ public abstract class DialogGUI {
         if (afterTeleport != null)
             afterTeleport.run();
         if (!isViewer) {
-            dialogViewer.setMetadata(KEY_LAST_WAYSTONE, new FixedMetadataValue(plugin, waystone.getUniqueId()));
+            dialogViewer.setMetadata(ModernWaystones.LAST_WAYSTONE, new FixedMetadataValue(plugin, waystone.getUniqueId()));
 //            waystone.markLastUsed();
 //            long current = System.currentTimeMillis();
 //            if (lastSaved + 1000L <= current) {
@@ -254,9 +260,9 @@ public abstract class DialogGUI {
             if (plugin.isWaystoneDestroyed(waystone.getLocation().getBlock()))
                 attributes.add(plugin.getConfig().getString("Messages.WaystoneAttributes.Destroyed"));
             if (player != null) {
-                if (plugin.getConfig().getBoolean("WaystoneScreen.ShowRecentUsedWaystoneAttribute") && player.hasMetadata(KEY_LAST_WAYSTONE)) {
-                    List<MetadataValue> metadata = player.getMetadata(KEY_LAST_WAYSTONE);
-                    if (!metadata.isEmpty() && waystone.getUniqueId().equals(player.getMetadata(KEY_LAST_WAYSTONE).getFirst().asString()))
+                if (plugin.getConfig().getBoolean("WaystoneScreen.ShowRecentUsedWaystoneAttribute") && player.hasMetadata(ModernWaystones.LAST_WAYSTONE)) {
+                    List<MetadataValue> metadata = player.getMetadata(ModernWaystones.LAST_WAYSTONE);
+                    if (!metadata.isEmpty() && waystone.getUniqueId().equals(player.getMetadata(ModernWaystones.LAST_WAYSTONE).getFirst().asString()))
                         attributes.add(plugin.getConfig().getString("Messages.WaystoneAttributes.LastlyUsed"));
                 }
                 if (!waystone.isGloballyAccessible() && waystone.getAddedPlayers().contains(player.getUniqueId()))
