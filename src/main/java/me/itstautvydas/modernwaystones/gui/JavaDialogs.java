@@ -216,13 +216,13 @@ public class JavaDialogs extends DialogGUI {
         dialog.opener().open(viewer);
     }
 
-    public void showFriendsSettingsDialog(Player viewer, WaystoneData waystone, boolean canEdit, Map<String, String> placeholders, Set<OfflinePlayer> cachedPlayers) {
+    public void showFriendsSettingsDialog(Player viewer, WaystoneData waystone, boolean canEdit, List<OfflinePlayer> cachedPlayers) {
+        Map<String, String> placeholders = new HashMap<>();
+        fillPlaceholders(placeholders, null, null, waystone, null);
+
         PaperMultiActionDialog dialog = dialogManager
                 .createMultiActionDialog()
                 .title(ModernWaystones.message("FriendsSettingDialog.Title", placeholders))
-                .body(builder -> builder.text()
-                        .text(ModernWaystones.message("FriendsSettingDialog.Text", placeholders))
-                        .width(300))
                 .afterAction(Dialog.AfterAction.NONE)
                 .canCloseWithEscape(true)
                 .columns(canEdit ? 2 : 1)
@@ -230,23 +230,26 @@ public class JavaDialogs extends DialogGUI {
                         .label(ModernWaystones.message("Close"))
                         .dynamicCustom(KEY_SAVE_WD_AND_CLOSE))
                 .pause(false);
+
+        if (canEdit)
+            dialog.body(builder -> builder.text()
+                    .text(ModernWaystones.message("FriendsSettingDialog.Text", placeholders))
+                    .width(300));
+
         for (OfflinePlayer player : cachedPlayers) {
             if (player.getUniqueId().equals(waystone.getOwnerUniqueId()))
                 continue;
             boolean isAdded = waystone.getAddedPlayers().contains(player.getUniqueId());
 
             UUID playerId = player.getUniqueId();
-            String name = player.hasPlayedBefore() ? player.getName() : playerId.toString();
+            fillPlaceholders(placeholders, player);
 
-            placeholders.put("username", name);
-            placeholders.put("player_id", playerId.toString());
-            placeholders.put("online_status", plugin.getConfig().getString("Messages.PlayerStatuses." + (player.isOnline() ? "Online" : "Offline")));
-
-            dialog.action(builder -> builder
-                    .label(ModernWaystones.message("FriendsSettingDialog.PlayerFormat", placeholders))
-                    .tooltip(ModernWaystones.message("FriendsSettingDialog.PlayerTooltipFormat", placeholders))
-                    .width(200)
-                    .copyToClipboard(player.getName()));
+            if (canEdit || isAdded)
+                dialog.action(builder -> builder
+                        .label(ModernWaystones.message("FriendsSettingDialog.PlayerFormat", placeholders))
+                        .tooltip(ModernWaystones.message("FriendsSettingDialog.PlayerTooltipFormat", placeholders))
+                        .width(200)
+                        .copyToClipboard(player.getName()));
 
             if (canEdit) {
                 String dynamicId = viewer.getUniqueId() + "_" + waystone.getUniqueId() + "_" + player.getUniqueId();
@@ -259,7 +262,7 @@ public class JavaDialogs extends DialogGUI {
                     else
                         waystone.addPlayer(playerId);
                     plugin.getPlayerDataManager().updatePlayersAccesses(waystone, false, true, true);
-                    showFriendsSettingsDialog(dialogViewer, waystone, true, placeholders, cachedPlayers);
+                    showFriendsSettingsDialog(dialogViewer, waystone, true, cachedPlayers);
                 });
 
                 dialog.action(builder -> builder
@@ -274,26 +277,7 @@ public class JavaDialogs extends DialogGUI {
 
     @Override
     public void showFriendsSettingsDialog(Player viewer, WaystoneData waystone, boolean canEdit) {
-        Map<String, String> placeholders = new HashMap<>();
-        fillPlaceholders(placeholders, null, null, waystone, null);
-
-        BukkitTask task = Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            Set<OfflinePlayer> players = Arrays.stream(Bukkit.getOfflinePlayers())
-                    .sorted(Comparator.comparing((OfflinePlayer x) -> !x.isOnline())
-                            .thenComparing(x -> x.getName() == null ? x.getUniqueId().toString() : x.getName()))
-                    .collect(Collectors.toCollection(LinkedHashSet::new));
-            Bukkit.getScheduler().runTask(plugin, () -> showFriendsSettingsDialog(viewer, waystone, canEdit, placeholders, players));
-        });
-
-        showSimpleNotice(viewer,
-                ModernWaystones.message("FriendsSettingDialog.Title", placeholders),
-                ModernWaystones.message("FriendsSettingDialog.LoadingPlayers", placeholders),
-                ModernWaystones.message("Close"),
-                player -> {
-                    closeDialog(player);
-                    task.cancel();
-                },
-                false);
+        showLoadingOfflinePlayersDialog(viewer, players -> showFriendsSettingsDialog(viewer, waystone, canEdit, players));
     }
 
     @Override

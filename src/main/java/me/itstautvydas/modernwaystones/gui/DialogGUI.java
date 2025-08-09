@@ -6,12 +6,14 @@ import me.itstautvydas.modernwaystones.data.PlayerData;
 import me.itstautvydas.modernwaystones.data.WaystoneData;
 import me.itstautvydas.modernwaystones.enums.WaystoneSound;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Particle;
+import org.bukkit.*;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -44,6 +46,26 @@ public abstract class DialogGUI {
     public abstract void showFriendsSettingsDialog(Player viewer, WaystoneData waystone, boolean canEdit);
     public abstract void showSortSettingsDialog(Player viewer);
     public abstract void showWaystonePlayerSettingsDialog(Player viewer);
+
+    public void showLoadingOfflinePlayersDialog(Player viewer, Consumer<List<OfflinePlayer>> afterLoading) {
+        BukkitTask task = Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
+            List<OfflinePlayer> players = Arrays.stream(Bukkit.getOfflinePlayers())
+                    .sorted(Comparator.comparing((OfflinePlayer x) -> !x.isOnline())
+                            .thenComparing(x -> x.getName() == null ? x.getUniqueId().toString() : x.getName()))
+                    .toList();
+            Bukkit.getScheduler().runTask(plugin, () -> afterLoading.accept(players));
+        }, 5); // Sometimes afterLoading can finish faster than showing loading players dialog (bedrock related issue, waiting won't hurt anyone lol)
+
+        showSimpleNotice(viewer,
+                ModernWaystones.message("FriendsSettingDialog.Title"),
+                ModernWaystones.message("FriendsSettingDialog.LoadingPlayers"),
+                ModernWaystones.message("Close"),
+                player -> {
+                    closeDialog(player);
+                    task.cancel();
+                },
+                true);
+    }
 
     public void showWaitingDialog(Player viewer, Component title, Function<Long, Component> text, Component cancelButton, long waitTicks, Consumer<Player> onClose, Consumer<Player> onFinish, boolean closeOnEscape) {
         if (waitTicks == 0) {
@@ -83,32 +105,43 @@ public abstract class DialogGUI {
             showWaystoneDestroyedNoticeDialog(viewer, clickedWaystone, waystone, true);
             return;
         }
-        applyNoDamageTicks(viewer);
 
+        int noDamageTicks = plugin.getConfig().getInt("Teleportation.NoDamageTicksBefore");
+        if (noDamageTicks > 0)
+            viewer.setNoDamageTicks(noDamageTicks);
+
+        ConfigurationSection potionSection = plugin.getConfig().getConfigurationSection("Teleportation.PotionEffect");
         long delayBefore = Math.max(0, plugin.getConfig().getLong("Teleportation.DelayBefore"));
         showWaitingDialog(viewer,
                 ModernWaystones.message("WaystonesListDialog.Teleporting.Title", teleportPlaceholders),
                 ticksLeft -> {
+                    tryApplyingPotionEffect(viewer, potionSection, ticksLeft);
                     teleportPlaceholders.put("seconds", Long.toString(ticksLeft / 20));
                     return ModernWaystones.message("WaystonesListDialog.Teleporting.Text", teleportPlaceholders);
                 },
                 ModernWaystones.message("Cancel"),
                 delayBefore * 20,
                 null, p -> {
-                    if (!waystone.isOwner(viewer) && !waystone.isGloballyAccessible()) {
-                        if (!waystone.getAddedPlayers().contains(viewer.getUniqueId())) {
-                            showWaystoneDestroyedNoticeDialog(p, clickedWaystone, waystone, false);
-                            return;
-                        }
+                    if (!waystone.isOwner(viewer) && !(waystone.isGloballyAccessible() || waystone.getAddedPlayers().contains(viewer.getUniqueId()))) {
+                        showWaystoneDestroyedNoticeDialog(p, clickedWaystone, waystone, false);
+                        return;
                     }
+                    if (delayBefore == 0)
+                        tryApplyingPotionEffect(viewer, potionSection, null);
                     doTeleport(p, false, waystone);
                 }, true);
     }
 
-    protected void applyNoDamageTicks(Player player) {
-        int noDamageTicks = plugin.getConfig().getInt("Teleportation.NoDamageTicksBefore");
-        if (noDamageTicks > 0)
-            player.setNoDamageTicks(noDamageTicks);
+    private void tryApplyingPotionEffect(Player player, ConfigurationSection section, Long ticksLeft) {
+        if (section == null || !section.getBoolean("Enabled")) return;
+        if (ticksLeft != null && section.getInt("ApplyWhenSecondsLeft") != ticksLeft / 20) return;
+        PotionEffectType effect = Registry.POTION_EFFECT_TYPE.get(NamespacedKey.minecraft(section.getString("Effect", "blindness")));
+        if (effect == null) return;
+        player.addPotionEffect(new PotionEffect(
+                effect,
+                (int) (section.getDouble("Duration", 2) * 20),
+                section.getInt("Amplifier", 1))
+        );
     }
 
     protected Component getWaystoneLabel(WaystoneData waystone, WaystoneData clickedWaystone, Map<String, String> placeholders) {
@@ -156,6 +189,13 @@ public abstract class DialogGUI {
             fillPlaceholders(placeholders, player, data, waystone, "");
         if (clickedWaystone != null)
             fillPlaceholders(placeholders, player, data, clickedWaystone, "current_");
+    }
+
+    protected void fillPlaceholders(Map<String, String> placeholders, OfflinePlayer player) {
+        String name = player.hasPlayedBefore() ? player.getName() : player.getUniqueId().toString();
+        placeholders.put("username", name);
+        placeholders.put("player_id", player.getUniqueId().toString());
+        placeholders.put("online_status", plugin.getConfig().getString("Messages.PlayerStatuses." + (player.isOnline() ? "Online" : "Offline")));
     }
 
     private void fillPlaceholders(Map<String, String> placeholders, Player player, PlayerData data, WaystoneData waystone, String prefix) {
