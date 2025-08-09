@@ -109,7 +109,7 @@ Sounds:
     Key: "block.beacon.deactivate"
     Pitch: 1.5
   Disallowed:
-    Enabled: true
+    Enabled: false
     Key: "entity.villager.no"
     Volume: 0.5
   Teleported:
