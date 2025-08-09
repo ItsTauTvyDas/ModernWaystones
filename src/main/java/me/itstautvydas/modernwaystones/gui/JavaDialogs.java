@@ -290,7 +290,7 @@ public class JavaDialogs extends DialogGUI {
     }
 
     @Override
-    public void showWaystoneDestroyedNoticeDialog(Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone, boolean actuallyDestroyed) {
+    public void showWaystoneInaccesibleNoticeDialog(Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone, boolean actuallyDestroyed) {
         Map<String, String> placeholders = new HashMap<>();
         fillPlaceholders(placeholders, viewer, null, clickedWaystone, null);
         String baseId = viewer.getUniqueId() + "_" + clickedWaystone.getUniqueId() + "_";

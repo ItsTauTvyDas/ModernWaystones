@@ -34,7 +34,7 @@ public abstract class DialogGUI {
         // Nothing by default
     }
 
-    public abstract void showWaystoneDestroyedNoticeDialog(Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone, boolean actuallyDestroyed);
+    public abstract void showWaystoneInaccesibleNoticeDialog(Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone, boolean actuallyDestroyed);
     public abstract void showListDialog(Player viewer, WaystoneData clickedWaystone);
     public abstract void showRenameDialog(Player viewer, WaystoneData clickedWaystone, String initialInput, boolean showNotice, boolean showError);
     public abstract void showSimpleNotice(Player viewer, Component title, Component text, Component button, Consumer<Player> action, boolean closeOnEscape);
@@ -99,7 +99,7 @@ public abstract class DialogGUI {
 
         Utils.loadChunkIfNeeded(waystone.getLocation());
         if (plugin.isWaystoneDestroyed(waystone.getBlock())) {
-            showWaystoneDestroyedNoticeDialog(viewer, clickedWaystone, waystone, true);
+            showWaystoneInaccesibleNoticeDialog(viewer, clickedWaystone, waystone, true);
             return;
         }
 
@@ -120,7 +120,7 @@ public abstract class DialogGUI {
                 delayBefore * 20,
                 null, p -> {
                     if (!waystone.isOwner(p) && !(waystone.isGloballyAccessible() || waystone.getAddedPlayers().contains(p.getUniqueId()))) {
-                        showWaystoneDestroyedNoticeDialog(p, clickedWaystone, waystone, false);
+                        showWaystoneInaccesibleNoticeDialog(p, clickedWaystone, waystone, false);
                         return;
                     }
                     if (delayBefore == 0)
