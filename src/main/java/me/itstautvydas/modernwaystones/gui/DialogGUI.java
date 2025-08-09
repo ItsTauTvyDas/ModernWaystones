@@ -106,9 +106,9 @@ public abstract class DialogGUI {
             return;
         }
 
-        int noDamageTicks = plugin.getConfig().getInt("Teleportation.NoDamageTicksBefore");
-        if (noDamageTicks > 0)
-            viewer.setNoDamageTicks(noDamageTicks);
+        int noDamageTicksBefore = plugin.getConfig().getInt("Teleportation.NoDamageTicksBefore");
+        if (noDamageTicksBefore > 0)
+            viewer.setNoDamageTicks(noDamageTicksBefore);
 
         ConfigurationSection potionSection = plugin.getConfig().getConfigurationSection("Teleportation.PotionEffect");
         long delayBefore = Math.max(0, plugin.getConfig().getLong("Teleportation.DelayBefore"));
@@ -122,17 +122,45 @@ public abstract class DialogGUI {
                 ModernWaystones.message("Cancel"),
                 delayBefore * 20,
                 null, p -> {
-                    if (!waystone.isOwner(viewer) && !(waystone.isGloballyAccessible() || waystone.getAddedPlayers().contains(viewer.getUniqueId()))) {
+                    if (!waystone.isOwner(p) && !(waystone.isGloballyAccessible() || waystone.getAddedPlayers().contains(p.getUniqueId()))) {
                         showWaystoneDestroyedNoticeDialog(p, clickedWaystone, waystone, false);
                         return;
                     }
                     if (delayBefore == 0)
-                        tryApplyingPotionEffect(viewer, potionSection, null);
-                    doTeleport(p, false, waystone);
+                        tryApplyingPotionEffect(p, potionSection, null);
+                    doTeleport(p, false, waystone, () -> {
+                        int noDamageTicks = plugin.getConfig().getInt("Teleportation.NoDamageTicksAfter");
+                        if (noDamageTicks > 0)
+                            p.setNoDamageTicks(noDamageTicks);
+                        tryApplyingSicknessEffects(p);
+                    });
                 }, true);
     }
 
-    private void tryApplyingPotionEffect(Player player, ConfigurationSection section, Long ticksLeft) {
+    protected void tryApplyingSicknessEffects(Player player) {
+        ConfigurationSection section = plugin.getConfig().getConfigurationSection("Sickness");
+        if (section == null || !section.getBoolean("Enabled")) return;
+        ConfigurationSection effects = section.getConfigurationSection("Effects");
+        if (effects == null) return;
+        for (String effectName : effects.getKeys(false)) {
+            ConfigurationSection potionSection = effects.getConfigurationSection(effectName.toLowerCase());
+            if (potionSection == null) return;
+            PotionEffectType effect = Registry.POTION_EFFECT_TYPE.get(
+                    NamespacedKey.minecraft(Objects.requireNonNull(effectName))
+            );
+            if (effect == null) continue; // TODO log a warning about invalid potion effect
+            int chance = Math.clamp(potionSection.getInt("Chance", 0), 0, 100);
+            int random = plugin.getRandom().nextInt(0, 100);
+            if (chance < random)
+                player.addPotionEffect(new PotionEffect(
+                        effect,
+                        (int) (potionSection.getDouble("Duration", 1) * 20),
+                        potionSection.getInt("Amplifier", 1))
+                );
+        }
+    }
+
+    protected void tryApplyingPotionEffect(Player player, ConfigurationSection section, Long ticksLeft) {
         if (section == null || !section.getBoolean("Enabled")) return;
         if (ticksLeft != null && section.getInt("ApplyWhenSecondsLeft") != ticksLeft / 20) return;
         PotionEffectType effect = Registry.POTION_EFFECT_TYPE.get(NamespacedKey.minecraft(section.getString("Effect", "blindness")));
@@ -161,7 +189,7 @@ public abstract class DialogGUI {
                 true);
     }
 
-    protected void doTeleport(Player dialogViewer, boolean isViewer, WaystoneData waystone) {
+    protected void doTeleport(Player dialogViewer, boolean isViewer, WaystoneData waystone, Runnable afterTeleport) {
         Utils.loadChunkIfNeeded(waystone.getLocation());
         dialogViewer.setMetadata("teleported_at", new FixedMetadataValue(plugin, System.currentTimeMillis()));
         plugin.playWaystoneSound(null, dialogViewer.getLocation(), WaystoneSound.TELEPORTED);
@@ -170,9 +198,8 @@ public abstract class DialogGUI {
         dialogViewer.teleport(location);
         dialogViewer.getWorld().spawnParticle(Particle.PORTAL, location, 5);
         plugin.playWaystoneSound(null, location, WaystoneSound.TELEPORTED);
-        int noDamageTicks = plugin.getConfig().getInt("Teleportation.NoDamageTicksAfter");
-        if (noDamageTicks > 0)
-            dialogViewer.setNoDamageTicks(noDamageTicks);
+        if (afterTeleport != null)
+            afterTeleport.run();
         if (!isViewer) {
             dialogViewer.setMetadata(KEY_LAST_WAYSTONE, new FixedMetadataValue(plugin, waystone.getUniqueId()));
 //            waystone.markLastUsed();

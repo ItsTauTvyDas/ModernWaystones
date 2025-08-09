@@ -40,6 +40,17 @@ Teleportation:
   DelayBetweenUses:
     Value: 5
     UseActionBar: true
+  Sickness:
+    Enabled: true
+    MultipleEffectsAtOnce: true
+    Effects:
+      nausea:
+        Duration: 5
+        Chance: 30
+      slowness:
+        Duration: 3
+        Amplifier: 2
+        Chance: 20
 PlayerLimitations:
   MaxWaystonesPerPlayer: 25
   MinDistanceBetweenWaystones: -1

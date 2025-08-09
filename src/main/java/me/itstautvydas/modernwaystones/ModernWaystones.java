@@ -50,10 +50,14 @@ public final class ModernWaystones extends JavaPlugin {
     private Material waystoneBlockType;
     private Material friendsBlockType;
 
+    private Random random;
+
     @SuppressWarnings("UnstableApiUsage")
     @Override
     public void onEnable() {
         plugin = this;
+
+        random = new Random();
 
         Plugin plugin = getServer().getPluginManager().getPlugin("floodgate");
         bedrockSupported = plugin != null && plugin.isEnabled();
@@ -123,6 +127,10 @@ public final class ModernWaystones extends JavaPlugin {
             waystoneDialogs.unregister();
         if (metrics != null)
             metrics.shutdown();
+    }
+
+    public Random getRandom() {
+        return random;
     }
 
     public WaystoneData getRecentWaystone(Player player) {
