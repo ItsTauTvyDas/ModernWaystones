@@ -3,6 +3,7 @@ package me.itstautvydas.modernwaystones.gui;
 import me.itstautvydas.modernwaystones.ModernWaystones;
 import me.itstautvydas.modernwaystones.data.PlayerData;
 import me.itstautvydas.modernwaystones.data.WaystoneData;
+import me.itstautvydas.modernwaystones.enums.WaystoneSound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.ChatColor;
@@ -36,7 +37,37 @@ public class BedrockDialogs extends DialogGUI {
 
     @Override
     public void showWaystoneInaccesibleNoticeDialog(Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone, boolean actuallyDestroyed) {
+        Map<String, String> placeholders = new HashMap<>();
+        fillPlaceholders(placeholders, viewer, null, clickedWaystone, null);
+        String message = actuallyDestroyed ? "WaystoneDestroyedNoticeDialog." : "WaystoneInaccessibleNoticeDialog.";
 
+        if (actuallyDestroyed) {
+            placeholders.put("time_until_deletion", "0"); // TODO
+            if (clickedWaystone.isOwner(viewer)) {
+                CustomForm form = CustomForm.builder()
+                        .title(serializeLegacyColors(ModernWaystones.message(message + "Title", placeholders)))
+                        .label(serializeLegacyColors(ModernWaystones.message(message + "Message", placeholders)))
+                        .toggle(serializeLegacyColors(ModernWaystones.message(message + "Checkbox", placeholders)))
+                        .closedOrInvalidResultHandler(() -> showListDialog(viewer, previousClickedWaystone))
+                        .validResultHandler(response -> {
+                            boolean toggle = response.asToggle(1); // 0 is the label
+                            if (toggle) {
+                                plugin.getWaystonesMap().remove(clickedWaystone.getLocation());
+                                plugin.getWaystoneDataManager().saveData();
+                                plugin.playWaystoneSound(viewer, viewer.getEyeLocation(), WaystoneSound.DEACTIVATED);
+                            }
+                            showListDialog(viewer, previousClickedWaystone);
+                        }).build();
+                sendForm(viewer, form);
+                return;
+            }
+        }
+        showSimpleNotice(
+                viewer,
+                ModernWaystones.message(message + "Title", placeholders),
+                ModernWaystones.message(message + "Message", placeholders),
+                ModernWaystones.message(message + "BackToList", placeholders),
+                player -> showListDialog(player, previousClickedWaystone), true);
     }
 
     @Override
@@ -53,19 +84,19 @@ public class BedrockDialogs extends DialogGUI {
         if (recentIndex == -1)
             recentIndex = 0;
         CustomForm form = CustomForm.builder()
-                .label(serialize(ModernWaystones.message("BedrockExtraMessages.CurrentWaystoneTooltip", placeholders)))
+                .label(serializeLegacyColors(ModernWaystones.message("BedrockExtraMessages.CurrentWaystoneTooltip", placeholders)))
                 .optionalLabel(
-                        serialize(ModernWaystones.message("WaystonesListDialog.PrivateWaystoneNotice", placeholders)),
+                        serializeLegacyColors(ModernWaystones.message("WaystonesListDialog.PrivateWaystoneNotice", placeholders)),
                         clickedWaystone != null && !clickedWaystone.isGloballyAccessible() && !clickedWaystone.isOwner(viewer)
                                 && !clickedWaystone.getAddedPlayers().contains(viewer.getUniqueId())
-                ).title(serialize(ModernWaystones.message("WaystonesListDialog.Title", placeholders)))
+                ).title(serializeLegacyColors(ModernWaystones.message("WaystonesListDialog.Title", placeholders)))
                 .dropdown(
-                        serialize(ModernWaystones.message("BedrockExtraMessages.SelectWaystone", placeholders)),
+                        serializeLegacyColors(ModernWaystones.message("BedrockExtraMessages.SelectWaystone", placeholders)),
                         sortedWaystones
                                 .stream()
                                 .map(waystone -> {
                                     fillPlaceholders(placeholders, viewer, playerData, waystone, null);
-                                    return serialize(getWaystoneLabel(waystone, clickedWaystone, placeholders));
+                                    return serializeLegacyColors(getWaystoneLabel(waystone, clickedWaystone, placeholders));
                                 })
                                 .toList(),
                         recentIndex)
@@ -85,12 +116,12 @@ public class BedrockDialogs extends DialogGUI {
     @Override
     public void showSimpleNotice(Player viewer, Component title, Component text, Component button, Consumer<Player> action, boolean closeOnEscape) {
         SimpleForm.Builder form = SimpleForm.builder()
-                .title(serialize(title))
-                .content(serialize(text));
+                .title(serializeLegacyColors(title))
+                .content(serializeLegacyColors(text));
         if (!closeOnEscape)
             form.closedResultHandler(modal -> sendForm(viewer, modal));
         if (button != null) {
-            form.button(serialize(button));
+            form.button(serializeLegacyColors(button));
             if (action != null)
                 form.validResultHandler(result -> action.accept(viewer));
         }
@@ -102,8 +133,8 @@ public class BedrockDialogs extends DialogGUI {
         fillPlaceholders(placeholders, null, null, waystone, null);
 
         CustomForm.Builder form = CustomForm.builder()
-                .title(serialize(ModernWaystones.message("FriendsSettingDialog.Title", placeholders)))
-                .optionalLabel(serialize(ModernWaystones.message("FriendsSettingDialog.Text", placeholders)), canEdit);
+                .title(serializeLegacyColors(ModernWaystones.message("FriendsSettingDialog.Title", placeholders)))
+                .optionalLabel(serializeLegacyColors(ModernWaystones.message("FriendsSettingDialog.Text", placeholders)), canEdit);
 
         for (OfflinePlayer player : cachedPlayers) {
             if (player.getUniqueId().equals(waystone.getOwnerUniqueId()))
@@ -112,7 +143,7 @@ public class BedrockDialogs extends DialogGUI {
             fillPlaceholders(placeholders, player);
 
             if (canEdit) {
-                form.toggle(serialize(ModernWaystones.message("FriendsSettingDialog.PlayerFormat", placeholders)), isAdded);
+                form.toggle(serializeLegacyColors(ModernWaystones.message("FriendsSettingDialog.PlayerFormat", placeholders)), isAdded);
                 form.validResultHandler(response -> {
                     // start from 1 because 0 is a label
                     for (int i = 1; i <= cachedPlayers.size(); i++) {
@@ -124,7 +155,7 @@ public class BedrockDialogs extends DialogGUI {
                     plugin.getPlayerDataManager().updatePlayersAccesses(waystone, false, true, true);
                 });
             } else {
-                form.optionalLabel(serialize(ModernWaystones.message("FriendsSettingDialog.PlayerFormat", placeholders)), isAdded);
+                form.optionalLabel(serializeLegacyColors(ModernWaystones.message("FriendsSettingDialog.PlayerFormat", placeholders)), isAdded);
             }
         }
 
@@ -164,7 +195,8 @@ public class BedrockDialogs extends DialogGUI {
     }
 
     @SuppressWarnings("deprecation")
-    private String serialize(Component component) {
+    private String serializeLegacyColors(Component component) {
+        // any better way to do it?
         return ChatColor.translateAlternateColorCodes('&', LegacyComponentSerializer.legacyAmpersand().serialize(component));
     }
 }
