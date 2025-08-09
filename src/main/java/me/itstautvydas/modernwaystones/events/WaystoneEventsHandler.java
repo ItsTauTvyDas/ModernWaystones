@@ -156,10 +156,12 @@ public class WaystoneEventsHandler implements Listener {
         if (event.getItem() == null) {
             if (clickedFriendsBlock) {
                 if (!waystone.isInternal() && (waystone.isOwner(player) || plugin.getConfig().getBoolean("Features.AddFriends.AllowEveryoneViewAddedPlayersList")))
-                    plugin.getWaystoneDialogs().showFriendsSettingsDialog(player, waystone, true);
+                    canUseWaystone(player, () ->
+                            plugin.getWaystoneDialogs().showFriendsSettingsDialog(player, waystone, waystone.isOwner(player)),
+                    true);
                 return;
             }
-            checkForAvailabilityAndShowListDialog(player, waystone);
+            canUseWaystone(player, () -> plugin.getWaystoneDialogs().showListDialog(player, waystone), false);
             return;
         }
 
@@ -227,7 +229,7 @@ public class WaystoneEventsHandler implements Listener {
         if (plugin.isWaystoneBlock(event.getClickedBlock())) return;
         if (event.getPlayer().isInsideVehicle()) return;
 
-        List<MetadataValue> list = event.getPlayer().getMetadata("teleported_at");
+        List<MetadataValue> list = event.getPlayer().getMetadata("last_used_at");
         if (!list.isEmpty()) {
             long current = System.currentTimeMillis();
             long last = list.getFirst().asLong();
@@ -243,15 +245,15 @@ public class WaystoneEventsHandler implements Listener {
         if (type.toString().endsWith("_PRESSURE_PLATE") && !List.of(Material.LIGHT_WEIGHTED_PRESSURE_PLATE, Material.HEAVY_WEIGHTED_PRESSURE_PLATE).contains(type)) {
             for (int i = 1; i <= 2; i++) {
                 Location loc = block.getLocation().add(0, -i, 0);
-                WaystoneData data = plugin.getWaystonesMap().get(loc);
-                if (data != null && !plugin.isWaystoneDestroyed(loc.getBlock())) {
+                WaystoneData waystone = plugin.getWaystonesMap().get(loc);
+                if (waystone != null && !plugin.isWaystoneDestroyed(loc.getBlock())) {
                     if (!(entity instanceof Player player)) {
                         cancellable.setCancelled(true);
                         return;
                     }
                     List<MetadataValue> list = player.getMetadata("was_damaged");
                     if (list.isEmpty())
-                        checkForAvailabilityAndShowListDialog(player, data);
+                        canUseWaystone(player, () -> plugin.getWaystoneDialogs().showListDialog(player, waystone), false);
                     return;
                 }
             }
@@ -348,24 +350,26 @@ public class WaystoneEventsHandler implements Listener {
             player.discoverRecipe(plugin.getCraftManager().getRecipeKey());
     }
 
-    private void checkForAvailabilityAndShowListDialog(Player player, WaystoneData waystone) {
+    private void canUseWaystone(Player player, Runnable success, boolean markLastUsed) {
         if (player.isSneaking()) {
             plugin.getWaystoneDialogs().showWaystonePlayerSettingsDialog(player);
             return;
         }
-        List<MetadataValue> list = player.getMetadata("teleported_at");
+        List<MetadataValue> list = player.getMetadata("last_used_at");
         if (!list.isEmpty()) {
             long current = System.currentTimeMillis();
             long last = list.getFirst().asLong();
             long delayAfter = plugin.getConfig().getLong("Teleportation.DelayBetweenUses.Value") * 1000;
-            if (last + delayAfter >= current) {
+            if (delayAfter != 0 && last + delayAfter >= current) {
                 Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("time", String.format("%.1f", (last + delayAfter - current) / 1000.0));
                 plugin.sendMessage(player, ModernWaystones.message("WaitBeforeUse", placeholders), "Teleportation.DelayBetweenUses.UseActionBar");
                 return;
             }
-            player.removeMetadata("teleported_at", plugin);
+            player.removeMetadata("last_used_at", plugin);
         }
-        plugin.getWaystoneDialogs().showListDialog(player, waystone);
+        success.run();
+        if (markLastUsed)
+            player.setMetadata("last_used_at", new FixedMetadataValue(plugin, System.currentTimeMillis()));
     }
 }

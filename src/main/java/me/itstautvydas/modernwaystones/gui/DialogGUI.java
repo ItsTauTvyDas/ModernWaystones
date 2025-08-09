@@ -138,7 +138,7 @@ public abstract class DialogGUI {
     }
 
     protected void tryApplyingSicknessEffects(Player player) {
-        ConfigurationSection section = plugin.getConfig().getConfigurationSection("Sickness");
+        ConfigurationSection section = plugin.getConfig().getConfigurationSection("Teleportation.Sickness");
         if (section == null || !section.getBoolean("Enabled")) return;
         ConfigurationSection effects = section.getConfigurationSection("Effects");
         if (effects == null) return;
@@ -191,7 +191,7 @@ public abstract class DialogGUI {
 
     protected void doTeleport(Player dialogViewer, boolean isViewer, WaystoneData waystone, Runnable afterTeleport) {
         Utils.loadChunkIfNeeded(waystone.getLocation());
-        dialogViewer.setMetadata("teleported_at", new FixedMetadataValue(plugin, System.currentTimeMillis()));
+        dialogViewer.setMetadata("last_used_at", new FixedMetadataValue(plugin, System.currentTimeMillis()));
         plugin.playWaystoneSound(null, dialogViewer.getLocation(), WaystoneSound.TELEPORTED);
         Location location = waystone.getTeleportLocation();
         dialogViewer.getWorld().spawnParticle(Particle.PORTAL, dialogViewer.getLocation(), 5);
