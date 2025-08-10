@@ -21,15 +21,24 @@ Item:
       L: LODESTONE
       R: REDSTONE
       T: TARGET
+RedstoneActivation:
+  PressurePlate: # Any weight dependant pressure plates don't work
+    Enabled: true
+    # Check for forced activation, do not activate if player
+    # - was pushed by some entity onto pressure plate
+    # - was knocked back into pressure plate
+    # - was pushed by flowing water
+    # - was pushed by piston or blocks
+    CheckForForcefulActivation: true
 DataConfigurations:
-  # for example, setting this false will make "showNumbers" not be present in
+  # For example, setting this false will make "showNumbers" not be present in
   # player's data if it's the same value as in WaystoneScreen configuration
   SaveDefaultData: false
 Teleportation:
   DelayBefore: 4
   PotionEffect:
     Enabled: true
-    # e.g., apple effect when 1 second is left before teleporting
+    # e.g., Apple effect when 1 second is left before teleporting
     # if DelayBefore is 0 then this setting has no effect
     ApplyWhenSecondsLeft: 3
     Effect: blindness
@@ -58,7 +67,6 @@ PlayerLimitations:
 DefaultWaystone:
   Name: "Waystone #{id}"
   GloballyAccessible: true
-  PromptRenameDialogUponPlacing: false # not implemented
   DeleteWaystoneAfterDestroyMark: 21600 # 6 hours
 DefaultPlayerData:
   # Other default settings can be found in WaystoneScreen category
@@ -82,7 +90,6 @@ WaystoneScreen:
 Features:
   RenameByNameTag:
     Enabled: true
-    UseDialog: false # not implemented
     Material: NAME_TAG
     SubtractItemCount: true
     UseActionBar: true
@@ -124,11 +131,10 @@ Sounds:
     Enabled: true
     Key: "entity.player.levelup"
 Messages:
-  NameInputDialog:
-    Title: "Waystones"
-    Notice: "Your waystone will be open to public, unless visibility is changed using <blue>echo shard"
-    InputLabel: "Enter waystone name:"
-    InputLabelRequired: "Enter waystone name: <red>(Required)</red>"
+  CommandUsage:
+    - "<gold>[ModernWaystones]"
+    - "<white>/{command} player-waystones <player>"
+    - "<white>/{command} waystone-data <x> <y> <z>"
   WaystonesListDialog:
     Title: "Waystones list"
     SortingTitle: "Manual waystone sorting"
