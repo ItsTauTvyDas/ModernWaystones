@@ -21,16 +21,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class JavaDialogs extends DialogGUI {
-    public static final String KEY_NAME_DIALOG_INPUT = "waystone_name_input";
-    public static final String KEY_NAME_DIALOG_DONE = "waystone_name_input_done";
-    public static final String KEY_NAME_DIALOG_CANCEL = "waystone_name_input_cancel";
     public static final String KEY_TELEPORT = "teleport";
     public static final String KEY_MOVE_WAYSTONE = "move_waystone";
     public static final String KEY_UP = "up";
@@ -168,61 +163,7 @@ public class JavaDialogs extends DialogGUI {
 
     @Override
     public void showRenameDialog(Player viewer, WaystoneData clickedWaystone, String initialInput, boolean showNotice, boolean showError) {
-        if (initialInput == null || initialInput.isBlank()) {
-            throw new IllegalArgumentException("initialInput can't be null/blank!");
-        }
-
-        String baseId = viewer.getUniqueId() + "_" + clickedWaystone.getUniqueId() + "_";
-
-        dialogManager.registerCustomAction(storeCustomActionIdentity(viewer, baseId + KEY_NAME_DIALOG_DONE), (uuid, data) -> {
-            Player dialogViewer = Bukkit.getPlayer(uuid);
-            if (dialogViewer == null)
-                return;
-            cleanupPlayerCache(uuid);
-            String name = data.getOrDefault(KEY_NAME_DIALOG_INPUT, "");
-            if (name.isBlank()) {
-                showRenameDialog(dialogViewer, clickedWaystone, initialInput, showNotice, true);
-                plugin.getWaystoneDataManager().saveData();
-            } else {
-                clickedWaystone.setName(name);
-                plugin.getWaystoneDataManager().saveData();
-            }
-            closeDialog(dialogViewer);
-        });
-
-        dialogManager.registerCustomAction(storeCustomActionIdentity(viewer, baseId + KEY_NAME_DIALOG_CANCEL), (uuid, data) -> {
-            Player dialogViewer = Bukkit.getPlayer(uuid);
-            if (dialogViewer == null)
-                return;
-            cleanupPlayerCache(uuid);
-            clickedWaystone.setName(initialInput);
-            plugin.getWaystoneDataManager().saveData();
-            closeDialog(dialogViewer);
-        });
-
-        PaperMultiActionDialog dialog = dialogManager
-                .createMultiActionDialog()
-                .title(ModernWaystones.message("NameInputDialog.Title"))
-                .afterAction(Dialog.AfterAction.WAIT_FOR_RESPONSE)
-                .canCloseWithEscape(true)
-                .pause(false)
-                .input(KEY_NAME_DIALOG_INPUT, builder -> builder
-                        .textInput()
-                        .initial(initialInput)
-                        .label(ModernWaystones.message("NameInputDialog." + (showError ? "InputLabel" : "InputLabelRequired"))))
-                .columns(2)
-                .action(builder -> builder
-                        .label(ModernWaystones.message("Done"))
-                        .dynamicCustom(storeCustomActionIdentity(viewer, baseId + KEY_NAME_DIALOG_DONE)))
-                .action(builder -> builder
-                        .label(ModernWaystones.message("Cancel"))
-                        .dynamicCustom(storeCustomActionIdentity(viewer, baseId + KEY_NAME_DIALOG_CANCEL)));
-        if (showNotice)
-            dialog.body(builder -> builder
-                    .text()
-                    .width(300)
-                    .text(ModernWaystones.message("NameInputDialog.Notice")));
-        dialog.opener().open(viewer);
+        throw new UnsupportedOperationException();
     }
 
     public void showFriendsSettingsDialog(Player viewer, WaystoneData waystone, boolean canEdit, List<OfflinePlayer> cachedPlayers) {
@@ -473,7 +414,7 @@ public class JavaDialogs extends DialogGUI {
             fillPlaceholders(placeholders, viewer, playerData, waystone, null);
             String baseId = viewer.getUniqueId() + "_" + waystone.getUniqueId() + "_";
 
-            if (!isSorting) {
+            if (!isSorting && waystone != clickedWaystone) {
                 dialogManager.registerCustomAction(storeCustomActionIdentity(viewer, baseId + KEY_TELEPORT), (uuid, data) -> {
                     cleanupPlayerCache(uuid);
                     Player dialogViewer = Bukkit.getPlayer(uuid);
@@ -530,9 +471,7 @@ public class JavaDialogs extends DialogGUI {
                                 .color(canMoveDown ? NamedTextColor.WHITE : NamedTextColor.GRAY))
                         .tooltip(canMoveDown ? null : ModernWaystones.message("WaystonesListDialog.Sorting.DisallowedDown", placeholders))
                         .dynamicCustom(baseId + KEY_DOWN));
-            }
 
-            if (isSorting) {
                 runAfterClose.put(viewer.getUniqueId(), x -> x.removeMetadata(KEY_MOVE_WAYSTONE, plugin));
                 dialogManager.registerCustomAction(storeCustomActionIdentity(viewer, baseId + KEY_MOVE_WAYSTONE), (uuid, data) -> {
                     Player dialogViewer = Bukkit.getPlayer(uuid);
