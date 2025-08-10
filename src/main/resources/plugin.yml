@@ -4,3 +4,10 @@ main: me.itstautvydas.modernwaystones.ModernWaystones
 authors: [Pozzoo, SkyboundLab, ItsTauTvyDas]
 api-version: '1.21'
 softdepend: [floodgate]
+commands:
+  modernwaystones:
+    description: Main command for ModernWaystones plugin
+    permission: modernwaystones.admin
+permissions:
+  modernwaystones.admin:
+    default: op
