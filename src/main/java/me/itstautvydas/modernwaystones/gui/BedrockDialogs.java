@@ -3,6 +3,7 @@ package me.itstautvydas.modernwaystones.gui;
 import me.itstautvydas.modernwaystones.ModernWaystones;
 import me.itstautvydas.modernwaystones.data.PlayerData;
 import me.itstautvydas.modernwaystones.data.WaystoneData;
+import me.itstautvydas.modernwaystones.enums.PlayerSortType;
 import me.itstautvydas.modernwaystones.enums.WaystoneSound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -110,7 +111,7 @@ public class BedrockDialogs extends DialogGUI {
 
     @Override
     public void showRenameDialog(Player viewer, WaystoneData clickedWaystone, String initialInput, boolean showNotice, boolean showError) {
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -175,7 +176,28 @@ public class BedrockDialogs extends DialogGUI {
 
     @Override
     public void showWaystonePlayerSettingsDialog(Player viewer) {
+        PlayerData data = plugin.getPlayerData(viewer);
 
+        List<PlayerSortType> sortTypes = List.of(PlayerSortType.values());
+        PlayerSortType selectedType = data.getSortType();
+
+        CustomForm form = CustomForm.builder()
+                .title(serializeLegacyColors(ModernWaystones.message("WaystoneSettingsDialog.Title")))
+                .toggle(serializeLegacyColors(ModernWaystones.message("WaystoneSettingsDialog.Labels.ShowNumbers")), data.getShowNumbers())
+                .toggle(serializeLegacyColors(ModernWaystones.message("WaystoneSettingsDialog.Labels.HideLocation")), data.getHideLocation())
+                .toggle(serializeLegacyColors(ModernWaystones.message("WaystoneSettingsDialog.Labels.ShowAttributes")), data.getShowAttributes())
+                .dropdown(
+                        serializeLegacyColors(ModernWaystones.message("WaystoneSettingsDialog.Labels.SortBy.Label")),
+                        sortTypes.stream().map(type -> serializeLegacyColors(ModernWaystones.message("WaystoneSettingsDialog.Labels.SortBy.Values." + type))).toList(),
+                        sortTypes.indexOf(selectedType)
+                ).toggle(serializeLegacyColors(ModernWaystones.message("WaystoneSettingsDialog.Labels.InvertSorting")), data.isSortingInverted())
+                .validResultHandler(response -> {
+                    data.setShowNumbers(response.asToggle(0));
+                    data.setHideLocation(response.asToggle(1));
+                    data.setShowAttributes(response.asToggle(2));
+                    data.setSortType(sortTypes.get(response.asDropdown(3)), response.asToggle(4), true);
+                }).build();
+        sendForm(viewer, form);
     }
 
     private void sendForm(Player player, Form form) {
