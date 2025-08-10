@@ -6,11 +6,12 @@ The plugin was tested with 1.21.7 version, but should work with 1.21.6 (the vers
 
 ## Features:
 - Custom craftable waystone.
-- Renamable waystones.
-- Everything is pretty much configurable (except dialog looks like widths of buttons).
+- Renamable waystones with a nametag.
+- Very configurable, player and server-wise! To access your waystone (as a player) settings, shift and right-click on any waystone.
+- BEDROCK SUPPORT! It uses floodgate API, so be sure to have that plugin installed.
+- Some redstone activation is implemented.
 - Uses minecraft's new dialog system.
-  - For bedrock, forms are used but since they are limited, features like sorting are cut down a lot.
-- **Bedrock support** (soon).
+  - For bedrock, forms are used but since they are limited, features like manual sorting are cut down.
 - Customizable sounds when waystone is placed, broken or when a player is teleporting to it.
 - Sort waystones listing by either name, when it was made, player's name or manually (by moving them yourself!).
 - Player waystone settings — change waystones numbering, hide coordinates, attributes visibility, waystone button width or columns.
@@ -42,16 +43,8 @@ soon.
 - **Bigger Menus:** Instead of a single chest, it now uses a double chest so you can see more per page. (removed feature as dialogs are used)
 - **UUIDs for IDs:** Allows multiple waystones to have the same name and not override each other.
 - **World's specific icons:** The 3 dimensions in Minecraft have their own block as the icon in the menu. (removed feature as dialogs are used)
-  
-### Original TODO list for my needs
-- [x] Use `echo shard` to change visibility (public by default)
-- [x] Target block below lodestone unlocks the ability to add other players to your private waystone.
-- [x] Special waystone recipe — uses 4 chiseled stone bricks, 1 target block, 1 enderpearl, 2 redstone dusts and 1 lodestone.
-- [x] Try replacing inventory GUI with new dialogs system.
-- [x] Persistent (system specified) waystones.
-- [x] Manual/Auto waystones sorting.
 
-## Below is the text from the original readme file.
+## Below is the original readme text from forked plugin.
 
 ### Features:
 - Right-click a lodestone to activate it as a waypoint
