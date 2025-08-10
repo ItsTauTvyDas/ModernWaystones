@@ -223,13 +223,15 @@ public class WaystoneEventsHandler implements Listener {
 
     @EventHandler
     public void onPlayerInteractRedstone(PlayerInteractEvent event) {
+        if (!plugin.getConfig().getBoolean("RedstoneActivation.PressurePlate.Enabled"))
+            return;
         if (event.getHand() == EquipmentSlot.OFF_HAND) return;
         if (event.getAction() != Action.PHYSICAL) return;
         if (event.getClickedBlock() == null) return;
         if (plugin.isWaystoneBlock(event.getClickedBlock())) return;
         if (event.getPlayer().isInsideVehicle()) return;
 
-        List<MetadataValue> list = event.getPlayer().getMetadata("last_used_at");
+        List<MetadataValue> list = event.getPlayer().getMetadata(ModernWaystones.LAST_USED_WAYSTONE_AT);
         if (!list.isEmpty()) {
             long current = System.currentTimeMillis();
             long last = list.getFirst().asLong();
@@ -242,26 +244,37 @@ public class WaystoneEventsHandler implements Listener {
 
     private void pressurePlate(Block block, Entity entity, Cancellable cancellable) {
         Material type = block.getType();
-        if (type.toString().endsWith("_PRESSURE_PLATE") && !List.of(Material.LIGHT_WEIGHTED_PRESSURE_PLATE, Material.HEAVY_WEIGHTED_PRESSURE_PLATE).contains(type)) {
-            for (int i = 1; i <= 2; i++) {
-                Location loc = block.getLocation().add(0, -i, 0);
-                WaystoneData waystone = plugin.getWaystonesMap().get(loc);
-                if (waystone != null && !plugin.isWaystoneDestroyed(loc.getBlock())) {
-                    if (!(entity instanceof Player player)) {
-                        cancellable.setCancelled(true);
+        switch (type) {
+            case Material.LIGHT_WEIGHTED_PRESSURE_PLATE:
+            case Material.HEAVY_WEIGHTED_PRESSURE_PLATE:
+                break;
+            default:
+                for (int i = 1; i <= 2; i++) {
+                    Location loc = block.getLocation().add(0, -i, 0);
+                    WaystoneData waystone = plugin.getWaystonesMap().get(loc);
+                    if (waystone != null && !plugin.isWaystoneDestroyed(loc.getBlock())) {
+                        if (!(entity instanceof Player player)) {
+                            cancellable.setCancelled(true);
+                            return;
+                        }
+                        List<MetadataValue> list = player.getMetadata(ModernWaystones.WAS_PLAYER_FORCED);
+                        if (list.isEmpty())
+                            canUseWaystone(player, ModernWaystones.LAST_USED_WAYSTONE_AT, false, () -> plugin.getWaystoneDialogs().showListDialog(player, waystone));
                         return;
                     }
-                    List<MetadataValue> list = player.getMetadata("was_damaged");
-                    if (list.isEmpty())
-                        canUseWaystone(player, ModernWaystones.LAST_USED_WAYSTONE_AT, false, () -> plugin.getWaystoneDialogs().showListDialog(player, waystone));
-                    return;
                 }
-            }
+                break;
         }
+    }
+
+    private boolean isCheckForForcefulPressurePlateActivationEnabled() {
+        return plugin.getConfig().getBoolean("RedstoneActivation.PressurePlate.Enabled") && plugin.getConfig().getBoolean("RedstoneActivation.PressurePlate.CheckForForcefulActivation");
     }
 
     @EventHandler
     public void onPistonExtend(BlockPistonExtendEvent event) {
+        if (!isCheckForForcefulPressurePlateActivationEnabled())
+            return;
         List<Block> blocks = new ArrayList<>(event.getBlocks());
         blocks.add(event.getBlock());
         blocks.add(event.getBlock().getRelative(event.getDirection()));
@@ -269,15 +282,18 @@ public class WaystoneEventsHandler implements Listener {
             Location location = block.getRelative(event.getDirection()).getLocation();
             for (Entity entity : location.getWorld().getNearbyEntities(location, 1, 1, 1, x -> x instanceof Player)) {
                 Player player = (Player) entity;
-                player.setMetadata("was_damaged", new FixedMetadataValue(plugin, System.currentTimeMillis()));
+                player.setMetadata(ModernWaystones.WAS_PLAYER_FORCED, new FixedMetadataValue(plugin, System.currentTimeMillis()));
             }
         }
     }
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
+        if (!isCheckForForcefulPressurePlateActivationEnabled())
+            return;
+        // Maybe it's a little too expensive to run this all in player move event?
         if (event.getFrom().getBlock().getType() == Material.WATER) {
-            event.getPlayer().setMetadata("was_damaged", new FixedMetadataValue(plugin, System.currentTimeMillis()));
+            event.getPlayer().setMetadata(ModernWaystones.WAS_PLAYER_FORCED, new FixedMetadataValue(plugin, System.currentTimeMillis()));
             return;
         }
         if (event.getFrom().getYaw() == event.getTo().getYaw() && event.getFrom().getPitch() == event.getTo().getPitch()) {
@@ -286,29 +302,33 @@ public class WaystoneEventsHandler implements Listener {
                     continue;
                 Location entityLocation = entity.getLocation();
                 if (entityLocation.distance(event.getFrom()) <= 0.7) {
-                    event.getPlayer().setMetadata("was_damaged", new FixedMetadataValue(plugin, System.currentTimeMillis()));
+                    event.getPlayer().setMetadata(ModernWaystones.WAS_PLAYER_FORCED, new FixedMetadataValue(plugin, System.currentTimeMillis()));
                     return;
                 }
             }
         }
-        List<MetadataValue> list = event.getPlayer().getMetadata("was_damaged");
+        List<MetadataValue> list = event.getPlayer().getMetadata(ModernWaystones.WAS_PLAYER_FORCED);
         if (list.isEmpty()) return;
         long timestamp = list.getFirst().asLong();
         if (timestamp + 1000L >= System.currentTimeMillis())
             return;
-        event.getPlayer().removeMetadata("was_damaged", plugin);
+        event.getPlayer().removeMetadata(ModernWaystones.WAS_PLAYER_FORCED, plugin);
     }
 
     @EventHandler
     public void onPlayerDamage(EntityDamageByEntityEvent event) {
+        if (!isCheckForForcefulPressurePlateActivationEnabled())
+            return;
         if (event.getEntity() instanceof Player player)
-            player.setMetadata("was_damaged", new FixedMetadataValue(plugin, null));
+            player.setMetadata(ModernWaystones.WAS_PLAYER_FORCED, new FixedMetadataValue(plugin, null));
     }
 
     @EventHandler
     public void onPlayerKnockback(EntityKnockbackEvent event) {
+        if (!isCheckForForcefulPressurePlateActivationEnabled())
+            return;
         if (event.getEntity() instanceof Player player)
-            player.setMetadata("was_damaged", new FixedMetadataValue(plugin, null));
+            player.setMetadata(ModernWaystones.WAS_PLAYER_FORCED, new FixedMetadataValue(plugin, null));
     }
 
     @EventHandler
@@ -343,7 +363,7 @@ public class WaystoneEventsHandler implements Listener {
             return;
         if (player.hasDiscoveredRecipe(plugin.getCraftManager().getRecipeKey()))
             return;
-        Material material = Material.getMaterial(plugin.getConfig().getString("Item.UnlockRecipe.OnMaterial", "AIR"));
+        Material material = Material.getMaterial(plugin.getConfig().getString("Item.UnlockRecipe.OnMaterial", "_null_"));
         if (material == null)
             return;
         if (item.getType() == material)
