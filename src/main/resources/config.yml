@@ -28,12 +28,14 @@ RedstoneActivation:
     # - was pushed by some entity onto pressure plate
     # - was knocked back into pressure plate
     # - was pushed by flowing water
-    # - was pushed by piston or blocks
+    # - was pushed by piston or its blocks
     CheckForForcefulActivation: true
 DataConfigurations:
   # For example, setting this false will make "showNumbers" not be present in
   # player's data if it's the same value as in WaystoneScreen configuration
   SaveDefaultData: false
+  ShowFullExceptions: false
+  RevertWaystonesConfigurationIfOneErrored: true
 Teleportation:
   DelayBefore: 4
   PotionEffect:
@@ -84,6 +86,8 @@ DefaultPlayerData:
 WaystoneScreen:
   ShowNumbers: true
   DefaultPlayerSorting:
+    # Available types: CREATED_AT, LAST_USED_AT, NAME, OWNER, MANUAL
+    # Invalid type will default to CREATED_AT
     Type: CREATED_AT
     Inverse: false
   ShowRecentUsedWaystoneAttribute: true
@@ -131,6 +135,8 @@ Sounds:
     Enabled: true
     Key: "entity.player.levelup"
 Messages:
+  Plugin:
+    Reloaded: "<gold>[ModernWaystones] <white>The plugin was reloaded!"
   CommandUsage:
     - "<gold>[ModernWaystones]"
     - "<white>/{command} player-waystones <player>"
