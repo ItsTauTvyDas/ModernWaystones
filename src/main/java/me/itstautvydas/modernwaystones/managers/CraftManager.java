@@ -40,7 +40,7 @@ public class CraftManager {
         return recipeKey;
     }
 
-    public void registerRecipes() {
+    public void registerRecipe() {
         if (plugin.getServer().getRecipe(recipeKey) != null)
             plugin.getServer().removeRecipe(recipeKey, true);
         ShapedRecipe recipe = new ShapedRecipe(recipeKey, createWaystoneItem(null, null));
