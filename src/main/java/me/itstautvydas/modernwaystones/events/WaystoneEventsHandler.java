@@ -14,6 +14,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.type.Piston;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
@@ -21,10 +22,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPistonExtendEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
@@ -49,8 +47,8 @@ public class WaystoneEventsHandler implements Listener {
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
-    private boolean canPlaceBlock(Block block) {
-        if (!block.getType().isOccluding())
+    private boolean canPlaceBlock(Block block, Material blockType) {
+        if (!blockType.isOccluding())
             return true;
         Block block1 = block.getRelative(BlockFace.DOWN, 1);
         Block block2 = block.getRelative(BlockFace.DOWN, 2);
@@ -106,7 +104,7 @@ public class WaystoneEventsHandler implements Listener {
     public void onBlockPlace(BlockPlaceEvent event) {
         ItemStack item = event.getItemInHand();
         Block block = event.getBlockPlaced();
-        if (!canPlaceBlock(event.getBlockPlaced())) {
+        if (!canPlaceBlock(event.getBlockPlaced(), event.getBlockPlaced().getType())) {
             plugin.playWaystoneSound(event.getPlayer(), block.getLocation(), WaystoneSound.DISALLOWED);
             event.setCancelled(true);
             return;
@@ -116,9 +114,11 @@ public class WaystoneEventsHandler implements Listener {
         Player player = event.getPlayer();
         int limit = plugin.getConfig().getInt("PlayerLimitations.MaxWaystonesPerPlayer", -1);
         if (limit != -1 && plugin.getPlayerOwnedWaystones(player.getUniqueId()).size() + 1 >= limit) {
-            Map<String, String> placeholders = new HashMap<>();
-            placeholders.put("max", Integer.toString(limit));
-            plugin.sendMessage(player, ModernWaystones.message("Limitations.WaystoneCountLimitReached", placeholders), "PlayerLimitations.UseActionBar");
+            plugin.sendMessage(player, ModernWaystones.message("Limitations.WaystoneCountLimitReached", new HashMap<>() {
+                {
+                    put("max", Integer.toString(limit));
+                }
+            }), "PlayerLimitations.UseActionBar");
             event.setCancelled(true);
             return;
         }
@@ -269,6 +269,26 @@ public class WaystoneEventsHandler implements Listener {
 
     private boolean isCheckForForcefulPressurePlateActivationEnabled() {
         return plugin.getConfig().getBoolean("RedstoneActivation.PressurePlate.Enabled") && plugin.getConfig().getBoolean("RedstoneActivation.PressurePlate.CheckForForcefulActivation");
+    }
+
+    private void checkPiston(BlockFace facing, Collection<Block> blocks, Cancellable cancellable) {
+        for (Block block : blocks) {
+            Block furtherBlock = block.getRelative(facing);
+            if (!canPlaceBlock(furtherBlock, block.getType())) {
+                cancellable.setCancelled(true);
+                break;
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPistonExtendToWaystoneArea(BlockPistonExtendEvent event) {
+        checkPiston(event.getDirection(), event.getBlocks(), event);
+    }
+
+    @EventHandler
+    public void onPistonRetractToWaystoneArea(BlockPistonRetractEvent event) {
+        checkPiston(event.getDirection(), event.getBlocks(), event);
     }
 
     @EventHandler
