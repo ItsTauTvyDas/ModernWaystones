@@ -44,12 +44,19 @@ public class Utils {
             chunk.load();
     }
 
-    public static String formatAgoTime(long millis) {
-        long totalSeconds = (System.currentTimeMillis() - millis) / 1000;
-        long days = totalSeconds / 86400;
-        long hours = (totalSeconds % 86400) / 3600;
-        long minutes = (totalSeconds % 3600) / 60;
-        long seconds = totalSeconds % 60;
+    public static String formatAgoTime(long millis, boolean inverse) {
+        long now = System.currentTimeMillis();
+        long diffSeconds;
+        if (inverse)
+            diffSeconds = (millis - now) / 1000; // time until
+        else
+            diffSeconds = (now - millis) / 1000; // time ago
+        if (diffSeconds < 0)
+            return "0s";
+        long days = diffSeconds / 86400;
+        long hours = (diffSeconds % 86400) / 3600;
+        long minutes = (diffSeconds % 3600) / 60;
+        long seconds = diffSeconds % 60;
         StringBuilder sb = new StringBuilder();
         if (days > 0) {
             sb.append(days).append("d");
@@ -67,8 +74,12 @@ public class Utils {
     }
 
     public static void printStackTrace(ModernWaystones plugin, Exception ex) {
+        boolean showAll = plugin.getConfig().getBoolean("DataConfigurations.ShowFullExceptions");
+        int exceptionsCount = 0;
+        plugin.getLogger().severe(ex.getClass().getName() + ": " + ex.getMessage());
         for (StackTraceElement element : ex.getStackTrace())
-            if (element.getClassName().startsWith("me.itstautvydas"))
+            // Just in case show 3 first stack trace lines.
+            if (exceptionsCount++ < 3 || showAll || element.getClassName().startsWith("me.itstautvydas"))
                 plugin.getLogger().severe(element.toString());
     }
 }
