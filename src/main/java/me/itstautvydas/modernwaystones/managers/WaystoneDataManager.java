@@ -4,7 +4,6 @@ import me.itstautvydas.modernwaystones.ModernWaystones;
 import me.itstautvydas.modernwaystones.Utils;
 import me.itstautvydas.modernwaystones.data.WaystoneData;
 import org.bukkit.Location;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.IOException;
@@ -18,51 +17,79 @@ public class WaystoneDataManager extends DataManagerBase<Map<Location, WaystoneD
     }
 
     @Override
-    public void loadData() throws IOException, InvalidConfigurationException {
+    public void loadData() {
         load();
         for (String key : keys) {
-            WaystoneData waystoneData = new WaystoneData(
-                    key,
-                    config.getString(key + ".name"),
-                    config.getLocation(key + ".location"),
-                    config.getString(key + ".owner"),
-                    UUID.fromString(Objects.requireNonNull(config.getString(key + ".ownerId"))),
-                    config.getLong(key + ".createdAt")
-            );
-            waystoneData.setInternal(config.getBoolean(key + ".internal"));
-            waystoneData.setGloballyAccessible(config.getBoolean(key + ".global"));
-            for (String uuidString : config.getStringList(key + ".addedPlayers")) {
-                UUID uuid = UUID.fromString(uuidString);
-                waystoneData.addPlayer(uuid);
+            try {
+                WaystoneData waystoneData = new WaystoneData(
+                        key,
+                        config.getString(key + ".name"),
+                        config.getLocation(key + ".location"),
+                        config.getString(key + ".owner"),
+                        UUID.fromString(Objects.requireNonNull(config.getString(key + ".ownerId"))),
+                        config.getLong(key + ".createdAt")
+                );
+                waystoneData.setInternal(config.getBoolean(key + ".internal"));
+                waystoneData.setGloballyAccessible(config.getBoolean(key + ".global"));
+                for (String uuidString : config.getStringList(key + ".addedPlayers")) {
+                    UUID uuid = UUID.fromString(uuidString);
+                    waystoneData.addPlayer(uuid);
+                }
+                waystonesMap.put(waystoneData.getLocation(), waystoneData);
+            } catch (Exception ex) {
+                getPlugin().getLogger().severe("Failed to load data for a waystone with an ID of" + key + ", skipping");
+                Utils.printStackTrace(getPlugin(), ex);
             }
-            waystonesMap.put(waystoneData.getLocation(), waystoneData);
         }
     }
 
     @Override
     public void saveData() {
+        YamlConfiguration oldConfig = config;
+        boolean revertConfig = false;
+        boolean canRevert = getPlugin().getConfig().getBoolean("DataConfigurations.RevertWaystonesConfigurationIfOneErrored");
         config = new YamlConfiguration();
         for (WaystoneData waystone : waystonesMap.values()) {
-            config.set(waystone.getUniqueId() + ".name", waystone.getName());
-            config.set(waystone.getUniqueId() + ".location", waystone.getLocation());
-            config.set(waystone.getUniqueId() + ".owner", waystone.getOwner());
-            config.set(waystone.getUniqueId() + ".ownerId", waystone.getOwnerUniqueId().toString());
-            config.set(waystone.getUniqueId() + ".global", waystone.isInternal() || waystone.isGloballyAccessible());
-            config.set(waystone.getUniqueId() + ".createdAt", waystone.getCreatedAt());
-            if (waystone.isInternal() || getPlugin().shouldDefaultDataBeSaved())
-                config.set(waystone.getUniqueId() + ".internal", waystone.isInternal());
-            if (!waystone.getAddedPlayers().isEmpty())
-                config.set(waystone.getUniqueId() + ".addedPlayers", waystone.getAddedPlayers()
-                        .stream()
-                        .map(UUID::toString)
-                        .toList());
+            try {
+                config.set(waystone.getUniqueId() + ".name", waystone.getName());
+                config.set(waystone.getUniqueId() + ".location", waystone.getLocation());
+                config.set(waystone.getUniqueId() + ".owner", waystone.getOwner());
+                config.set(waystone.getUniqueId() + ".ownerId", waystone.getOwnerUniqueId().toString());
+                config.set(waystone.getUniqueId() + ".global", waystone.isInternal() || waystone.isGloballyAccessible());
+                config.set(waystone.getUniqueId() + ".createdAt", waystone.getCreatedAt());
+                if (waystone.isInternal() || getPlugin().shouldDefaultDataBeSaved())
+                    config.set(waystone.getUniqueId() + ".internal", waystone.isInternal());
+                if (!waystone.getAddedPlayers().isEmpty())
+                    config.set(waystone.getUniqueId() + ".addedPlayers", waystone.getAddedPlayers()
+                            .stream()
+                            .map(UUID::toString)
+                            .toList());
+            } catch (Exception ex) {
+                config = oldConfig;
+                getPlugin().getLogger().severe("Failed to save waystone with an ID of " + waystone.getUniqueId());
+                Utils.printStackTrace(getPlugin(), ex);
+                if (canRevert) {
+                    getPlugin().getLogger().warning("Waystones configuration is going to be reverted to previous version!");
+                    revertConfig = true;
+                } else {
+                    getPlugin().getLogger().warning("This waystone is going to be skipped...");
+                }
+                break;
+            }
         }
+        if (revertConfig)
+            config = oldConfig;
         save();
     }
 
     @Override
     public Map<Location, WaystoneData> getData() {
         return waystonesMap;
+    }
+
+    public void deleteExpiredWaystones() {
+        getData().entrySet().removeIf(entry ->
+                        entry.getValue().getMarkedForDeletionTime() >= System.currentTimeMillis());
     }
 
     public List<WaystoneData> filterPlayerWaystones(UUID playerUUID) {

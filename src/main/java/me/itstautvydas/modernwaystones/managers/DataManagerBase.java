@@ -1,7 +1,7 @@
 package me.itstautvydas.modernwaystones.managers;
 
 import me.itstautvydas.modernwaystones.ModernWaystones;
-import org.bukkit.configuration.InvalidConfigurationException;
+import me.itstautvydas.modernwaystones.Utils;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -49,19 +49,22 @@ public abstract class DataManagerBase<D> {
         return config;
     }
 
-    public abstract void loadData() throws Exception;
+    public abstract void loadData();
     public abstract void saveData();
     public abstract D getData();
 
     protected void save() {
         try {
             config.save(file);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            plugin.getLogger().severe("Failed to save " + getFile().getName() + " configuration!");
+            Utils.printStackTrace(plugin, ex);
         }
     }
 
-    protected void load() throws IOException, InvalidConfigurationException {
-        config.load(file);
+    protected void load() {
+        config = YamlConfiguration.loadConfiguration(file);
+        config.options().parseComments(true);
+        save();
     }
 }

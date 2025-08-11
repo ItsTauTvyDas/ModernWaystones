@@ -6,7 +6,6 @@ import me.itstautvydas.modernwaystones.data.PlayerData;
 import me.itstautvydas.modernwaystones.data.WaystoneData;
 import me.itstautvydas.modernwaystones.enums.PlayerSortType;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
@@ -22,7 +21,7 @@ public class PlayerDataManager extends DataManagerBase<Map<UUID, PlayerData>> {
     }
 
     @Override
-    public void loadData() throws IOException, InvalidConfigurationException {
+    public void loadData() {
         load();
         Map<String, WaystoneData> map = getPlugin().getSimpleWaystonesMap();
         for (String key : keys) {
@@ -41,7 +40,7 @@ public class PlayerDataManager extends DataManagerBase<Map<UUID, PlayerData>> {
                 playerData.setShowAttributes(config.getBoolean(key + ".waystonesListScreen.showAttributes", getPlugin().getConfig().getBoolean("DefaultPlayerData.ShowAttributes")));
                 playerDataMap.put(uuid, playerData);
             } catch (Exception ex) {
-                getPlugin().getLogger().severe("Failed to load data for " + key + ": " + ex.getMessage());
+                getPlugin().getLogger().severe("Failed to load data for a player with an ID of " + key + ", skipping");
                 Utils.printStackTrace(getPlugin(), ex);
             }
         }
@@ -82,7 +81,7 @@ public class PlayerDataManager extends DataManagerBase<Map<UUID, PlayerData>> {
                         .map(WaystoneData::getUniqueId)
                         .toList());
             } catch (Exception ex) {
-                getPlugin().getLogger().severe("Failed to save data for " + playerData.getUniqueId() + ": " + ex.getMessage());
+                getPlugin().getLogger().severe("Failed to save data for player with an ID of " + playerData.getUniqueId());
                 Utils.printStackTrace(getPlugin(), ex);
             }
         }
@@ -95,9 +94,16 @@ public class PlayerDataManager extends DataManagerBase<Map<UUID, PlayerData>> {
     }
 
     public PlayerData createData(UUID playerUUID, boolean save) {
+        PlayerSortType sortingType = PlayerSortType.CREATED_AT;
+        try {
+            sortingType = PlayerSortType.valueOf(getPlugin().getConfig().getString("WaystoneScreen.DefaultPlayerSorting.Type"));
+        } catch (Exception ex) {
+            getPlugin().getLogger().warning("[Player Data Creation] Failed to read WaystoneScreen.DefaultPlayerSorting.Type, defaulting to CREATED_AT");
+        }
+
         PlayerData data = new PlayerData(
                 playerUUID,
-                PlayerSortType.valueOf(getPlugin().getConfig().getString("WaystoneScreen.DefaultPlayerSorting.Type")),
+                sortingType,
                 getPlugin().getWaystoneDataManager().filterPlayerWaystones(playerUUID),
                 getPlugin().getConfig().getBoolean("WaystoneScreen.DefaultPlayerSorting.Inverted")
         );
