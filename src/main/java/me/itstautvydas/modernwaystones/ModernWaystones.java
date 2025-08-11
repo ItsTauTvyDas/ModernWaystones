@@ -111,7 +111,7 @@ public final class ModernWaystones extends JavaPlugin {
                     .then(Commands.literal("reload")
                             .executes(ctx -> {
                                 reload();
-                                ctx.getSource().getSender().sendMessage(message("plugin.reloaded"));
+                                ctx.getSource().getSender().sendMessage(message("Plugin.Reloaded"));
                                 return Command.SINGLE_SUCCESS;
                             }))
                     .then(Commands.literal("waystone-data")
