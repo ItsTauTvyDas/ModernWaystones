@@ -126,16 +126,16 @@ public class WaystoneData {
             this.owner = player.getName();
     }
 
-    public void markForDeletion() {
-        markedAsDestroyedSince = System.currentTimeMillis();
+    public void markForDeletion(long whenMillis) {
+        markedAsDestroyedSince = whenMillis;
     }
 
-    public long getMarkedForDeletionSince() {
+    public long getMarkedForDeletionTime() {
         return markedAsDestroyedSince;
     }
 
     public boolean isMarkedForDeletion() {
-        return markedAsDestroyedSince >0;
+        return markedAsDestroyedSince != 0;
     }
 
     @Override
