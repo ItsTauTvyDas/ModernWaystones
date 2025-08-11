@@ -231,7 +231,7 @@ public class JavaDialogs extends DialogGUI {
     }
 
     @Override
-    public void showWaystoneInaccesibleNoticeDialog(Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone, boolean actuallyDestroyed) {
+    public void showWaystoneInaccessibleNoticeDialog(Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone, boolean actuallyDestroyed) {
         Map<String, String> placeholders = new HashMap<>();
         fillPlaceholders(placeholders, viewer, null, clickedWaystone, null);
         String baseId = viewer.getUniqueId() + "_" + clickedWaystone.getUniqueId() + "_";
@@ -253,7 +253,7 @@ public class JavaDialogs extends DialogGUI {
         String message = actuallyDestroyed ? "WaystoneDestroyedNoticeDialog." : "WaystoneInaccessibleNoticeDialog.";
 
         if (actuallyDestroyed)
-            placeholders.put("time_until_deletion", "0"); // TODO
+            tryMarkWaystoneForDeletion(clickedWaystone, placeholders);
 
         PaperMultiActionDialog dialog = dialogManager
                 .createMultiActionDialog()
@@ -294,30 +294,28 @@ public class JavaDialogs extends DialogGUI {
         boolean showAttributes = data.get(KEY_SHOW_ATTRIBUTES).equals("1.0");
         int width = (int) Double.parseDouble(data.get(KEY_WAYSTONE_BUTTON_WIDTH));
         int columns = (int) Double.parseDouble(data.get(KEY_WAYSTONE_SCREEN_COLUMNS));
-        int i = 0;
-        if (playerData.setSortType(PlayerSortType.valueOf(data.get(KEY_SORT)), data.get(KEY_INVERT_SORT).equals("1.0"), true))
-            i++;
+        boolean save = playerData.setSortType(PlayerSortType.valueOf(data.get(KEY_SORT)), data.get(KEY_INVERT_SORT).equals("1.0"), true);
         if (playerData.getHideLocation() != hideLocations) {
             playerData.setHideLocation(hideLocations);
-            i++;
+            save = true;
         }
         if (playerData.getWaystoneButtonWidth() != width) {
             playerData.setWaystoneButtonWidth(width);
-            i++;
+            save = true;
         }
         if (playerData.getWaystoneScreenColumns() != columns) {
             playerData.setWaystoneScreenColumns(columns);
-            i++;
+            save = true;
         }
         if (playerData.getShowNumbers() != showNumbers) {
             playerData.setShowNumbers(showNumbers);
-            i++;
+            save = true;
         }
         if (playerData.getShowAttributes() != showAttributes) {
             playerData.setShowAttributes(showAttributes);
-            i++;
+            save = true;
         }
-        if (i > 0)
+        if (save)
             plugin.getPlayerDataManager().saveData();
     }
 

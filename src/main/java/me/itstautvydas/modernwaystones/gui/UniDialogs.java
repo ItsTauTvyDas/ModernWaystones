@@ -54,11 +54,11 @@ public class UniDialogs extends DialogGUI {
     }
 
     @Override
-    public void showWaystoneInaccesibleNoticeDialog(Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone, boolean actuallyDestroyed) {
+    public void showWaystoneInaccessibleNoticeDialog(Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone, boolean actuallyDestroyed) {
         if (bedrockAPI.isFloodgatePlayer(viewer.getUniqueId())) {
-            bedrock.showWaystoneInaccesibleNoticeDialog(viewer, previousClickedWaystone, clickedWaystone, actuallyDestroyed);
+            bedrock.showWaystoneInaccessibleNoticeDialog(viewer, previousClickedWaystone, clickedWaystone, actuallyDestroyed);
         } else {
-            java.showWaystoneInaccesibleNoticeDialog(viewer, previousClickedWaystone, clickedWaystone, actuallyDestroyed);
+            java.showWaystoneInaccessibleNoticeDialog(viewer, previousClickedWaystone, clickedWaystone, actuallyDestroyed);
         }
     }
 

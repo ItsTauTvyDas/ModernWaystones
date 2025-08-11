@@ -37,13 +37,13 @@ public class BedrockDialogs extends DialogGUI {
     }
 
     @Override
-    public void showWaystoneInaccesibleNoticeDialog(Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone, boolean actuallyDestroyed) {
+    public void showWaystoneInaccessibleNoticeDialog(Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone, boolean actuallyDestroyed) {
         Map<String, String> placeholders = new HashMap<>();
         fillPlaceholders(placeholders, viewer, null, clickedWaystone, null);
         String message = actuallyDestroyed ? "WaystoneDestroyedNoticeDialog." : "WaystoneInaccessibleNoticeDialog.";
 
         if (actuallyDestroyed) {
-            placeholders.put("time_until_deletion", "0"); // TODO
+            tryMarkWaystoneForDeletion(clickedWaystone, placeholders);
             if (clickedWaystone.isOwner(viewer)) {
                 CustomForm form = CustomForm.builder()
                         .title(serializeLegacyColors(ModernWaystones.message(message + "Title", placeholders)))
@@ -77,6 +77,7 @@ public class BedrockDialogs extends DialogGUI {
         PlayerData playerData = plugin.getPlayerData(viewer);
         fillPlaceholders(placeholders, viewer, playerData, null, clickedWaystone);
         List<WaystoneData> sortedWaystones = new ArrayList<>(playerData.getSortedWaystones());
+        sortedWaystones.remove(clickedWaystone);
         if (sortedWaystones.isEmpty()) {
             showNoWaystonesNotice(viewer, placeholders);
             return;

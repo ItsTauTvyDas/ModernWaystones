@@ -34,7 +34,7 @@ public abstract class DialogGUI {
         // Nothing by default
     }
 
-    public abstract void showWaystoneInaccesibleNoticeDialog(Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone, boolean actuallyDestroyed);
+    public abstract void showWaystoneInaccessibleNoticeDialog(Player viewer, WaystoneData previousClickedWaystone, WaystoneData clickedWaystone, boolean actuallyDestroyed);
     public abstract void showListDialog(Player viewer, WaystoneData clickedWaystone);
     public abstract void showRenameDialog(Player viewer, WaystoneData clickedWaystone, String initialInput, boolean showNotice, boolean showError);
     public abstract void showSimpleNotice(Player viewer, Component title, Component text, Component button, Consumer<Player> action, boolean closeOnEscape);
@@ -93,13 +93,19 @@ public abstract class DialogGUI {
 
     public abstract void closeDialogIfOpened(Player player);
 
+    protected void tryMarkWaystoneForDeletion(WaystoneData clickedWaystone, Map<String, String> placeholders) {
+        if (!clickedWaystone.isMarkedForDeletion())
+            clickedWaystone.markForDeletion(System.currentTimeMillis() + plugin.getConfig().getLong("DefaultWaystone.DeleteWaystoneAfterDestroyMark") * 1000);
+        placeholders.put("time_until_deletion", Utils.formatAgoTime(clickedWaystone.getMarkedForDeletionTime(), true));
+    }
+
     protected void onWaystoneClick(Player viewer, PlayerData playerData, WaystoneData waystone, WaystoneData clickedWaystone) {
         Map<String, String> teleportPlaceholders = new HashMap<>();
         fillPlaceholders(teleportPlaceholders, viewer, playerData, waystone, (WaystoneData)null);
 
         Utils.loadChunkIfNeeded(waystone.getLocation());
         if (plugin.isWaystoneDestroyed(waystone.getBlock())) {
-            showWaystoneInaccesibleNoticeDialog(viewer, clickedWaystone, waystone, true);
+            showWaystoneInaccessibleNoticeDialog(viewer, clickedWaystone, waystone, true);
             return;
         }
 
@@ -112,20 +118,20 @@ public abstract class DialogGUI {
         showWaitingDialog(viewer,
                 ModernWaystones.message("WaystonesListDialog.Teleporting.Title", teleportPlaceholders),
                 ticksLeft -> {
-                    tryApplyingPotionEffect(viewer, potionSection, ticksLeft);
+                    tryApplyingTeleportationPotionEffect(viewer, potionSection, ticksLeft);
                     teleportPlaceholders.put("seconds", Long.toString(ticksLeft / 20));
                     return ModernWaystones.message("WaystonesListDialog.Teleporting.Text", teleportPlaceholders);
                 },
                 ModernWaystones.message("Cancel"),
                 delayBefore * 20,
-                null, p -> {
+                p -> tryRemoveTeleportationPotionEffect(p, potionSection), p -> {
                     boolean destroyed = plugin.isWaystoneDestroyed(waystone.getBlock());
                     if (destroyed || (!waystone.isOwner(p) && !(waystone.isGloballyAccessible() || waystone.getAddedPlayers().contains(p.getUniqueId())))) {
-                        showWaystoneInaccesibleNoticeDialog(p, clickedWaystone, waystone, destroyed);
+                        showWaystoneInaccessibleNoticeDialog(p, clickedWaystone, waystone, destroyed);
                         return;
                     }
                     if (delayBefore == 0)
-                        tryApplyingPotionEffect(p, potionSection, null);
+                        tryApplyingTeleportationPotionEffect(p, potionSection, null);
                     doTeleportation(p, false, waystone);
                     int noDamageTicks = plugin.getConfig().getInt("Teleportation.NoDamageTicksAfter");
                     if (noDamageTicks > 0)
@@ -165,7 +171,7 @@ public abstract class DialogGUI {
         player.addPotionEffects(effects);
     }
 
-    protected void tryApplyingPotionEffect(Player player, ConfigurationSection section, Long ticksLeft) {
+    protected void tryApplyingTeleportationPotionEffect(Player player, ConfigurationSection section, Long ticksLeft) {
         if (section == null || !section.getBoolean("Enabled")) return;
         if (ticksLeft != null && section.getInt("ApplyWhenSecondsLeft") != ticksLeft / 20) return;
         PotionEffectType effect = Registry.POTION_EFFECT_TYPE.get(NamespacedKey.minecraft(section.getString("Effect", "blindness")));
@@ -175,6 +181,13 @@ public abstract class DialogGUI {
                 (int) (section.getDouble("Duration", 2) * 20),
                 section.getInt("Amplifier", 1))
         );
+    }
+
+    protected void tryRemoveTeleportationPotionEffect(Player player, ConfigurationSection section) {
+        if (section == null || !section.getBoolean("Enabled")) return;
+        PotionEffectType effect = Registry.POTION_EFFECT_TYPE.get(NamespacedKey.minecraft(section.getString("Effect", "blindness")));
+        if (effect == null) return;
+        player.removePotionEffect(effect);
     }
 
     protected Component getWaystoneLabel(WaystoneData waystone, WaystoneData clickedWaystone, Map<String, String> placeholders) {
@@ -249,7 +262,7 @@ public abstract class DialogGUI {
         placeholders.put(prefix + "world_name", waystone.getLocation().getWorld().getName());
 
         // TODO add for last_used
-        placeholders.put(prefix + "created_ago", Utils.formatAgoTime(waystone.getCreatedAt()));
+        placeholders.put(prefix + "created_ago", Utils.formatAgoTime(waystone.getCreatedAt(), false));
 
         if (data == null || data.getShowAttributes()) {
             List<String> attributes = new ArrayList<>();
