@@ -44,6 +44,7 @@ public final class ModernWaystones extends JavaPlugin {
     public static final String LAST_USED_WAYSTONE_AT = "last_used_waystone_at";
     public static final String LAST_USED_FRIENDS_BLOCK_AT = "last_used_friends_block_at";
     public static final String LAST_WAYSTONE = "last_waystone";
+    public static final String WAS_PLAYER_FORCED = "was_player_activation_forced";
 
     private static boolean bedrockSupported;
 
@@ -51,6 +52,7 @@ public final class ModernWaystones extends JavaPlugin {
     private PlayerDataManager playerDataManager;
     private CraftManager craftManager;
     private DialogGUI waystoneDialogs;
+
     private Material waystoneBlockType;
     private Material friendsBlockType;
 
@@ -69,7 +71,7 @@ public final class ModernWaystones extends JavaPlugin {
         saveDefaultConfig();
 
         craftManager = new CraftManager(this);
-        craftManager.registerRecipes();
+        craftManager.registerRecipe();
 
         new WaystoneEventsHandler(this);
 
@@ -79,8 +81,9 @@ public final class ModernWaystones extends JavaPlugin {
 
             playerDataManager = new PlayerDataManager(this);
             playerDataManager.loadData();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            getLogger().severe("Failed to create configurations!");
+            Utils.printStackTrace(this, ex);
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -92,22 +95,26 @@ public final class ModernWaystones extends JavaPlugin {
 
 //        metrics = new Metrics(this, 22064);
 
-        waystoneBlockType = Material.valueOf(Objects.requireNonNull(getConfig().getString("Item.Material")).toUpperCase(Locale.ROOT));
-        friendsBlockType = Material.valueOf(Objects.requireNonNull(getConfig().getString("Features.AddFriends.SpecialBlockMaterial")).toUpperCase(Locale.ROOT));
+        loadMaterials();
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("modernwaystones")
-                    .requires(sender -> sender.getSender().isOp())
-                    .then(Commands.literal("listdialog")
+                    .requires(sender -> sender.getSender().isOp() || sender.getSender().hasPermission("modernwaystones.admin"))
+                    .then(Commands.literal("player-waystones")
                             .then(Commands.argument("target", ArgumentTypes.player())
                                     .executes(ctx -> {
                                         final PlayerSelectorArgumentResolver resolver = ctx.getArgument("target", PlayerSelectorArgumentResolver.class);
                                         final Player target = resolver.resolve(ctx.getSource()).getFirst();
-//                                        waystoneDialogs.showListDialog(target, (Player) ctx.getSource().getExecutor(), null);
-                                        // TODO make a simple dialog
+                                        // TODO show dialog
                                         return Command.SINGLE_SUCCESS;
                                     })))
-                    .then(Commands.literal("check")
+                    .then(Commands.literal("reload")
+                            .executes(ctx -> {
+                                reload();
+                                ctx.getSource().getSender().sendMessage(message("plugin.reloaded"));
+                                return Command.SINGLE_SUCCESS;
+                            }))
+                    .then(Commands.literal("waystone-data")
                             .then(Commands.argument("location", ArgumentTypes.blockPosition())
                                     .executes(ctx -> {
                                         final BlockPositionResolver resolver = ctx.getArgument("location", BlockPositionResolver.class);
@@ -118,9 +125,29 @@ public final class ModernWaystones extends JavaPlugin {
                                         else
                                             ctx.getSource().getSender().sendMessage(data.toString());
                                         return Command.SINGLE_SUCCESS;
-                                    })));
+                                    })))
+                    .executes(ctx -> {
+                        ctx.getSource().getSender().sendMessage(ModernWaystones.message("CommandUsage", new HashMap<>() {
+                            {
+                                put("command", "modernwaystones");
+                            }
+                        }));
+                        return Command.SINGLE_SUCCESS;
+                    });
             commands.registrar().register(command.build());
         });
+    }
+
+    public void reload() {
+        getLogger().info("Reloading configurations...");
+        reloadConfig();
+        waystoneDataManager.loadData();
+        playerDataManager.loadData();
+        getLogger().info("Re-registering custom recipe...");
+        craftManager.registerRecipe();
+        getLogger().info("Caching materials...");
+        loadMaterials();
+        getLogger().info("Successfully reloaded!");
     }
 
     @Override
@@ -134,6 +161,11 @@ public final class ModernWaystones extends JavaPlugin {
             waystoneDataManager.saveData();
         if (metrics != null)
             metrics.shutdown();
+    }
+
+    public void loadMaterials() {
+        waystoneBlockType = Material.valueOf(Objects.requireNonNull(getConfig().getString("Item.Material")).toUpperCase(Locale.ROOT));
+        friendsBlockType = Material.valueOf(Objects.requireNonNull(getConfig().getString("Features.AddFriends.SpecialBlockMaterial")).toUpperCase(Locale.ROOT));
     }
 
     public Random getRandom() {
