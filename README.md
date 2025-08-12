@@ -9,6 +9,7 @@ The plugin was tested with 1.21.7 version, but should work with 1.21.6 (the vers
 - Renamable waystones with a nametag.
 - Very configurable, player and server-wise! To access your waystone (as a player) settings, shift and right-click on any waystone.
 - BEDROCK SUPPORT! It uses floodgate API, so be sure to have that plugin installed.
+  - Floodgate is not really required, Geyser already translates Java dialogs to Bedrock forms, but they are not going to look pretty and some actions are a little buggy.
 - Some redstone activations are implemented (open up your waystone menu on wooden/stone pressure plate press).
 - Uses minecraft's new dialog system.
   - For bedrock, forms are used but since they are limited, features like manual sorting are cut down.
