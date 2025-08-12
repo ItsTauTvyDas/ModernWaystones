@@ -80,6 +80,10 @@ public class WaystoneData {
         return internal;
     }
 
+    public boolean isExpired() {
+        return markedAsDestroyedSince <= System.currentTimeMillis();
+    }
+
     public boolean addPlayer(UUID player) {
         return this.addedPlayers.add(player);
     }
