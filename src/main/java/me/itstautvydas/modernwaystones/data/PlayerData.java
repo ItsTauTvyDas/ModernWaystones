@@ -5,6 +5,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class PlayerData {
     private final UUID uniqueId;
@@ -16,7 +18,7 @@ public class PlayerData {
     private int columns;
     private PlayerSortType sortType;
     private PlayerSortType oldSortType;
-    private Set<WaystoneData> sortedWaystones;
+    private SequencedSet<WaystoneData> sortedWaystones;
 
     private final Comparator<WaystoneData> comparator;
 
@@ -84,7 +86,7 @@ public class PlayerData {
         this.hideLocation = hideLocation;
     }
 
-    public Player getOnlinePlayer() {
+    public Player getBukkitPlayer() {
         return Bukkit.getPlayer(uniqueId);
     }
 
@@ -92,8 +94,39 @@ public class PlayerData {
         return sortType;
     }
 
-    public Set<WaystoneData> getSortedWaystones() {
+    public SequencedSet<WaystoneData> getSortedWaystones() {
         return sortedWaystones;
+    }
+
+    public <T> List<T> removeAndGetExpiredWaystones(Function<WaystoneData, T> methodReturn) {
+        List<T> removedWaystones = new ArrayList<>();
+        Iterator<WaystoneData> it = sortedWaystones.iterator();
+        while (it.hasNext()) {
+            WaystoneData waystone = it.next();
+            if (waystone.isExpired()) {
+                it.remove();
+                removedWaystones.add(methodReturn.apply(waystone));
+            }
+        }
+        return removedWaystones;
+    }
+
+    public boolean removeExpiredWaystones() {
+        return sortedWaystones.removeIf(WaystoneData::isExpired);
+    }
+
+    public boolean removeExpiredWaystones(Consumer<WaystoneData> removedElement) {
+        Iterator<WaystoneData> it = sortedWaystones.iterator();
+        boolean removedAny = false;
+        while (it.hasNext()) {
+            WaystoneData waystone = it.next();
+            if (waystone.isExpired()) {
+                it.remove();
+                removedElement.accept(waystone);
+                removedAny = true;
+            }
+        }
+        return removedAny;
     }
 
     public int getWaystoneScreenColumns() {
@@ -137,36 +170,38 @@ public class PlayerData {
         sortedWaystones.add(waystone);
     }
 
-    private void move(WaystoneData waystone, int i) {
+    private boolean move(WaystoneData waystone, int i) {
         setSortType(PlayerSortType.MANUAL, null, true);
         List<WaystoneData> ids = new ArrayList<>(sortedWaystones);
         int index = ids.indexOf(waystone);
-        if (index == -1) return;
+        if (index == -1) return false;
         Collections.swap(ids, index, index - i);
         sortedWaystones = new LinkedHashSet<>(ids);
+        return true;
     }
 
-    public void moveUp(WaystoneData waystone) {
-        move(waystone, 1);
+    public boolean moveUp(WaystoneData waystone) {
+        return move(waystone, 1);
     }
 
-    public void moveDown(WaystoneData waystone) {
-        move(waystone, -1);
+    public boolean moveDown(WaystoneData waystone) {
+        return move(waystone, -1);
     }
 
-    public void exchange(WaystoneData waystone1, WaystoneData waystone2) {
+    public boolean swap(WaystoneData waystone1, WaystoneData waystone2) {
         setSortType(PlayerSortType.MANUAL, null, true);
         List<WaystoneData> ids = new ArrayList<>(sortedWaystones);
         int index1 = ids.indexOf(waystone1);
-        if (index1 < 0) return;
+        if (index1 < 0) return false;
         int index2 = ids.indexOf(waystone2);
-        if (index2 < 0) return;
+        if (index2 < 0) return false;
         Collections.swap(ids, index1, index2);
         sortedWaystones = new LinkedHashSet<>(ids);
+        return true;
     }
 
     private void invert() {
-        sortedWaystones = ((SequencedSet<WaystoneData>) sortedWaystones).reversed();
+        sortedWaystones = sortedWaystones.reversed();
     }
 
     public void updateSorting(boolean forced) {
