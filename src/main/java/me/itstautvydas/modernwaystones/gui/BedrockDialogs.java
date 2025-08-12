@@ -15,7 +15,10 @@ import org.geysermc.cumulus.form.Form;
 import org.geysermc.cumulus.form.SimpleForm;
 import org.geysermc.floodgate.api.FloodgateApi;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class BedrockDialogs extends DialogGUI {
@@ -147,7 +150,7 @@ public class BedrockDialogs extends DialogGUI {
             if (canEdit) {
                 form.toggle(serializeLegacyColors(ModernWaystones.message("FriendsSettingDialog.PlayerFormat", placeholders)), isAdded);
                 form.validResultHandler(response -> {
-                    // start from 1 because 0 is a label
+                    // Atart from 1 because 0 is a label
                     for (int i = 1; i <= cachedPlayers.size(); i++) {
                         if (response.asToggle(i))
                             waystone.addPlayer(cachedPlayers.get(i).getUniqueId());
@@ -219,7 +222,7 @@ public class BedrockDialogs extends DialogGUI {
 
     @SuppressWarnings("deprecation")
     private String serializeLegacyColors(Component component) {
-        // any better way to do it?
+        // Any better way to do it?
         return ChatColor.translateAlternateColorCodes('&', LegacyComponentSerializer.legacyAmpersand().serialize(component));
     }
 }
