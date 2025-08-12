@@ -76,7 +76,7 @@ public class BedrockDialogs extends DialogGUI {
         Map<String, String> placeholders = new HashMap<>();
         PlayerData playerData = plugin.getPlayerData(viewer);
         fillPlaceholders(placeholders, viewer, playerData, null, clickedWaystone);
-        List<WaystoneData> sortedWaystones = new ArrayList<>(playerData.getSortedWaystones());
+        List<WaystoneData> sortedWaystones = new ArrayList<>(getPlayerWaystones(playerData));
         sortedWaystones.remove(clickedWaystone);
         if (sortedWaystones.isEmpty()) {
             showNoWaystonesNotice(viewer, placeholders);

@@ -398,7 +398,7 @@ public class JavaDialogs extends DialogGUI {
         PlayerData playerData = plugin.getPlayerData(viewer);
         Map<String, String> placeholders = new HashMap<>();
         fillPlaceholders(placeholders, viewer, playerData, null, clickedWaystone);
-        Collection<WaystoneData> sortedWaystones = playerData.getSortedWaystones();
+        Collection<WaystoneData> sortedWaystones = getPlayerWaystones(playerData);
 
         if (sortedWaystones.isEmpty()) {
             showNoWaystonesNotice(viewer, placeholders);
@@ -479,7 +479,7 @@ public class JavaDialogs extends DialogGUI {
                     if (!list.isEmpty()) {
                         WaystoneData waystone1 = (WaystoneData) list.getFirst().value();
                         if (waystone != waystone1 && waystone1 != null)
-                            playerData.exchange(waystone1, waystone);
+                            playerData.swap(waystone1, waystone);
                         dialogViewer.removeMetadata(KEY_MOVE_WAYSTONE, plugin);
                     } else {
                         dialogViewer.setMetadata(KEY_MOVE_WAYSTONE, new FixedMetadataValue(plugin, waystone));
