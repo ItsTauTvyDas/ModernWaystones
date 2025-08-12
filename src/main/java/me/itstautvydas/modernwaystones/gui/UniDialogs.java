@@ -41,7 +41,8 @@ public class UniDialogs extends DialogGUI {
 
     @Override
     public void cleanupPlayerCache(UUID uuid) {
-        java.cleanupPlayerCache(uuid);
+        if (!bedrockAPI.isFloodgatePlayer(uuid))
+            java.cleanupPlayerCache(uuid);
     }
 
     @Override
