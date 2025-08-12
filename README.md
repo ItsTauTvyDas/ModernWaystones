@@ -9,7 +9,7 @@ The plugin was tested with 1.21.7 version, but should work with 1.21.6 (the vers
 - Renamable waystones with a nametag.
 - Very configurable, player and server-wise! To access your waystone (as a player) settings, shift and right-click on any waystone.
 - BEDROCK SUPPORT! It uses floodgate API, so be sure to have that plugin installed.
-- Some redstone activation is implemented.
+- Some redstone activations are implemented (open up your waystone menu on wooden/stone pressure plate press).
 - Uses minecraft's new dialog system.
   - For bedrock, forms are used but since they are limited, features like manual sorting are cut down.
 - Customizable sounds when waystone is placed, broken or when a player is teleporting to it.
@@ -20,7 +20,8 @@ The plugin was tested with 1.21.7 version, but should work with 1.21.6 (the vers
 - Server's waystones — players with operator permissions can make the waystone global, meaning it would behave as /warp.
 - Delays before teleporting and between waystone uses.
 - Limited waystones — limit how many waystones a player can have and what min distance should be between their other waystones.
-- Teleportation sickness — give players effects (based on chances) as if teleportation could have impact on player's mentality.
+- Teleportation sickness — give players effects (based on chances) as if teleportation could have an impact on player's mentality.
+- Expirable waystones — if another player destroys your waystone, it is still shown in your waystones list but is deleted after some time.
 
 ### Features I'm considering adding or fixing some things
 - Add a setting to switch back to inventory's GUI (this would allow support for older minecraft versions, <1.21.6).
