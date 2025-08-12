@@ -198,7 +198,14 @@ public abstract class DialogGUI {
         return ModernWaystones.message("WaystonesListDialog.WaystoneButton", placeholders);
     }
 
-    protected void showNoWaystonesNotice(Player viewer, Map<String, String> placeholders) {
+    protected Set<WaystoneData> getPlayerWaystones(PlayerData data) {
+        if (!data.removeExpiredWaystones(w -> plugin.getWaystonesMap().remove(w.getLocation())))
+            return data.getSortedWaystones();
+        plugin.getWaystoneDataManager().saveData();
+        return data.getSortedWaystones();
+    }
+
+    public void showNoWaystonesNotice(Player viewer, Map<String, String> placeholders) {
         showSimpleNotice(viewer,
                 ModernWaystones.message("WaystonesListDialog.Title", placeholders),
                 ModernWaystones.message("WaystonesListDialog.NoWaystonesNotice", placeholders),
