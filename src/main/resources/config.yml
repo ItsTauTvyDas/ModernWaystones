@@ -30,6 +30,18 @@ RedstoneActivation:
     # - was pushed by flowing water
     # - was pushed by piston or its blocks
     CheckForForcefulActivation: true
+LoggingAndDebugging:
+  Enabled: false
+  ShowWaystoneID: true
+  Events:
+    WaystoneCreated: false
+    WaystoneDestroyed: false
+    WaystoneVisibilityChanged: false
+    WaystoneNameChanged: false
+    WaystoneAddedPlayersChanged: false
+    WaystoneSetAsGlobal: false
+    WaystoneOpened: false
+    TeleportedToWaystone: false
 DataConfigurations:
   # For example, setting this false will make "showNumbers" not be present in
   # player's data if it's the same value as in WaystoneScreen configuration
