@@ -139,8 +139,9 @@ Messages:
     Reloaded: "<gold>[ModernWaystones] <white>The plugin was reloaded!"
   CommandUsage:
     - "<gold>[ModernWaystones]"
-    - "<white>/{command} player-waystones <player>"
-    - "<white>/{command} waystone-data <x> <y> <z>"
+    - "[modernwaystones.admin.view-waystones]:<white>/{command} player-waystones <player>"
+    - "[modernwaystones.admin.inspect]:<white>/{command} waystone-data <x> <y> <z>"
+    - "[modernwaystones.admin.reload]:<white>/{command} reload"
   WaystonesListDialog:
     Title: "Waystones list"
     SortingTitle: "Manual waystone sorting"
