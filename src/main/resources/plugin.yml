@@ -2,12 +2,65 @@ name: ModernWaystones
 version: '${project.version}'
 main: me.itstautvydas.modernwaystones.ModernWaystones
 authors: [Pozzoo, SkyboundLab, ItsTauTvyDas]
-api-version: '1.21'
+api-version: '1.21.6'
 softdepend: [floodgate]
 commands:
   modernwaystones:
     description: Main command for ModernWaystones plugin
-    permission: modernwaystones.admin
+    permission: modernwaystones.admin.command
 permissions:
-  modernwaystones.admin:
+  modernwaystones.waystones.use:
+    description: Open waystones list dialog and allow teleportation
+    default: true
+  modernwaystones.waystones.place:
+    description: Allow placing waystone block
+    default: true
+  modernwaystones.waystones.break.other:
+    description: Allow breaking other player's waystone
+    default: true
+  modernwaystones.waystones.rename:
+    description: Allow renaming waystone by an item
+    default: true
+  modernwaystones.waystones.settings:
+    description: Allow accessing player's waystones settings
+    default: true
+  modernwaystones.waystones.manage-players:
+    description: Allow add and remove players from waystone
+    default: true
+  modernwaystones.waystones.manage-players.see-other:
+    description: Allow to see other player's added players to the waystone
+    default: true
+  modernwaystones.waystones.change-visibility:
+    description: Allow changing visibility of the waystone with an item
+    default: true
+  modernwaystones.admin.command:
+    description: Allow to access admin command
+  modernwaystones.admin.*:
+    description: Allow using modernwaystones admin command
+    default: op
+    children:
+      modernwaystones.admin.command: true
+      modernwaystones.admin.reload: true
+      modernwaystones.admin.inspect: true
+      modernwaystones.admin.view-waystones: true
+  modernwaystones.admin.reload:
+    description: Allow to reload the plugin
+    default: op
+    children:
+      modernwaystones.admin.command: true
+  modernwaystones.admin.inspect:
+    description: Allow to inspect waystone's data
+    default: op
+    children:
+      modernwaystones.admin.command: true
+  modernwaystones.admin.view-waystones:
+    description: Allow to view player's made waystones-
+    default: op
+    children:
+      modernwaystones.admin.command: true
+  modernwaystones.sickness.immune:
+    description: Allow player to be immune to teleportation sickness
+    default: op
+  modernwaystones.teleportation.instant:
+    description: Allow to skip waiting time for teleportation
     default: op
